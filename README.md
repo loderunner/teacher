@@ -1,36 +1,48 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Journey
 
-## Getting Started
+AI-powered "teach yourself anything" app. Built with Next.js 16 (App Router), Clerk auth, Neon Postgres, Drizzle ORM, Tailwind v4, and shadcn/ui.
 
-First, run the development server:
+## Prerequisites
+
+- Node.js 20+
+- pnpm
+- Vercel CLI (`npm install -g vercel`)
+- A Vercel project linked to this repo (`vercel link`)
+
+## Local setup
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
+vercel env pull .env.local   # pulls Clerk + Neon credentials from Vercel
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Daily development
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+pnpm dev        # start dev server at http://localhost:3000
+pnpm typecheck  # TypeScript type check (no emit)
+pnpm lint       # ESLint (next/core-web-vitals + eslint-config-loderunner)
+pnpm test       # vitest (run once)
+pnpm test:watch # vitest (watch mode)
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Database
 
-## Learn More
+All DB commands read credentials from `.env.local` via `drizzle.config.ts`.
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+pnpm db:generate  # generate a new migration from schema changes
+pnpm db:migrate   # apply pending migrations to the Neon dev database
+pnpm db:studio    # open Drizzle Studio (browser UI for the DB)
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Schema lives in `lib/server/db/schema.ts`. Migrations are committed to `lib/server/db/migrations/`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Deployment
 
-## Deploy on Vercel
+```bash
+vercel deploy           # preview deployment
+vercel deploy --prod    # promote to production
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The Vercel project has Clerk and Neon provisioned via the Marketplace. Environment variables are managed there — do not commit `.env.local`.
