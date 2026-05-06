@@ -4,6 +4,7 @@ import nextTs from "eslint-config-next/typescript";
 import loderunnerBase from "eslint-config-loderunner/base";
 import loderunnerTs from "eslint-config-loderunner/typescript";
 import loderunnerReact from "eslint-config-loderunner/react";
+import loderunnerFormatting from "eslint-config-loderunner/formatting";
 
 const eslintConfig = defineConfig([
   ...nextVitals,
@@ -28,6 +29,7 @@ const eslintConfig = defineConfig([
       "react/prop-types": "off",
     },
   },
+  ...loderunnerFormatting,
   globalIgnores([
     ".next/**",
     "out/**",

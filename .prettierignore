@@ -1,0 +1,3 @@
+.claude/
+.agents/
+lib/server/db/migrations/meta/
