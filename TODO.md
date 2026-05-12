@@ -35,14 +35,6 @@ fixed, as thinking content can be quite long. The collapsible section should
 have a title like "Thinking..." and a pulsing animation to indicate that the
 model is thinking. The content should be scrollable.
 
-## First visit UI
-
-On first visit, before the chat has started, the prompt input box should appear
-at the center of the screen, and the syllabus draft panel should be hidden.
-After the user sends their first message, the prompt input box should transition
-to the bottom of the screen, and the syllabus draft panel should appear.
-Ideally, the transition should be smooth and not jarring.
-
 ## Write tests w/ db mock
 
 Write unit tests for the whole thing. Unit tests use Vitest mocks. Use Drizzle
@@ -64,3 +56,10 @@ The syllabus draft phase should be persisted in the database. A journey is
 created immediately after the user sends their first message, and the syllabus
 draft and the messages are persisted in the database. When the user navigates
 back to the journey page, they can resume building their syllabus in chat.
+
+## Where are the headings?
+
+I set Poppins as the heading font, and Inter as the body font. But I don't see
+Poppins being used anywhere. Can we set the CSS class for the heading font where
+it belongs in the components code? Also, switch to "Atkinson Hyperlegible Next"
+for the body font, and "Atkinson Hyperlegible Mono" for the code font.

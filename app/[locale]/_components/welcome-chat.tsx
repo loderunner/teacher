@@ -1,6 +1,7 @@
 'use client';
 
 import { useChat } from '@ai-sdk/react';
+import { CompassIcon } from '@phosphor-icons/react';
 import {
   DefaultChatTransport,
   type InferUITools,
@@ -36,8 +37,8 @@ import { parseLocale } from '@/i18n/locale';
 import { useRouter } from '@/i18n/navigation';
 import type { Style } from '@/lib/server/styles/get';
 import type { Syllabus } from '@/lib/server/syllabus/schema';
-// eslint-disable-next-line @typescript-eslint/consistent-type-imports -- typeof updateSyllabusDraft for InferUITools
-import { updateSyllabusDraft } from '@/lib/syllabus-chat/tool';
+import { type updateSyllabusDraft } from '@/lib/syllabus-chat/tool';
+import { cn } from '@/lib/tailwind';
 
 type SyllabusChatTools = InferUITools<{
   updateSyllabusDraft: typeof updateSyllabusDraft;
@@ -101,6 +102,8 @@ export function WelcomeChat({ presets }: Props) {
 
   const draft = deriveLatestSyllabusDraft(messages);
 
+  const started = messages.length > 0;
+
   const startable =
     draft !== null && draft.chapters.length > 0 && styleId.length > 0;
 
@@ -149,11 +152,35 @@ export function WelcomeChat({ presets }: Props) {
     <div className="flex flex-1 gap-6 overflow-hidden p-6">
       {/* Left: chat */}
       <section className="flex flex-1 flex-col overflow-hidden">
-        <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 overflow-hidden">
-          <Conversation className="flex-1">
-            <ConversationContent>{messageItems}</ConversationContent>
-            <ConversationScrollButton />
-          </Conversation>
+        <div
+          className={cn(
+            'mx-auto flex w-full max-w-3xl flex-1 flex-col',
+            started ? 'gap-4 overflow-hidden' : 'pt-[12vh]',
+          )}
+        >
+          <div
+            className={cn(
+              'overflow-hidden transition-all duration-500',
+              started
+                ? 'max-h-0 -translate-y-2 opacity-0'
+                : 'max-h-[500px] translate-y-0 opacity-100',
+            )}
+          >
+            <div className="mb-10 flex flex-col items-center gap-4 text-center">
+              <CompassIcon className="size-16" weight="bold" />
+              <h1 className="text-7xl  font-heading font-black tracking-tight">
+                {t('title')}
+              </h1>
+              <p className="text-muted-foreground text-xl">{t('tagline')}</p>
+            </div>
+          </div>
+
+          {started && (
+            <Conversation className="animate-in fade-in slide-in-from-bottom-4 flex-1 duration-500">
+              <ConversationContent>{messageItems}</ConversationContent>
+              <ConversationScrollButton />
+            </Conversation>
+          )}
 
           <PromptInput onSubmit={handleSubmit}>
             <PromptInputTextarea
@@ -165,29 +192,45 @@ export function WelcomeChat({ presets }: Props) {
               <PromptInputSubmit status={status} />
             </PromptInputFooter>
           </PromptInput>
+
+          {!started && (
+            <div className="mt-3">
+              <StylePicker
+                presets={presets}
+                value={styleId}
+                onChange={setStyleId}
+              />
+            </div>
+          )}
         </div>
       </section>
 
       {/* Right: syllabus draft + controls */}
-      <aside className="flex w-80 flex-col gap-4 overflow-hidden xl:w-96 2xl:w-md">
-        <SyllabusDraftPanel draft={draft} />
-        <StylePicker presets={presets} value={styleId} onChange={setStyleId} />
-        <div>
-          {!startable && (
-            <p className="text-muted-foreground mb-2 text-xs">
-              {t('startJourneyDisabledHint')}
-            </p>
-          )}
-          <button
-            className="border-foreground bg-foreground text-background w-full rounded border px-4 py-2 text-sm font-medium transition-opacity disabled:opacity-40"
-            disabled={!startable || pending}
-            type="button"
-            onClick={handleStartJourney}
-          >
-            {t('startJourney')}
-          </button>
-        </div>
-      </aside>
+      {started && (
+        <aside className="animate-in fade-in slide-in-from-right-8 flex w-80 flex-col gap-4 overflow-hidden duration-500 xl:w-96 2xl:w-md">
+          <SyllabusDraftPanel draft={draft} />
+          <StylePicker
+            presets={presets}
+            value={styleId}
+            onChange={setStyleId}
+          />
+          <div>
+            {!startable && (
+              <p className="text-muted-foreground mb-2 text-xs">
+                {t('startJourneyDisabledHint')}
+              </p>
+            )}
+            <button
+              className="border-foreground bg-foreground text-background w-full rounded border px-4 py-2 text-sm font-medium transition-opacity disabled:opacity-40"
+              disabled={!startable || pending}
+              type="button"
+              onClick={handleStartJourney}
+            >
+              {t('startJourney')}
+            </button>
+          </div>
+        </aside>
+      )}
     </div>
   );
 }
