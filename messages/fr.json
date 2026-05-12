@@ -22,7 +22,8 @@
   "StylePicker": {
     "label": "Style d'enseignement",
     "teacher": "Enseignant",
-    "tutorial": "Tutoriel"
+    "tutorial": "Tutoriel",
+    "adventure": "Aventure"
   },
   "TopBar": {
     "home": "Retourner à l'accueil"

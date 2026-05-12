@@ -34,15 +34,6 @@ input box, buttons, etc.) appear in fixed positions on the screen, and dynamic
 content (messages, syllabus draft, etc.) occupies a fixed size in which the
 content is scrollable.
 
-## RPG teaching style
-
-Another approach to learning would be for the model to teach through a
-role-playing game, where the user would solve puzzles, complete tasks, and
-progress through a story. The model would be the storyteller, create and submit
-the puzzles and tasks, and the user would solve them. The model would then
-assess the solution, and either continue with the story, or guide the user teach
-and to try again.
-
 ## Question tool
 
 In the syllabus chat, the model should be able to ask questions to the user to
