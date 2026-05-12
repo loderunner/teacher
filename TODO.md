@@ -1,14 +1,5 @@
 # TODO
 
-## Tool calls & follow-up message
-
-The AI term should never end on a tool call. After calling a tool, if the turn
-is finished, the LLM should always send a follow-up message to the user, just to
-make the conversation feel more natural. Maybe this needs a multi-turn LLM call?
-Or maybe an agentic loop? Should this be done on our side or on the provider's
-side? Read Anthropic blogs and docs, and AI SDK docs, and discover optimal
-practices.
-
 ## Question tool
 
 In the syllabus chat, the model should be able to ask questions to the user to

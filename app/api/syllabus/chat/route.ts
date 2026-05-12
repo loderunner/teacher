@@ -4,6 +4,7 @@ import {
   type UIMessage,
   convertToModelMessages,
   smoothStream,
+  stepCountIs,
   streamText,
   validateUIMessages,
 } from 'ai';
@@ -92,6 +93,7 @@ export async function POST(req: Request): Promise<Response> {
     model: 'anthropic/claude-sonnet-4-6',
     messages: modelMessages,
     tools,
+    stopWhen: stepCountIs(5),
     providerOptions: {
       anthropic: {
         thinking: { type: 'adaptive' },
