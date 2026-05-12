@@ -13,7 +13,9 @@
     "emptyChapterSections": "No sections yet.",
     "startJourney": "Start journey",
     "startJourneyDisabledHint": "Add at least one chapter and pick a style to begin.",
-    "promptPlaceholder": "Describe what you want to learn…"
+    "promptPlaceholder": "Describe what you want to learn…",
+    "thinkingIndicator": "Thinking",
+    "toolCallIndicator": "Updating syllabus"
   },
   "Journey": {
     "syllabusHeader": "Syllabus",

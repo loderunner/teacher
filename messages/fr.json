@@ -13,7 +13,9 @@
     "emptyChapterSections": "Aucune section pour le moment.",
     "startJourney": "Commencer le parcours",
     "startJourneyDisabledHint": "Ajoutez au moins un chapitre et choisissez un style pour commencer.",
-    "promptPlaceholder": "Décrivez ce que vous souhaitez apprendre…"
+    "promptPlaceholder": "Décrivez ce que vous souhaitez apprendre…",
+    "thinkingIndicator": "En train de réfléchir",
+    "toolCallIndicator": "Mise à jour du programme"
   },
   "Journey": {
     "syllabusHeader": "Programme",

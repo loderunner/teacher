@@ -1,5 +1,13 @@
 'use client';
 
+import { Button } from '@/components/ui/button';
+import { ButtonGroup, ButtonGroupText } from '@/components/ui/button-group';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { CaretLeftIcon, CaretRightIcon } from '@phosphor-icons/react';
 import { cjk } from '@streamdown/cjk';
 import { code } from '@streamdown/code';
@@ -22,14 +30,6 @@ import {
 } from 'react';
 import { Streamdown } from 'streamdown';
 
-import { Button } from '@/components/ui/button';
-import { ButtonGroup, ButtonGroupText } from '@/components/ui/button-group';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
 import { cn } from '@/lib/tailwind';
 
 /** Props for the {@link Message} wrapper. */
@@ -373,6 +373,38 @@ export const MessageResponse = memo(
 );
 
 MessageResponse.displayName = 'MessageResponse';
+
+/** The visual state of a processing indicator. */
+export type MessageIndicatorType = 'loading' | 'thinking' | 'tool-call';
+
+export type MessageIndicatorProps = {
+  /** The visual state to display. */
+  type: MessageIndicatorType;
+  /** Optional label shown next to the animated dots. */
+  label?: string;
+};
+
+/**
+ * Displays an animated processing indicator as an assistant message.
+ * Used to signal loading, model reasoning, or an in-progress tool call.
+ *
+ * @example
+ * <MessageIndicator type="thinking" label="Thinking" />
+ */
+export const MessageIndicator = ({ label }: MessageIndicatorProps) => (
+  <Message aria-label={label} aria-live="polite" from="assistant">
+    <MessageContent>
+      <div className="flex items-center gap-2 text-muted-foreground text-xs">
+        <span className="flex gap-0.5">
+          <span className="animate-pulse">•</span>
+          <span className="animate-pulse [animation-delay:200ms]">•</span>
+          <span className="animate-pulse [animation-delay:400ms]">•</span>
+        </span>
+        {label !== undefined && <span>{label}</span>}
+      </div>
+    </MessageContent>
+  </Message>
+);
 
 /** Props for the {@link MessageToolbar} row. */
 export type MessageToolbarProps = ComponentProps<'div'>;

@@ -4,6 +4,7 @@ import { useChat } from '@ai-sdk/react';
 import { CompassIcon } from '@phosphor-icons/react';
 import {
   DefaultChatTransport,
+  type ChatStatus,
   type InferUITools,
   type ToolUIPart,
   type UIDataTypes,
@@ -23,6 +24,7 @@ import {
 import {
   Message,
   MessageContent,
+  MessageIndicator,
   MessageResponse,
 } from '@/components/ai-elements/message';
 import {
@@ -57,6 +59,27 @@ function isSyllabusDraftToolPart(
 type Props = {
   presets: Style[];
 };
+
+type ProcessingIndicator = 'loading' | 'thinking' | 'tool-call';
+
+function deriveProcessingIndicator(
+  status: ChatStatus,
+  messages: SyllabusChatUIMessage[],
+): ProcessingIndicator | null {
+  if (status === 'submitted') return 'loading';
+  if (status !== 'streaming') return null;
+
+  const lastMsg = messages[messages.length - 1];
+  if (lastMsg?.role !== 'assistant' || lastMsg.parts.length === 0)
+    return 'loading';
+
+  const lastPart = lastMsg.parts[lastMsg.parts.length - 1];
+  if (lastPart.type === 'reasoning') return 'thinking';
+  if (isSyllabusDraftToolPart(lastPart) && lastPart.state !== 'output-available') {
+    return 'tool-call';
+  }
+  return null;
+}
 
 /**
  * Returns the latest syllabus draft from assistant tool parts, if any.
@@ -99,6 +122,14 @@ export function WelcomeChat({ presets }: Props) {
   });
 
   const streaming = status === 'streaming' || status === 'submitted';
+
+  const indicatorLabels: Record<ProcessingIndicator, string | undefined> = {
+    loading: undefined,
+    thinking: t('thinkingIndicator'),
+    'tool-call': t('toolCallIndicator'),
+  };
+
+  const indicator = deriveProcessingIndicator(status, messages);
 
   const draft = deriveLatestSyllabusDraft(messages);
 
@@ -177,7 +208,16 @@ export function WelcomeChat({ presets }: Props) {
 
           {started && (
             <Conversation className="animate-in fade-in slide-in-from-bottom-4 flex-1 duration-500">
-              <ConversationContent>{messageItems}</ConversationContent>
+              <ConversationContent>
+                {messageItems}
+                {indicator !== null && (
+                  <MessageIndicator
+                    key="processing-indicator"
+                    type={indicator}
+                    label={indicatorLabels[indicator]}
+                  />
+                )}
+              </ConversationContent>
               <ConversationScrollButton />
             </Conversation>
           )}
