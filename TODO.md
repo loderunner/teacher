@@ -85,8 +85,8 @@ Also, create a tw`` template tag for tailwind classes in strings.
 
 ## Return to home page
 
-When the user is on a journey page, and they click the "Return to home" button
-in the top bar, they should be redirected to the home page.
+When the user is on a journey page, we need a way to "Return to home" in the top
+bar, that should redirect the user to the home page.
 
 ## Write tests w/ db mock
 

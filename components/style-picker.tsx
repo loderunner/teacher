@@ -2,8 +2,8 @@
 
 import { useTranslations } from 'next-intl';
 
-import { cn } from '@/lib/cn';
 import type { Style } from '@/lib/server/styles/get';
+import { cn } from '@/lib/tailwind';
 
 type Props = {
   presets: Style[];
@@ -23,7 +23,7 @@ export function StylePicker({ presets, value, onChange }: Props) {
 
   return (
     <div className="flex flex-col gap-2">
-      <span className="text-sm font-medium text-muted-foreground">
+      <span className="text-muted-foreground text-sm font-medium">
         {t('label')}
       </span>
       <div className="flex gap-2">

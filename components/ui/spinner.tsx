@@ -1,6 +1,6 @@
 import { SpinnerGapIcon } from '@phosphor-icons/react';
 
-import { cn } from '@/lib/cn';
+import { cn } from '@/lib/tailwind';
 
 /** Animated spinning icon used to indicate loading state. */
 function Spinner({ className, ...props }: React.ComponentProps<'svg'>) {

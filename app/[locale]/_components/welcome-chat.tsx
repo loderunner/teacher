@@ -172,12 +172,12 @@ export function WelcomeChat({ presets }: Props) {
         <StylePicker presets={presets} value={styleId} onChange={setStyleId} />
         <div>
           {!startable && (
-            <p className="mb-2 text-xs text-muted-foreground">
+            <p className="text-muted-foreground mb-2 text-xs">
               {t('startJourneyDisabledHint')}
             </p>
           )}
           <button
-            className="w-full rounded border border-foreground bg-foreground px-4 py-2 text-sm font-medium text-background transition-opacity disabled:opacity-40"
+            className="border-foreground bg-foreground text-background w-full rounded border px-4 py-2 text-sm font-medium transition-opacity disabled:opacity-40"
             disabled={!startable || pending}
             type="button"
             onClick={handleStartJourney}

@@ -16,7 +16,7 @@ function ChapterItem({ index, chapter }: ChapterItemProps) {
     chapter.sections !== undefined && chapter.sections.length > 0 ? (
       <ul className="ml-4 flex flex-col gap-0.5">
         {chapter.sections.map((section, j) => (
-          <li key={j} className="list-disc text-xs text-muted-foreground">
+          <li key={j} className="text-muted-foreground list-disc text-xs">
             {section}
           </li>
         ))}
@@ -29,7 +29,7 @@ function ChapterItem({ index, chapter }: ChapterItemProps) {
         {index + 1}. {chapter.title}
       </span>
       {chapter.summary !== undefined && (
-        <span className="text-xs text-muted-foreground">{chapter.summary}</span>
+        <span className="text-muted-foreground text-xs">{chapter.summary}</span>
       )}
       {sections}
     </li>
@@ -41,7 +41,7 @@ export function SyllabusDraftPanel({ draft }: Props) {
 
   const draftContent =
     draft === null || draft.chapters.length === 0 ? (
-      <p className="text-sm text-muted-foreground">{t('emptyDraft')}</p>
+      <p className="text-muted-foreground text-sm">{t('emptyDraft')}</p>
     ) : (
       <ol className="flex flex-col gap-3">
         {draft.chapters.map((chapter, i) => (

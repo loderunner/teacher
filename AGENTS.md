@@ -243,9 +243,9 @@ return <div>{panel}</div>;
 ## `'use client'`
 
 `'use client'` marks a boundary in the module graph. Place it on the
-**outermost** file that requires client-only capabilities — everything that
-file imports becomes part of the client bundle automatically; you do not
-re-declare the directive in child files.
+**outermost** file that requires client-only capabilities — everything that file
+imports becomes part of the client bundle automatically; you do not re-declare
+the directive in child files.
 
 A file needs `'use client'` when it uses:
 

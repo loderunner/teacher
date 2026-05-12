@@ -23,11 +23,11 @@ function ChapterItem({ chapter, label }: ChapterItemProps) {
           {chapter.idx + 1}. {chapter.title}
         </span>
         {label !== null && (
-          <span className="text-sm text-muted-foreground">{label}</span>
+          <span className="text-muted-foreground text-sm">{label}</span>
         )}
       </div>
       {chapter.summary !== null && (
-        <p className="text-sm text-muted-foreground">{chapter.summary}</p>
+        <p className="text-muted-foreground text-sm">{chapter.summary}</p>
       )}
     </li>
   );
