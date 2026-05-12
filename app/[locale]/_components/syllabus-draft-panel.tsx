@@ -8,6 +8,36 @@ type Props = {
   draft: Syllabus | null;
 };
 
+type ChapterItemProps = {
+  index: number;
+  chapter: Syllabus['chapters'][number];
+};
+
+function ChapterItem({ index, chapter }: ChapterItemProps) {
+  const sections =
+    chapter.sections !== undefined && chapter.sections.length > 0 ? (
+      <ul className="ml-4 flex flex-col gap-0.5">
+        {chapter.sections.map((section, j) => (
+          <li key={j} className="list-disc text-xs text-muted-foreground">
+            {section}
+          </li>
+        ))}
+      </ul>
+    ) : null;
+
+  return (
+    <li className="flex flex-col gap-1">
+      <span className="text-sm font-medium">
+        {index + 1}. {chapter.title}
+      </span>
+      {chapter.summary !== undefined && (
+        <span className="text-xs text-muted-foreground">{chapter.summary}</span>
+      )}
+      {sections}
+    </li>
+  );
+}
+
 export function SyllabusDraftPanel({ draft }: Props) {
   const t = useTranslations('Welcome');
 
@@ -17,28 +47,7 @@ export function SyllabusDraftPanel({ draft }: Props) {
     ) : (
       <ol className="flex flex-col gap-3">
         {draft.chapters.map((chapter, i) => (
-          <li key={i} className="flex flex-col gap-1">
-            <span className="text-sm font-medium">
-              {i + 1}. {chapter.title}
-            </span>
-            {chapter.summary !== undefined && (
-              <span className="text-xs text-muted-foreground">
-                {chapter.summary}
-              </span>
-            )}
-            {chapter.sections !== undefined && chapter.sections.length > 0 && (
-              <ul className="ml-4 flex flex-col gap-0.5">
-                {chapter.sections.map((section, j) => (
-                  <li
-                    key={j}
-                    className="list-disc text-xs text-muted-foreground"
-                  >
-                    {section}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </li>
+          <ChapterItem key={i} chapter={chapter} index={i} />
         ))}
       </ol>
     );
