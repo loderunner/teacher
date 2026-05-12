@@ -59,27 +59,31 @@ export const ConversationEmptyState = ({
   icon,
   children,
   ...props
-}: ConversationEmptyStateProps) => (
-  <div
-    className={cn(
-      'flex size-full flex-col items-center justify-center gap-3 p-8 text-center',
-      className,
-    )}
-    {...props}
-  >
-    {children ?? (
-      <>
-        {icon !== undefined && icon !== null && icon !== false && (
-          <div className="text-muted-foreground">{icon}</div>
-        )}
-        <div className="space-y-1">
-          <h3 className="font-medium text-sm">{title}</h3>
-          <p className="text-muted-foreground text-sm">{description}</p>
-        </div>
-      </>
-    )}
-  </div>
-);
+}: ConversationEmptyStateProps) => {
+  const defaultContent = (
+    <>
+      {icon !== undefined && icon !== null && icon !== false && (
+        <div className="text-muted-foreground">{icon}</div>
+      )}
+      <div className="space-y-1">
+        <h3 className="font-medium text-sm">{title}</h3>
+        <p className="text-muted-foreground text-sm">{description}</p>
+      </div>
+    </>
+  );
+
+  return (
+    <div
+      className={cn(
+        'flex size-full flex-col items-center justify-center gap-3 p-8 text-center',
+        className,
+      )}
+      {...props}
+    >
+      {children ?? defaultContent}
+    </div>
+  );
+};
 
 /** Props for the {@link ConversationScrollButton} jump-to-bottom control. */
 export type ConversationScrollButtonProps = ComponentProps<typeof Button>;

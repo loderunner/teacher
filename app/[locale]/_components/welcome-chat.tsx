@@ -95,6 +95,25 @@ export function WelcomeChat({ presets }: Props) {
   const startable =
     draft !== null && draft.chapters.length > 0 && styleId.length > 0;
 
+  const lastMessage = messages[messages.length - 1];
+  const messageItems = messages.map((msg) => {
+    const parts = msg.parts.map((part, i) => {
+      if (part.type !== 'text') {
+        return null;
+      }
+      return (
+        <MessageResponse key={i} isAnimating={streaming && msg === lastMessage}>
+          {part.text}
+        </MessageResponse>
+      );
+    });
+    return (
+      <Message key={msg.id} from={msg.role}>
+        <MessageContent>{parts}</MessageContent>
+      </Message>
+    );
+  });
+
   const handleSubmit = ({ text }: PromptInputMessage) => {
     if (text.trim() === '') {
       return;
@@ -122,29 +141,7 @@ export function WelcomeChat({ presets }: Props) {
       {/* Left: chat */}
       <div className="flex flex-1 flex-col gap-4 overflow-hidden">
         <Conversation className="flex-1">
-          <ConversationContent>
-            {messages.map((msg) => {
-              const lastMessage = messages[messages.length - 1];
-              const parts = msg.parts.map((part, i) => {
-                if (part.type !== 'text') {
-                  return null;
-                }
-                return (
-                  <MessageResponse
-                    key={i}
-                    isAnimating={streaming && msg === lastMessage}
-                  >
-                    {part.text}
-                  </MessageResponse>
-                );
-              });
-              return (
-                <Message key={msg.id} from={msg.role}>
-                  <MessageContent>{parts}</MessageContent>
-                </Message>
-              );
-            })}
-          </ConversationContent>
+          <ConversationContent>{messageItems}</ConversationContent>
           <ConversationScrollButton />
         </Conversation>
 
