@@ -1,5 +1,27 @@
 {
   "Home": {
     "comingSoon": "Bienvenue — bientôt disponible"
+  },
+  "Metadata": {
+    "description": "Apprenez tout ce que vous voulez avec l'IA"
+  },
+  "Welcome": {
+    "title": "Commencer un Parcours",
+    "tagline": "Que voulez-vous apprendre ?",
+    "draftHeader": "Votre programme",
+    "emptyDraft": "Discutez pour commencer à esquisser votre programme.",
+    "startJourney": "Commencer le parcours",
+    "startJourneyDisabledHint": "Ajoutez au moins un chapitre et choisissez un style pour commencer.",
+    "promptPlaceholder": "Décrivez ce que vous souhaitez apprendre…"
+  },
+  "Journey": {
+    "syllabusHeader": "Programme",
+    "beginChapter": "Commencer le chapitre {n} — bientôt disponible",
+    "resumeChapter": "Reprendre le chapitre {n} — bientôt disponible"
+  },
+  "StylePicker": {
+    "label": "Style d'enseignement",
+    "teacher": "Enseignant",
+    "tutorial": "Tutoriel"
   }
 }

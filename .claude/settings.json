@@ -1,4 +1,9 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
-  "autoMemoryDirectory": "./.claude/memory"
+  "autoMemoryDirectory": "./.claude/memory",
+  "permissions": {
+    "deny": [
+      "Edit(./lib/server/db/migrations/**/snapshot.json)"
+    ]
+  }
 }

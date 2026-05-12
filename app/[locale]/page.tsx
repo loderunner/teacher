@@ -1,20 +1,19 @@
-import { auth } from "@clerk/nextjs/server";
-import { useTranslations } from "next-intl";
+import { auth } from '@clerk/nextjs/server';
 
-import { ensureUser } from "@/lib/server/users/ensure";
+import { WelcomeChat } from './_components/welcome-chat';
+
+import { listPresets } from '@/lib/server/styles/get';
+import { ensureUser } from '@/lib/server/users/ensure';
 
 export default async function Home() {
   const { userId } = await auth();
-  await ensureUser({ clerkUserId: userId! });
+  await ensureUser(userId!);
 
-  return <HomeContent />;
-}
+  const presets = listPresets();
 
-function HomeContent() {
-  const t = useTranslations("Home");
   return (
-    <main className="flex flex-1 items-center justify-center">
-      <h1 className="text-2xl font-semibold">{t("comingSoon")}</h1>
+    <main className="flex flex-1 flex-col overflow-hidden">
+      <WelcomeChat presets={presets} />
     </main>
   );
 }

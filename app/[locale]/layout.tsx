@@ -1,28 +1,41 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import { ClerkProvider } from "@clerk/nextjs";
-import { NextIntlClientProvider, hasLocale } from "next-intl";
-import { getMessages } from "next-intl/server";
-import { notFound } from "next/navigation";
+import { ClerkProvider } from '@clerk/nextjs';
+import type { Metadata } from 'next';
+import { Geist, Geist_Mono } from 'next/font/google';
+import { notFound } from 'next/navigation';
+import { NextIntlClientProvider } from 'next-intl';
+import { getMessages, getTranslations } from 'next-intl/server';
 
-import { routing } from "@/i18n/routing";
-import TopBar from "@/components/top-bar";
-import "../globals.css";
+import TopBar from '@/components/top-bar';
+import { hasLocale } from '@/i18n/locale';
+import { routing } from '@/i18n/routing';
+
+import '../globals.css';
 
 const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+  variable: '--font-geist-sans',
+  subsets: ['latin'],
 });
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  variable: '--font-geist-mono',
+  subsets: ['latin'],
 });
 
-export const metadata: Metadata = {
-  title: "Journey",
-  description: "Teach yourself anything with AI",
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  if (!hasLocale(locale)) {
+    return {};
+  }
+  const t = await getTranslations({ locale, namespace: 'Metadata' });
+  return {
+    title: 'Journey',
+    description: t('description'),
+  };
+}
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -36,9 +49,10 @@ export default async function LocaleLayout({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  if (!hasLocale(routing.locales, locale)) {
+  if (!hasLocale(locale)) {
     notFound();
   }
+
   const messages = await getMessages();
 
   return (

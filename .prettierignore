@@ -1,3 +1,4 @@
 .claude/
 .agents/
-lib/server/db/migrations/meta/
+lib/server/db/migrations/
+pnpm-lock.yaml

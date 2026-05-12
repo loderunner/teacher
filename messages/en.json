@@ -1,5 +1,27 @@
 {
   "Home": {
     "comingSoon": "Welcome — coming soon"
+  },
+  "Metadata": {
+    "description": "Teach yourself anything with AI"
+  },
+  "Welcome": {
+    "title": "Start a Journey",
+    "tagline": "What do you want to learn?",
+    "draftHeader": "Your syllabus",
+    "emptyDraft": "Chat to start sketching out your syllabus.",
+    "startJourney": "Start journey",
+    "startJourneyDisabledHint": "Add at least one chapter and pick a style to begin.",
+    "promptPlaceholder": "Describe what you want to learn…"
+  },
+  "Journey": {
+    "syllabusHeader": "Syllabus",
+    "beginChapter": "Begin Chapter {n} — coming soon",
+    "resumeChapter": "Resume Chapter {n} — coming soon"
+  },
+  "StylePicker": {
+    "label": "Teaching style",
+    "teacher": "Teacher",
+    "tutorial": "Tutorial"
   }
 }

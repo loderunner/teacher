@@ -1,4 +1,4 @@
-import { Show, UserButton } from "@clerk/nextjs";
+import { Show, UserButton } from '@clerk/nextjs';
 
 export default function TopBar() {
   return (

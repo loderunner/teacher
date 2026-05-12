@@ -1,41 +1,47 @@
-import { defineConfig, globalIgnores } from "eslint/config";
-import nextVitals from "eslint-config-next/core-web-vitals";
-import nextTs from "eslint-config-next/typescript";
-import loderunnerBase from "eslint-config-loderunner/base";
-import loderunnerTs from "eslint-config-loderunner/typescript";
-import loderunnerReact from "eslint-config-loderunner/react";
-import loderunnerFormatting from "eslint-config-loderunner/formatting";
+import { defineConfig, globalIgnores } from 'eslint/config';
+import loderunnerBase from 'eslint-config-loderunner/base';
+import loderunnerFormatting from 'eslint-config-loderunner/formatting';
+import loderunnerImport from 'eslint-config-loderunner/import';
+import loderunnerReact from 'eslint-config-loderunner/react';
+import loderunnerTs from 'eslint-config-loderunner/typescript';
+import nextVitals from 'eslint-config-next/core-web-vitals';
+import nextTs from 'eslint-config-next/typescript';
 
 const eslintConfig = defineConfig([
-  ...nextVitals,
-  ...nextTs,
-  ...loderunnerBase,
-  ...loderunnerTs,
-  ...loderunnerReact,
   {
     languageOptions: {
       parserOptions: {
         projectService: {
           // *.config.ts is in tsconfig already; .mjs files are not — allow only the latter
           // to avoid "found in both project service and allowDefaultProject" errors.
-          allowDefaultProject: ["*.config.mjs"],
+          allowDefaultProject: ['*.config.mjs'],
         },
       },
     },
+  },
+  ...nextVitals,
+  ...nextTs,
+  ...loderunnerBase,
+  ...loderunnerTs,
+  ...loderunnerReact,
+  ...loderunnerImport,
+  {
     rules: {
       // next/core-web-vitals handles React import; suppress loderunner duplicate
-      "react/react-in-jsx-scope": "off",
+      'react/react-in-jsx-scope': 'off',
       // next already validates this; loderunner's react/prop-types is redundant in TS
-      "react/prop-types": "off",
+      'react/prop-types': 'off',
+      'import/no-deprecated': 'warn',
+      '@typescript-eslint/no-deprecated': 'warn',
     },
   },
   ...loderunnerFormatting,
   globalIgnores([
-    ".next/**",
-    "out/**",
-    "build/**",
-    "next-env.d.ts",
-    ".agents/**",
+    '.next/**',
+    'out/**',
+    'build/**',
+    'next-env.d.ts',
+    '.agents/**',
   ]),
 ]);
 
