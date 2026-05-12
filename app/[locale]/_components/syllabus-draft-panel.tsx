@@ -1,5 +1,3 @@
-'use client';
-
 import { useTranslations } from 'next-intl';
 
 import type { Syllabus } from '@/lib/server/syllabus/schema';

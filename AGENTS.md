@@ -240,6 +240,32 @@ const panel =
 return <div>{panel}</div>;
 ```
 
+## `'use client'`
+
+`'use client'` marks a boundary in the module graph. Place it on the
+**outermost** file that requires client-only capabilities — everything that
+file imports becomes part of the client bundle automatically; you do not
+re-declare the directive in child files.
+
+A file needs `'use client'` when it uses:
+
+- `useState`, `useReducer`, `useRef`, or any hook that holds mutable state
+- `useEffect`, `useLayoutEffect`, or other lifecycle hooks
+- Event handlers wired to DOM elements (`onClick`, `onChange`, etc.)
+- Browser-only APIs (`window`, `localStorage`, `navigator`, etc.)
+- `useRouter` from `@/i18n/navigation` (wraps Next.js `useRouter`)
+- Any custom hook that uses the above internally
+
+A file does **not** need `'use client'` for:
+
+- `useTranslations` / `useLocale` from `next-intl` (v3+ supports Server
+  Components)
+- Pure data-in → markup-out components with no interactivity
+- Components that only forward `children` without adding state or handlers
+
+Push the boundary as deep as possible: if only one small button in a large
+layout needs interactivity, extract it into its own file and mark only that.
+
 ## CSS
 
 Do not use `!important`.
