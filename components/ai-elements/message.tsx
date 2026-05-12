@@ -11,8 +11,10 @@ import {
   type Dispatch,
   type HTMLAttributes,
   type ReactElement,
+  type ReactNode,
   type SetStateAction,
   createContext,
+  isValidElement,
   memo,
   useContext,
   useEffect,
@@ -30,10 +32,13 @@ import {
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/cn';
 
+/** Props for the {@link Message} wrapper. */
 export type MessageProps = HTMLAttributes<HTMLDivElement> & {
+  /** The role of the message author; controls alignment and styling. */
   from: UIMessage['role'];
 };
 
+/** Outer wrapper for a single chat message, aligned by role. */
 export const Message = ({ className, from, ...props }: MessageProps) => (
   <div
     className={cn(
@@ -45,8 +50,10 @@ export const Message = ({ className, from, ...props }: MessageProps) => (
   />
 );
 
+/** Props for the {@link MessageContent} bubble. */
 export type MessageContentProps = HTMLAttributes<HTMLDivElement>;
 
+/** Styled bubble that wraps a message's renderable content. */
 export const MessageContent = ({
   children,
   className,
@@ -65,8 +72,10 @@ export const MessageContent = ({
   </div>
 );
 
+/** Props for the {@link MessageActions} action row. */
 export type MessageActionsProps = ComponentProps<'div'>;
 
+/** Row of action buttons displayed below a message. */
 export const MessageActions = ({
   className,
   children,
@@ -77,11 +86,15 @@ export const MessageActions = ({
   </div>
 );
 
+/** Props for a single {@link MessageAction} icon button. */
 export type MessageActionProps = ComponentProps<typeof Button> & {
+  /** Tooltip text shown on hover. Also used as the accessible label when `label` is omitted. */
   tooltip?: string;
+  /** Screen-reader label; falls back to `tooltip` if not provided. */
   label?: string;
 };
 
+/** Icon button used inside {@link MessageActions}, optionally wrapped in a tooltip. */
 export const MessageAction = ({
   tooltip,
   children,
@@ -138,11 +151,18 @@ const useMessageBranch = () => {
   return context;
 };
 
+/** Props for the {@link MessageBranch} multi-version container. */
 export type MessageBranchProps = HTMLAttributes<HTMLDivElement> & {
+  /** Zero-based index of the branch to show on first render. Defaults to `0`. */
   defaultBranch?: number;
+  /** Called whenever the active branch changes. */
   onBranchChange?: (branchIndex: number) => void;
 };
 
+/**
+ * Container that tracks multiple alternate message versions and exposes
+ * branch navigation via context to its children.
+ */
 export const MessageBranch = ({
   defaultBranch = 0,
   onBranchChange,
@@ -188,22 +208,27 @@ export const MessageBranch = ({
   );
 };
 
+/** Props for the {@link MessageBranchContent} branch renderer. */
 export type MessageBranchContentProps = HTMLAttributes<HTMLDivElement>;
 
+function toReactElementArray(node: ReactNode): ReactElement[] {
+  if (Array.isArray(node)) {
+    return node.filter(isValidElement);
+  }
+  return isValidElement(node) ? [node] : [];
+}
+
+/** Renders the currently active branch from an array of child elements. */
 export const MessageBranchContent = ({
   children,
   ...props
 }: MessageBranchContentProps) => {
   const { currentBranch, setBranches } = useMessageBranch();
-  const childrenArray = Array.isArray(children)
-    ? (children as ReactElement[])
-    : [children as ReactElement];
+  const childrenArray = toReactElementArray(children);
 
   useEffect(() => {
     setBranches((prev) => {
-      const next = Array.isArray(children)
-        ? (children as ReactElement[])
-        : [children as ReactElement];
+      const next = toReactElementArray(children);
       return prev.length !== next.length ? next : prev;
     });
   }, [children, setBranches]);
@@ -222,8 +247,10 @@ export const MessageBranchContent = ({
   ));
 };
 
+/** Props for the {@link MessageBranchSelector} navigation control group. */
 export type MessageBranchSelectorProps = ComponentProps<typeof ButtonGroup>;
 
+/** Button group containing previous/next controls and a page indicator; hidden when only one branch exists. */
 export const MessageBranchSelector = ({
   className,
   ...props
@@ -247,8 +274,10 @@ export const MessageBranchSelector = ({
   );
 };
 
+/** Props for the {@link MessageBranchPrevious} button. */
 export type MessageBranchPreviousProps = ComponentProps<typeof Button>;
 
+/** Button that navigates to the previous branch in a {@link MessageBranch}. */
 export const MessageBranchPrevious = ({
   children,
   ...props
@@ -270,8 +299,10 @@ export const MessageBranchPrevious = ({
   );
 };
 
+/** Props for the {@link MessageBranchNext} button. */
 export type MessageBranchNextProps = ComponentProps<typeof Button>;
 
+/** Button that navigates to the next branch in a {@link MessageBranch}. */
 export const MessageBranchNext = ({
   children,
   ...props
@@ -293,8 +324,10 @@ export const MessageBranchNext = ({
   );
 };
 
+/** Props for the {@link MessageBranchPage} indicator. */
 export type MessageBranchPageProps = HTMLAttributes<HTMLSpanElement>;
 
+/** Displays the current branch index as "N of M" inside a {@link MessageBranchSelector}. */
 export const MessageBranchPage = ({
   className,
   ...props
@@ -314,10 +347,15 @@ export const MessageBranchPage = ({
   );
 };
 
+/** Props for the {@link MessageResponse} streaming renderer. */
 export type MessageResponseProps = ComponentProps<typeof Streamdown>;
 
 const streamdownPlugins = { cjk, code, math, mermaid };
 
+/**
+ * Memoized Streamdown renderer for assistant message content.
+ * Skips re-renders when neither the text nor the animation state has changed.
+ */
 export const MessageResponse = memo(
   ({ className, ...props }: MessageResponseProps) => (
     <Streamdown
@@ -336,8 +374,10 @@ export const MessageResponse = memo(
 
 MessageResponse.displayName = 'MessageResponse';
 
+/** Props for the {@link MessageToolbar} row. */
 export type MessageToolbarProps = ComponentProps<'div'>;
 
+/** Full-width row for controls displayed below message content (e.g. branch selector + actions). */
 export const MessageToolbar = ({
   className,
   children,

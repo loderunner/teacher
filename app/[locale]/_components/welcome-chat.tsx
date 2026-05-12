@@ -21,6 +21,7 @@ import {
 import {
   PromptInput,
   PromptInputFooter,
+  type PromptInputMessage,
   PromptInputSubmit,
   PromptInputTextarea,
 } from '@/components/ai-elements/prompt-input';
@@ -29,6 +30,18 @@ import { parseLocale } from '@/i18n/locale';
 import { useRouter } from '@/i18n/navigation';
 import type { Style } from '@/lib/server/styles/get';
 import type { Syllabus } from '@/lib/server/syllabus/schema';
+
+type SyllabusDraftToolPart = {
+  type: string;
+  state: string;
+  input?: { fullDraft?: Syllabus };
+};
+
+function isSyllabusDraftToolPart(
+  part: UIMessage['parts'][number],
+): part is SyllabusDraftToolPart {
+  return part.type === 'tool-updateSyllabusDraft';
+}
 
 type Props = {
   presets: Style[];
@@ -50,10 +63,10 @@ function deriveLatestSyllabusDraft(messages: UIMessage[]): Syllabus | null {
     for (let j = parts.length - 1; j >= 0; j--) {
       const part = parts[j];
       if (
-        part.type === 'tool-updateSyllabusDraft' &&
+        isSyllabusDraftToolPart(part) &&
         (part.state === 'output-available' || part.state === 'input-available')
       ) {
-        const input = (part as { input?: { fullDraft?: Syllabus } }).input;
+        const { input } = part;
         if (input !== undefined && input.fullDraft !== undefined) {
           return input.fullDraft;
         }
@@ -82,7 +95,7 @@ export function WelcomeChat({ presets }: Props) {
   const startable =
     draft !== null && draft.chapters.length > 0 && styleId.length > 0;
 
-  const handleSubmit = ({ text }: { text: string; files: unknown[] }) => {
+  const handleSubmit = ({ text }: PromptInputMessage) => {
     if (text.trim() === '') {
       return;
     }
@@ -110,27 +123,27 @@ export function WelcomeChat({ presets }: Props) {
       <div className="flex flex-1 flex-col gap-4 overflow-hidden">
         <Conversation className="flex-1">
           <ConversationContent>
-            {messages.map((msg) => (
-              <Message key={msg.id} from={msg.role}>
-                <MessageContent>
-                  {msg.parts.map((part, i) => {
-                    if (part.type !== 'text') {
-                      return null;
-                    }
-                    return (
-                      <MessageResponse
-                        key={i}
-                        isAnimating={
-                          streaming && msg === messages[messages.length - 1]
-                        }
-                      >
-                        {part.text}
-                      </MessageResponse>
-                    );
-                  })}
-                </MessageContent>
-              </Message>
-            ))}
+            {messages.map((msg) => {
+              const lastMessage = messages[messages.length - 1];
+              const parts = msg.parts.map((part, i) => {
+                if (part.type !== 'text') {
+                  return null;
+                }
+                return (
+                  <MessageResponse
+                    key={i}
+                    isAnimating={streaming && msg === lastMessage}
+                  >
+                    {part.text}
+                  </MessageResponse>
+                );
+              });
+              return (
+                <Message key={msg.id} from={msg.role}>
+                  <MessageContent>{parts}</MessageContent>
+                </Message>
+              );
+            })}
           </ConversationContent>
           <ConversationScrollButton />
         </Conversation>

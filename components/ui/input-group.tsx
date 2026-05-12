@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/cn';
 
+/** Wraps an input (or textarea) with inline or block addons into a unified bordered group. */
 function InputGroup({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
@@ -43,6 +44,7 @@ const inputGroupAddonVariants = cva(
   },
 );
 
+/** Addon slot positioned inline or block relative to the input inside an {@link InputGroup}. */
 function InputGroupAddon({
   className,
   align = 'inline-start',
@@ -55,7 +57,10 @@ function InputGroupAddon({
       data-slot="input-group-addon"
       role="group"
       onClick={(e) => {
-        if ((e.target as HTMLElement).closest('button') !== null) {
+        if (
+          e.target instanceof HTMLElement &&
+          e.target.closest('button') !== null
+        ) {
           return;
         }
         e.currentTarget.parentElement?.querySelector('input')?.focus();
@@ -83,6 +88,7 @@ const inputGroupButtonVariants = cva(
   },
 );
 
+/** Compact button intended for placement inside an {@link InputGroup} addon. */
 function InputGroupButton({
   className,
   type = 'button',
@@ -104,6 +110,7 @@ function InputGroupButton({
   );
 }
 
+/** Non-interactive text label inside an {@link InputGroup}. */
 function InputGroupText({ className, ...props }: React.ComponentProps<'span'>) {
   return (
     <span
@@ -116,6 +123,7 @@ function InputGroupText({ className, ...props }: React.ComponentProps<'span'>) {
   );
 }
 
+/** Text input styled to sit flush inside an {@link InputGroup}, removing default borders and shadows. */
 function InputGroupInput({
   className,
   ...props
@@ -132,6 +140,7 @@ function InputGroupInput({
   );
 }
 
+/** Textarea styled to sit flush inside an {@link InputGroup}, removing default borders and shadows. */
 function InputGroupTextarea({
   className,
   ...props
