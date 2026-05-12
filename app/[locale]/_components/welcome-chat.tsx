@@ -3,8 +3,8 @@
 import { useChat } from '@ai-sdk/react';
 import { CompassIcon } from '@phosphor-icons/react';
 import {
-  DefaultChatTransport,
   type ChatStatus,
+  DefaultChatTransport,
   type InferUITools,
   type ToolUIPart,
   type UIDataTypes,
@@ -66,16 +66,26 @@ function deriveProcessingIndicator(
   status: ChatStatus,
   messages: SyllabusChatUIMessage[],
 ): ProcessingIndicator | null {
-  if (status === 'submitted') return 'loading';
-  if (status !== 'streaming') return null;
+  if (status === 'submitted') {
+    return 'loading';
+  }
+  if (status !== 'streaming') {
+    return null;
+  }
 
   const lastMsg = messages[messages.length - 1];
-  if (lastMsg?.role !== 'assistant' || lastMsg.parts.length === 0)
+  if (lastMsg.role !== 'assistant' || lastMsg.parts.length === 0) {
     return 'loading';
+  }
 
   const lastPart = lastMsg.parts[lastMsg.parts.length - 1];
-  if (lastPart.type === 'reasoning') return 'thinking';
-  if (isSyllabusDraftToolPart(lastPart) && lastPart.state !== 'output-available') {
+  if (lastPart.type === 'reasoning') {
+    return 'thinking';
+  }
+  if (
+    isSyllabusDraftToolPart(lastPart) &&
+    lastPart.state !== 'output-available'
+  ) {
     return 'tool-call';
   }
   return null;
@@ -199,7 +209,7 @@ export function WelcomeChat({ presets }: Props) {
           >
             <div className="mb-10 flex flex-col items-center gap-4 text-center">
               <CompassIcon className="size-16" weight="bold" />
-              <h1 className="text-7xl  font-heading font-black tracking-tight">
+              <h1 className="font-heading text-7xl font-black tracking-tight">
                 {t('title')}
               </h1>
               <p className="text-muted-foreground text-xl">{t('tagline')}</p>
@@ -213,8 +223,8 @@ export function WelcomeChat({ presets }: Props) {
                 {indicator !== null && (
                   <MessageIndicator
                     key="processing-indicator"
-                    type={indicator}
                     label={indicatorLabels[indicator]}
+                    type={indicator}
                   />
                 )}
               </ConversationContent>

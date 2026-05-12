@@ -1,13 +1,5 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
-import { ButtonGroup, ButtonGroupText } from '@/components/ui/button-group';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
 import { CaretLeftIcon, CaretRightIcon } from '@phosphor-icons/react';
 import { cjk } from '@streamdown/cjk';
 import { code } from '@streamdown/code';
@@ -30,6 +22,14 @@ import {
 } from 'react';
 import { Streamdown } from 'streamdown';
 
+import { Button } from '@/components/ui/button';
+import { ButtonGroup, ButtonGroupText } from '@/components/ui/button-group';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { cn } from '@/lib/tailwind';
 
 /** Props for the {@link Message} wrapper. */
@@ -394,7 +394,7 @@ export type MessageIndicatorProps = {
 export const MessageIndicator = ({ label }: MessageIndicatorProps) => (
   <Message aria-label={label} aria-live="polite" from="assistant">
     <MessageContent>
-      <div className="flex items-center gap-2 text-muted-foreground text-xs">
+      <div className="text-muted-foreground flex items-center gap-2 text-xs">
         <span className="flex gap-0.5">
           <span className="animate-pulse">•</span>
           <span className="animate-pulse [animation-delay:200ms]">•</span>

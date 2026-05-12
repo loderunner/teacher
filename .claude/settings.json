@@ -2,8 +2,24 @@
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "autoMemoryDirectory": "./.claude/memory",
   "permissions": {
-    "deny": [
-      "Edit(./lib/server/db/migrations/**/snapshot.json)"
+    "deny": ["Edit(./lib/server/db/migrations/**/snapshot.json)"]
+  },
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pnpm lint:fix 1>&2",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "pnpm typecheck 1>&2",
+            "timeout": 5
+          }
+        ]
+      }
     ]
   }
 }
