@@ -93,3 +93,12 @@ in the top bar, they should be redirected to the home page.
 Write unit tests for the whole thing. Unit tests use Vitest mocks. Use Drizzle
 mock (https://orm.drizzle.team/docs/goodies#mock-driver) for database mocks, and
 Vitest to mock the actual database responses.
+
+## No source outside app/ or lib/
+
+No source should be outside the app/ or lib/ directories. All source should be
+within these directories. This does not include config or setup files, or
+Next.js files in standard locations like proxy.ts.
+
+Add this rule to AGENTS.md, and simplify the tsconfig.json include to only point
+to those directories.
