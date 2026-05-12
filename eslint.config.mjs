@@ -8,23 +8,23 @@ import nextVitals from 'eslint-config-next/core-web-vitals';
 import nextTs from 'eslint-config-next/typescript';
 
 const eslintConfig = defineConfig([
-  {
-    languageOptions: {
-      parserOptions: {
-        projectService: {
-          // *.config.ts is in tsconfig already; .mjs files are not — allow only the latter
-          // to avoid "found in both project service and allowDefaultProject" errors.
-          allowDefaultProject: ['*.config.mjs'],
-        },
-      },
-    },
-  },
   ...nextVitals,
   ...nextTs,
   ...loderunnerBase,
   ...loderunnerTs,
   ...loderunnerReact,
   ...loderunnerImport,
+  {
+    languageOptions: {
+      parserOptions: {
+        projectService: {
+          // *.config.ts is in tsconfig already; .mjs/.cjs files are not — allow only the
+          // latter to avoid "found in both project service and allowDefaultProject" errors.
+          allowDefaultProject: ['*.config.{mjs,cjs}'],
+        },
+      },
+    },
+  },
   {
     rules: {
       // next/core-web-vitals handles React import; suppress loderunner duplicate
