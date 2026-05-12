@@ -34,11 +34,6 @@ input box, buttons, etc.) appear in fixed positions on the screen, and dynamic
 content (messages, syllabus draft, etc.) occupies a fixed size in which the
 content is scrollable.
 
-## Locale picker
-
-It's nice that the locale is automatically detected from the browser, but it
-would be nice to have a locale picker in the top bar.
-
 ## RPG teaching style
 
 Another approach to learning would be for the model to teach through a
@@ -66,18 +61,13 @@ fixed, as thinking content can be quite long. The collapsible section should
 have a title like "Thinking..." and a pulsing animation to indicate that the
 model is thinking. The content should be scrollable.
 
-## First visit
+## First visit UI
 
 On first visit, before the chat has started, the prompt input box should appear
 at the center of the screen, and the syllabus draft panel should be hidden.
 After the user sends their first message, the prompt input box should transition
 to the bottom of the screen, and the syllabus draft panel should appear.
 Ideally, the transition should be smooth and not jarring.
-
-## Return to home page
-
-When the user is on a journey page, we need a way to "Return to home" in the top
-bar, that should redirect the user to the home page.
 
 ## Write tests w/ db mock
 
@@ -93,3 +83,21 @@ Next.js files in standard locations like proxy.ts.
 
 Add this rule to AGENTS.md, and simplify the tsconfig.json include to only point
 to those directories.
+
+## Content layout shift when auth resolves
+
+The Top Bar uses a Show component to conditionally render the UserButton. When
+the user is not authenticated, the UserButton is not rendered, and the layout
+shifts. We should find a way to prevent this layout shift.
+
+## Persist syllabus draft phase
+
+The syllabus draft phase should be persisted in the database. A journey is
+created immediately after the user sends their first message, and the syllabus
+draft and the messages are persisted in the database. When the user navigates
+back to the journey page, they can resume building their syllabus in chat.
+
+## Localize Clerk UI
+
+The Clerk UI should be localized to the user's locale.
+https://clerk.com/docs/guides/customizing-clerk/localization

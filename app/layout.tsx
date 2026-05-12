@@ -1,18 +1,24 @@
 import { ClerkProvider } from '@clerk/nextjs';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Inconsolata, Inter, Poppins } from 'next/font/google';
 import { getLocale } from 'next-intl/server';
 
 import { ThemeProvider } from '@/components/theme/provider';
 
 import './globals.css';
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
+const inter = Inter({
+  variable: '--font-inter',
   subsets: ['latin'],
 });
 
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
+const poppins = Poppins({
+  variable: '--font-poppins',
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+});
+
+const inconsolata = Inconsolata({
+  variable: '--font-inconsolata',
   subsets: ['latin'],
 });
 
@@ -24,7 +30,7 @@ export default async function RootLayout({
   const locale = await getLocale();
   return (
     <html
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${inter.variable} ${poppins.variable} ${inconsolata.variable} h-full antialiased`}
       lang={locale}
       suppressHydrationWarning
     >
