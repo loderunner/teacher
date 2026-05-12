@@ -1283,7 +1283,7 @@ export const PromptInputSubmit = ({
     Icon = <XIcon className="size-4" />;
   }
 
-  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleClick: NonNullable<PromptInputSubmitProps['onClick']> = (e) => {
     if (generating && onStop !== undefined) {
       e.preventDefault();
       onStop();

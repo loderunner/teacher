@@ -75,20 +75,9 @@ Next.js files in standard locations like proxy.ts.
 Add this rule to AGENTS.md, and simplify the tsconfig.json include to only point
 to those directories.
 
-## Content layout shift when auth resolves
-
-The Top Bar uses a Show component to conditionally render the UserButton. When
-the user is not authenticated, the UserButton is not rendered, and the layout
-shifts. We should find a way to prevent this layout shift.
-
 ## Persist syllabus draft phase
 
 The syllabus draft phase should be persisted in the database. A journey is
 created immediately after the user sends their first message, and the syllabus
 draft and the messages are persisted in the database. When the user navigates
 back to the journey page, they can resume building their syllabus in chat.
-
-## Localize Clerk UI
-
-The Clerk UI should be localized to the user's locale.
-https://clerk.com/docs/guides/customizing-clerk/localization

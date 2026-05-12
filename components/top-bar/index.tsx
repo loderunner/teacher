@@ -1,4 +1,4 @@
-import { Show, UserButton } from '@clerk/nextjs';
+import { ClerkLoaded, ClerkLoading, Show, UserButton } from '@clerk/nextjs';
 
 import { HomeButton } from './home-button';
 
@@ -15,9 +15,14 @@ export default function TopBar() {
       <div className="flex items-center gap-2">
         <LocalePicker />
         <ThemeToggle />
-        <Show when="signed-in">
-          <UserButton />
-        </Show>
+        <ClerkLoading>
+          <div className="bg-foreground/10 size-8 animate-pulse rounded-full" />
+        </ClerkLoading>
+        <ClerkLoaded>
+          <Show when="signed-in">
+            <UserButton />
+          </Show>
+        </ClerkLoaded>
       </div>
     </header>
   );
