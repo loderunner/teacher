@@ -1,3 +1,5 @@
+> **Implemented.** This deliverable has been shipped. The codebase may differ from the details below — treat this document as historical context, not a specification of the current state.
+
 # Deliverable 1 — Foundation
 
 ## Context

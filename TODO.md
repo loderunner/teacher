@@ -87,3 +87,9 @@ Also, create a tw`` template tag for tailwind classes in strings.
 
 When the user is on a journey page, and they click the "Return to home" button
 in the top bar, they should be redirected to the home page.
+
+## Write tests w/ db mock
+
+Write unit tests for the whole thing. Unit tests use Vitest mocks. Use Drizzle
+mock (https://orm.drizzle.team/docs/goodies#mock-driver) for database mocks, and
+Vitest to mock the actual database responses.
