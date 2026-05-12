@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, getTranslations } from 'next-intl/server';
 
+import { ThemeProvider } from '@/components/theme/provider';
 import TopBar from '@/components/top-bar';
 import { hasLocale } from '@/i18n/locale';
 import { routing } from '@/i18n/routing';
@@ -59,12 +60,15 @@ export default async function LocaleLayout({
     <html
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       lang={locale}
+      suppressHydrationWarning
     >
       <body className="flex min-h-full flex-col">
         <ClerkProvider>
           <NextIntlClientProvider messages={messages}>
-            <TopBar />
-            {children}
+            <ThemeProvider>
+              <TopBar />
+              {children}
+            </ThemeProvider>
           </NextIntlClientProvider>
         </ClerkProvider>
       </body>

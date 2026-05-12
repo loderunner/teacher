@@ -57,10 +57,6 @@ use the answer to understand the user's needs better, and generate a more
 appropriate response. Similar to Anthropic's `AskUserQuestion` tool:
 https://code.claude.com/docs/en/agent-sdk/user-input.md
 
-## Dark mode selector
-
-Select between light, dark, and system themes in the top bar.
-
 ## Show thinking content
 
 The user should be able to see the model's thinking content in the chat
@@ -77,11 +73,6 @@ at the center of the screen, and the syllabus draft panel should be hidden.
 After the user sends their first message, the prompt input box should transition
 to the bottom of the screen, and the syllabus draft panel should appear.
 Ideally, the transition should be smooth and not jarring.
-
-## Prettier tailwind plugin
-
-Use prettier tailwind plugin, and make it support twMerge, clsx, and cn utility.
-Also, create a tw`` template tag for tailwind classes in strings.
 
 ## Return to home page
 
