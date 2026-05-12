@@ -24,6 +24,9 @@
     "teacher": "Teacher",
     "tutorial": "Tutorial"
   },
+  "TopBar": {
+    "home": "Return to home"
+  },
   "ThemeToggle": {
     "label": "Select theme",
     "light": "Light",
