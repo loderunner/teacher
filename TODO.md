@@ -39,13 +39,6 @@ created immediately after the user sends their first message, and the syllabus
 draft and the messages are persisted in the database. When the user navigates
 back to the journey page, they can resume building their syllabus in chat.
 
-## Where are the headings?
-
-I set Poppins as the heading font, and Inter as the body font. But I don't see
-Poppins being used anywhere. Can we set the CSS class for the heading font where
-it belongs in the components code? Also, switch to "Atkinson Hyperlegible Next"
-for the body font, and "Atkinson Hyperlegible Mono" for the code font.
-
 ## Stream partial object for syllabus draft
 
 When the model is generating the syllabus draft, it should stream the partial

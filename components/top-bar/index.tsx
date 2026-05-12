@@ -10,7 +10,9 @@ export default function TopBar() {
     <header className="border-border flex h-14 items-center justify-between border-b px-4">
       <div className="flex items-center gap-3">
         <HomeButton />
-        <span className="font-semibold tracking-tight">Journey</span>
+        <span className="font-heading font-semibold tracking-tight">
+          Journey
+        </span>
       </div>
       <div className="flex items-center gap-2">
         <LocalePicker />

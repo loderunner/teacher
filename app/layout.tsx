@@ -1,14 +1,13 @@
-import { Inconsolata, Inter, Poppins } from 'next/font/google';
+import {
+  Atkinson_Hyperlegible_Mono,
+  Atkinson_Hyperlegible_Next,
+  Poppins,
+} from 'next/font/google';
 import { getLocale } from 'next-intl/server';
 
 import { ThemeProvider } from '@/components/theme/provider';
 
 import './globals.css';
-
-const inter = Inter({
-  variable: '--font-inter',
-  subsets: ['latin'],
-});
 
 const poppins = Poppins({
   variable: '--font-poppins',
@@ -16,9 +15,16 @@ const poppins = Poppins({
   weight: ['400', '500', '600', '700'],
 });
 
-const inconsolata = Inconsolata({
-  variable: '--font-inconsolata',
+const atkinsonNext = Atkinson_Hyperlegible_Next({
+  variable: '--font-atkinson-next',
   subsets: ['latin'],
+  adjustFontFallback: false,
+});
+
+const atkinsonMono = Atkinson_Hyperlegible_Mono({
+  variable: '--font-atkinson-mono',
+  subsets: ['latin'],
+  adjustFontFallback: false,
 });
 
 export default async function RootLayout({
@@ -29,7 +35,7 @@ export default async function RootLayout({
   const locale = await getLocale();
   return (
     <html
-      className={`${inter.variable} ${poppins.variable} ${inconsolata.variable} h-full antialiased`}
+      className={`${poppins.variable} ${atkinsonNext.variable} ${atkinsonMono.variable} h-full antialiased`}
       lang={locale}
       suppressHydrationWarning
     >

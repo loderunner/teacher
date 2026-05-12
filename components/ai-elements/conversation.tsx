@@ -66,7 +66,7 @@ export const ConversationEmptyState = ({
         <div className="text-muted-foreground">{icon}</div>
       )}
       <div className="space-y-1">
-        <h3 className="text-sm font-medium">{title}</h3>
+        <h3 className="font-heading text-sm font-medium">{title}</h3>
         <p className="text-muted-foreground text-sm">{description}</p>
       </div>
     </>

@@ -1440,7 +1440,7 @@ export const PromptInputTabLabel = ({
   // oxlint-disable-next-line eslint-plugin-jsx-a11y(heading-has-content)
   <h3
     className={cn(
-      'text-muted-foreground mb-2 px-3 text-xs font-medium',
+      'font-heading text-muted-foreground mb-2 px-3 text-xs font-medium',
       className,
     )}
     {...props}

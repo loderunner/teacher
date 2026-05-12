@@ -39,7 +39,7 @@ export function JourneyHome({ journey, presets }: Props) {
   return (
     <main className="flex flex-1 flex-col gap-8 p-8">
       <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold">{journey.title}</h1>
+        <h1 className="font-heading text-3xl font-bold">{journey.title}</h1>
         <StylePickerPersist
           initialStyleId={journey.styleId}
           journeyId={journey.id}
@@ -48,7 +48,9 @@ export function JourneyHome({ journey, presets }: Props) {
       </div>
 
       <section className="flex flex-col gap-4">
-        <h2 className="text-xl font-semibold">{t('syllabusHeader')}</h2>
+        <h2 className="font-heading text-xl font-semibold">
+          {t('syllabusHeader')}
+        </h2>
         <ol className="flex flex-col gap-4">
           {journey.chapters.map((chapter) => (
             <ChapterItem

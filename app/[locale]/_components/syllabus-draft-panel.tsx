@@ -75,7 +75,9 @@ export function SyllabusDraftPanel({ draft }: Props) {
 
   return (
     <section className="flex min-h-0 flex-1 flex-col rounded-lg border">
-      <h2 className="border-b p-4 font-semibold">{t('draftHeader')}</h2>
+      <h2 className="font-heading border-b p-4 font-semibold">
+        {t('draftHeader')}
+      </h2>
       <div className="min-h-0 flex-1 overflow-y-auto p-4">{draftContent}</div>
     </section>
   );
