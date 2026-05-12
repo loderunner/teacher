@@ -1,7 +1,13 @@
 'use client';
 
 import { useChat } from '@ai-sdk/react';
-import { DefaultChatTransport, type UIMessage } from 'ai';
+import {
+  DefaultChatTransport,
+  type InferUITools,
+  type ToolUIPart,
+  type UIDataTypes,
+  type UIMessage,
+} from 'ai';
 import { useLocale, useTranslations } from 'next-intl';
 import { useState, useTransition } from 'react';
 
@@ -30,15 +36,19 @@ import { parseLocale } from '@/i18n/locale';
 import { useRouter } from '@/i18n/navigation';
 import type { Style } from '@/lib/server/styles/get';
 import type { Syllabus } from '@/lib/server/syllabus/schema';
+// eslint-disable-next-line @typescript-eslint/consistent-type-imports -- typeof updateSyllabusDraft for InferUITools
+import { updateSyllabusDraft } from '@/lib/syllabus-chat/tool';
 
-type SyllabusDraftToolPart = {
-  type: string;
-  state: string;
-  input?: { fullDraft?: Syllabus };
-};
+type SyllabusChatTools = InferUITools<{
+  updateSyllabusDraft: typeof updateSyllabusDraft;
+}>;
+
+type SyllabusChatUIMessage = UIMessage<unknown, UIDataTypes, SyllabusChatTools>;
+
+type SyllabusDraftToolPart = ToolUIPart<SyllabusChatTools>;
 
 function isSyllabusDraftToolPart(
-  part: UIMessage['parts'][number],
+  part: SyllabusChatUIMessage['parts'][number],
 ): part is SyllabusDraftToolPart {
   return part.type === 'tool-updateSyllabusDraft';
 }
@@ -53,7 +63,9 @@ type Props = {
  * @param messages Chat messages from `useChat`.
  * @returns The most recent `fullDraft` from `tool-updateSyllabusDraft`, or null.
  */
-function deriveLatestSyllabusDraft(messages: UIMessage[]): Syllabus | null {
+function deriveLatestSyllabusDraft(
+  messages: SyllabusChatUIMessage[],
+): Syllabus | null {
   for (let i = messages.length - 1; i >= 0; i--) {
     const msg = messages[i];
     if (msg.role !== 'assistant') {
@@ -66,10 +78,7 @@ function deriveLatestSyllabusDraft(messages: UIMessage[]): Syllabus | null {
         isSyllabusDraftToolPart(part) &&
         (part.state === 'output-available' || part.state === 'input-available')
       ) {
-        const { input } = part;
-        if (input !== undefined && input.fullDraft !== undefined) {
-          return input.fullDraft;
-        }
+        return part.input.fullDraft;
       }
     }
   }
@@ -84,7 +93,7 @@ export function WelcomeChat({ presets }: Props) {
   const [styleId, setStyleId] = useState(presets[0]?.id ?? 'teacher');
   const [pending, startTransition] = useTransition();
 
-  const { messages, sendMessage, status } = useChat({
+  const { messages, sendMessage, status } = useChat<SyllabusChatUIMessage>({
     transport: new DefaultChatTransport({ api: '/api/syllabus/chat' }),
   });
 
