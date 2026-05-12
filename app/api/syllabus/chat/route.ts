@@ -17,10 +17,16 @@ import { updateSyllabusDraft } from '@/lib/syllabus-chat/tool';
 
 export const maxDuration = 60;
 
-/** Exported so callers can type-check their fetch body. */
+/**
+ * Request body for `POST /api/syllabus/chat`.
+ * Exported so callers can type-check their fetch body.
+ */
 export type RequestBody = {
+  /** Chat history to send to the model. */
   messages: UIMessage[];
+  /** Teaching style preset ID used to build the system prompt. */
   styleId: string;
+  /** Locale for selecting the correct system prompt language. */
   locale: Locale;
 };
 

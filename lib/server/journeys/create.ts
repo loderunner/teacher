@@ -2,16 +2,29 @@ import { dbTx } from '@/lib/server/db';
 import { chapters, journeys } from '@/lib/server/db/schema';
 import type { Syllabus } from '@/lib/server/syllabus/schema';
 
+/** Parameters for creating a new journey. */
 export type CreateJourneyParams = {
+  /** Clerk user ID of the owner. */
   userId: string;
+  /** Display title of the journey. */
   title: string;
+  /** ID of the teaching style preset to apply. */
   styleId: string;
+  /** Structured syllabus generated during the chat phase. */
   syllabus: Syllabus;
+  /** Markdown summary of learner context captured from the bootstrap conversation. */
   memory: string;
 };
 
+/** Minimal journey data returned after creation. */
 export type CreatedJourney = { id: string; title: string };
 
+/**
+ * Creates a journey and its initial chapters in a single transaction.
+ *
+ * @param params - Journey creation parameters.
+ * @returns The newly created journey's ID and title.
+ */
 export async function createJourney({
   userId,
   title,

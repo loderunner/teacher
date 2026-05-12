@@ -22,6 +22,10 @@ const buttonGroupVariants = cva(
   },
 );
 
+/**
+ * Groups buttons (or other controls) into a visually connected row or column,
+ * collapsing borders between adjacent items.
+ */
 function ButtonGroup({
   className,
   orientation,
@@ -38,6 +42,7 @@ function ButtonGroup({
   );
 }
 
+/** Non-interactive text label styled to match adjacent buttons in a {@link ButtonGroup}. */
 function ButtonGroupText({
   className,
   render,
@@ -61,6 +66,7 @@ function ButtonGroupText({
   });
 }
 
+/** Visual separator between items inside a {@link ButtonGroup}. */
 function ButtonGroupSeparator({
   className,
   orientation = 'vertical',

@@ -40,6 +40,7 @@ const buttonVariants = cva(
   },
 );
 
+/** General-purpose button supporting multiple visual variants and sizes. */
 function Button({
   className,
   variant = 'default',

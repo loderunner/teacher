@@ -18,11 +18,20 @@ Votre dernier appel à \`updateSyllabusDraft\` contient le brouillon actuel. Si 
 Lorsque le brouillon contient au moins un chapitre et que l'utilisateur signale qu'il est prêt, suggérez-lui de cliquer sur « Commencer le parcours » — n'appelez aucun outil de démarrage vous-même.`,
 };
 
+/** Parameters for composing the syllabus-phase system prompt. */
 export type ComposeSyllabusSystemPromptParams = {
+  /** Teaching style whose fragment is prepended to the prompt. */
   style: Style;
+  /** Locale used to select the correct language variant. */
   locale: Locale;
 };
 
+/**
+ * Combines the style's system prompt fragment with the syllabus-phase instructions.
+ *
+ * @param params - Style and locale.
+ * @returns The full system prompt string for the syllabus chat.
+ */
 export function composeSyllabusSystemPrompt({
   style,
   locale,

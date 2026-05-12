@@ -8,8 +8,13 @@ import { StickToBottom, useStickToBottomContext } from 'use-stick-to-bottom';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/cn';
 
+/** Props for the {@link Conversation} scroll container. */
 export type ConversationProps = ComponentProps<typeof StickToBottom>;
 
+/**
+ * Scrollable container that sticks to the bottom as new messages arrive.
+ * Wraps `StickToBottom` with sensible defaults for chat UIs.
+ */
 export const Conversation = ({ className, ...props }: ConversationProps) => (
   <StickToBottom
     className={cn('relative flex-1 overflow-y-hidden', className)}
@@ -20,10 +25,12 @@ export const Conversation = ({ className, ...props }: ConversationProps) => (
   />
 );
 
+/** Props for the {@link ConversationContent} message list wrapper. */
 export type ConversationContentProps = ComponentProps<
   typeof StickToBottom.Content
 >;
 
+/** Inner content area of a {@link Conversation} that holds the message list. */
 export const ConversationContent = ({
   className,
   ...props
@@ -34,12 +41,17 @@ export const ConversationContent = ({
   />
 );
 
+/** Props for the {@link ConversationEmptyState} placeholder. */
 export type ConversationEmptyStateProps = ComponentProps<'div'> & {
+  /** Heading shown when no messages exist. */
   title?: string;
+  /** Supporting text below the heading. */
   description?: string;
+  /** Optional icon displayed above the heading. */
   icon?: ReactNode;
 };
 
+/** Centered placeholder displayed inside a {@link Conversation} with no messages. */
 export const ConversationEmptyState = ({
   className,
   title = 'No messages yet',
@@ -69,8 +81,13 @@ export const ConversationEmptyState = ({
   </div>
 );
 
+/** Props for the {@link ConversationScrollButton} jump-to-bottom control. */
 export type ConversationScrollButtonProps = ComponentProps<typeof Button>;
 
+/**
+ * Floating button that appears when the conversation is scrolled away from
+ * the bottom and returns the user to the latest message on click.
+ */
 export const ConversationScrollButton = ({
   className,
   ...props
@@ -106,12 +123,16 @@ const getMessageText = (message: UIMessage): string =>
     .map((part) => part.text)
     .join('');
 
+/** Props for the {@link ConversationDownload} export button. */
 export type ConversationDownloadProps = Omit<
   ComponentProps<typeof Button>,
   'onClick'
 > & {
+  /** Messages to include in the downloaded file. */
   messages: UIMessage[];
+  /** File name for the downloaded Markdown file. Defaults to `"conversation.md"`. */
   filename?: string;
+  /** Custom message formatter; receives each message and its index. */
   formatMessage?: (message: UIMessage, index: number) => string;
 };
 
@@ -121,6 +142,13 @@ const defaultFormatMessage = (message: UIMessage): string => {
   return `**${roleLabel}:** ${getMessageText(message)}`;
 };
 
+/**
+ * Converts an array of UI messages to a Markdown string.
+ *
+ * @param messages - Messages to convert.
+ * @param formatMessage - Optional formatter; defaults to bold role label + text.
+ * @returns A Markdown document with each message separated by a blank line.
+ */
 export const messagesToMarkdown = (
   messages: UIMessage[],
   formatMessage: (
@@ -129,6 +157,7 @@ export const messagesToMarkdown = (
   ) => string = defaultFormatMessage,
 ): string => messages.map((msg, i) => formatMessage(msg, i)).join('\n\n');
 
+/** Floating button that downloads the current conversation as a Markdown file. */
 export const ConversationDownload = ({
   messages,
   filename = 'conversation.md',

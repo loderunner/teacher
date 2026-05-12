@@ -11,6 +11,13 @@ type Props = {
   onChange: (id: string) => void;
 };
 
+/**
+ * Renders a row of toggle buttons for selecting a teaching style preset.
+ *
+ * @param presets - Available style presets to display as options.
+ * @param value - ID of the currently selected preset.
+ * @param onChange - Called with the new preset ID when the user selects a different style.
+ */
 export function StylePicker({ presets, value, onChange }: Props) {
   const t = useTranslations('StylePicker');
 

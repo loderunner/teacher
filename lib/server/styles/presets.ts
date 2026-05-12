@@ -1,5 +1,6 @@
 import { type Style } from './get';
 
+/** Built-in teaching style presets available to all journeys. */
 export const PRESETS: Style[] = [
   {
     id: 'teacher',

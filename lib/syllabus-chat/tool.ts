@@ -3,6 +3,10 @@ import { z } from 'zod';
 
 import { syllabusSchema } from '@/lib/server/syllabus/schema';
 
+/**
+ * AI SDK tool that instructs the model to replace the entire syllabus draft
+ * with a new version during the syllabus chat phase.
+ */
 export const updateSyllabusDraft = tool({
   description: `Replace the entire syllabus draft with the new version.
 

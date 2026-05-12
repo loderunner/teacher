@@ -10,11 +10,13 @@ import {
 } from 'drizzle-orm/pg-core';
 import { nanoid } from 'nanoid';
 
+/** Database table for registered users, keyed by their Clerk user ID. */
 export const users = pgTable('users', {
   id: text('id').primaryKey(), // Clerk userId
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
+/** Database table for learning journeys owned by a user. */
 export const journeys = pgTable(
   'journeys',
   {
@@ -38,12 +40,14 @@ export const journeys = pgTable(
   (t) => [index('journeys_user_idx').on(t.userId)],
 );
 
+/** Postgres enum for the progression state of a chapter. */
 export const chapterStatusEnum = pgEnum('chapter_status', [
   'locked',
   'active',
   'done',
 ]);
 
+/** Database table for individual chapters within a journey. */
 export const chapters = pgTable(
   'chapters',
   {

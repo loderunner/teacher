@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+/** Zod schema for a single chapter in a syllabus. */
 export const chapterSchema = z.object({
   title: z
     .string()
@@ -29,6 +30,7 @@ export const chapterSchema = z.object({
     ),
 });
 
+/** Zod schema for a full syllabus containing an ordered list of chapters. */
 export const syllabusSchema = z.object({
   chapters: z
     .array(chapterSchema)
@@ -40,5 +42,8 @@ export const syllabusSchema = z.object({
     ),
 });
 
+/** TypeScript type for a single syllabus chapter. */
 export type Chapter = z.infer<typeof chapterSchema>;
+
+/** TypeScript type for a full syllabus. */
 export type Syllabus = z.infer<typeof syllabusSchema>;
