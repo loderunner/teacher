@@ -69,28 +69,28 @@ export function WelcomeChat({ presets }: Props) {
   const router = useRouter();
 
   const [styleId, setStyleId] = useState(presets[0]?.id ?? 'teacher');
-  const [isPending, startTransition] = useTransition();
+  const [pending, startTransition] = useTransition();
 
   const { messages, sendMessage, status } = useChat({
     transport: new DefaultChatTransport({ api: '/api/syllabus/chat' }),
   });
 
-  const isStreaming = status === 'streaming' || status === 'submitted';
+  const streaming = status === 'streaming' || status === 'submitted';
 
   const draft = deriveLatestSyllabusDraft(messages);
 
-  const canStart =
+  const startable =
     draft !== null && draft.chapters.length > 0 && styleId.length > 0;
 
-  function handleSubmit({ text }: { text: string; files: unknown[] }) {
+  const handleSubmit = ({ text }: { text: string; files: unknown[] }) => {
     if (text.trim() === '') {
       return;
     }
     void sendMessage({ text }, { body: { styleId, locale } });
-  }
+  };
 
-  function handleStartJourney() {
-    if (!canStart) {
+  const handleStartJourney = () => {
+    if (!startable) {
       return;
     }
     const syllabus = draft;
@@ -102,7 +102,7 @@ export function WelcomeChat({ presets }: Props) {
       });
       router.push(result.path);
     });
-  }
+  };
 
   return (
     <div className="flex flex-1 gap-6 overflow-hidden p-6">
@@ -121,7 +121,7 @@ export function WelcomeChat({ presets }: Props) {
                       <MessageResponse
                         key={i}
                         isAnimating={
-                          isStreaming && msg === messages[messages.length - 1]
+                          streaming && msg === messages[messages.length - 1]
                         }
                       >
                         {part.text}
@@ -137,7 +137,7 @@ export function WelcomeChat({ presets }: Props) {
 
         <PromptInput onSubmit={handleSubmit}>
           <PromptInputTextarea
-            disabled={isStreaming}
+            disabled={streaming}
             placeholder={t('promptPlaceholder')}
           />
           <PromptInputFooter>
@@ -152,14 +152,14 @@ export function WelcomeChat({ presets }: Props) {
         <SyllabusDraftPanel draft={draft} />
         <StylePicker presets={presets} value={styleId} onChange={setStyleId} />
         <div>
-          {!canStart && (
+          {!startable && (
             <p className="mb-2 text-xs text-muted-foreground">
               {t('startJourneyDisabledHint')}
             </p>
           )}
           <button
             className="w-full rounded border border-foreground bg-foreground px-4 py-2 text-sm font-medium text-background transition-opacity disabled:opacity-40"
-            disabled={!canStart || isPending}
+            disabled={!startable || pending}
             type="button"
             onClick={handleStartJourney}
           >

@@ -5,12 +5,12 @@ import { Streamdown } from 'streamdown';
 
 type Props = {
   children: string;
-  isStreaming?: boolean;
+  streaming?: boolean;
 };
 
-export function MessageMarkdown({ children, isStreaming = false }: Props) {
+export function MessageMarkdown({ children, streaming = false }: Props) {
   return (
-    <Streamdown caret={isStreaming ? 'block' : undefined} plugins={{ code }}>
+    <Streamdown caret={streaming ? 'block' : undefined} plugins={{ code }}>
       {children}
     </Streamdown>
   );

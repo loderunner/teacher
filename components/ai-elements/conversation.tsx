@@ -75,14 +75,14 @@ export const ConversationScrollButton = ({
   className,
   ...props
 }: ConversationScrollButtonProps) => {
-  const { isAtBottom, scrollToBottom } = useStickToBottomContext();
+  const { isAtBottom: atBottom, scrollToBottom } = useStickToBottomContext();
 
   const handleScrollToBottom = () => {
     void scrollToBottom();
   };
 
   return (
-    !isAtBottom && (
+    !atBottom && (
       <Button
         className={cn(
           'absolute bottom-4 left-[50%] translate-x-[-50%] rounded-full dark:bg-background dark:hover:bg-muted',

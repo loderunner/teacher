@@ -75,7 +75,7 @@ import { cn } from '@/lib/cn';
 // Helpers
 // ============================================================================
 
-const convertBlobUrlToDataUrl = async (url: string): Promise<string | null> => {
+const convertBlobURLToDataURL = async (url: string): Promise<string | null> => {
   try {
     const response = await fetch(url);
     const blob = await response.blob();
@@ -815,11 +815,11 @@ export const PromptInput = ({
       const convertedFiles: FileUIPart[] = await Promise.all(
         files.map(async ({ id: _id, ...item }) => {
           if (item.url.startsWith('blob:')) {
-            const dataUrl = await convertBlobUrlToDataUrl(item.url);
+            const dataURL = await convertBlobURLToDataURL(item.url);
             // If conversion failed, keep the original blob URL
             return {
               ...item,
-              url: dataUrl ?? item.url,
+              url: dataURL ?? item.url,
             };
           }
           return item;
@@ -911,7 +911,7 @@ export const PromptInputTextarea = ({
 }: PromptInputTextareaProps) => {
   const controller = useOptionalPromptInputController();
   const attachments = usePromptInputAttachments();
-  const [isComposing, setIsComposing] = useState(false);
+  const [composing, setComposing] = useState(false);
 
   const handleKeyDown: KeyboardEventHandler<HTMLTextAreaElement> = (e) => {
     // Call the external onKeyDown handler first
@@ -923,7 +923,7 @@ export const PromptInputTextarea = ({
     }
 
     if (e.key === 'Enter') {
-      if (isComposing || e.nativeEvent.isComposing) {
+      if (composing || e.nativeEvent.isComposing) {
         return;
       }
       if (e.shiftKey) {
@@ -976,8 +976,8 @@ export const PromptInputTextarea = ({
     }
   };
 
-  const handleCompositionEnd = () => setIsComposing(false);
-  const handleCompositionStart = () => setIsComposing(true);
+  const handleCompositionEnd = () => setComposing(false);
+  const handleCompositionStart = () => setComposing(true);
 
   const controlledProps =
     controller !== null
@@ -1162,7 +1162,7 @@ export const PromptInputSubmit = ({
   children,
   ...props
 }: PromptInputSubmitProps) => {
-  const isGenerating = status === 'submitted' || status === 'streaming';
+  const generating = status === 'submitted' || status === 'streaming';
 
   let Icon = <ArrowBendDownLeftIcon className="size-4" />;
 
@@ -1175,7 +1175,7 @@ export const PromptInputSubmit = ({
   }
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    if (isGenerating && onStop !== undefined) {
+    if (generating && onStop !== undefined) {
       e.preventDefault();
       onStop();
       return;
@@ -1187,10 +1187,10 @@ export const PromptInputSubmit = ({
 
   return (
     <InputGroupButton
-      aria-label={isGenerating ? 'Stop' : 'Submit'}
+      aria-label={generating ? 'Stop' : 'Submit'}
       className={cn(className)}
       size={size}
-      type={isGenerating && onStop !== undefined ? 'button' : 'submit'}
+      type={generating && onStop !== undefined ? 'button' : 'submit'}
       variant={variant}
       onClick={handleClick}
       {...props}

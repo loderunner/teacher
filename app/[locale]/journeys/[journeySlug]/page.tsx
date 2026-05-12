@@ -9,7 +9,6 @@ import { listPresets } from '@/lib/server/styles/get';
 import { ensureUser } from '@/lib/server/users/ensure';
 import { journeyPath, parseJourneySlug } from '@/lib/url';
 
-
 export default async function Page({
   params,
 }: {

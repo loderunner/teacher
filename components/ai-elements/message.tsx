@@ -152,22 +152,22 @@ export const MessageBranch = ({
   const [currentBranch, setCurrentBranch] = useState(defaultBranch);
   const [branches, setBranches] = useState<ReactElement[]>([]);
 
-  function handleBranchChange(newBranch: number) {
+  const handleBranchChange = (newBranch: number) => {
     setCurrentBranch(newBranch);
     onBranchChange?.(newBranch);
-  }
+  };
 
-  function goToPrevious() {
+  const goToPrevious = () => {
     const newBranch =
       currentBranch > 0 ? currentBranch - 1 : branches.length - 1;
     handleBranchChange(newBranch);
-  }
+  };
 
-  function goToNext() {
+  const goToNext = () => {
     const newBranch =
       currentBranch < branches.length - 1 ? currentBranch + 1 : 0;
     handleBranchChange(newBranch);
-  }
+  };
 
   const contextValue: MessageBranchContextType = {
     branches,

@@ -5,7 +5,6 @@ import { StylePickerPersist } from './style-picker-persist';
 import type { Journey } from '@/lib/server/journeys/get';
 import type { Style } from '@/lib/server/styles/get';
 
-
 type Props = {
   journey: Journey;
   presets: Style[];
