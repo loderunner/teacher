@@ -1,3 +1,5 @@
+import { ClerkProvider } from '@clerk/nextjs';
+import { frFR } from '@clerk/localizations';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { NextIntlClientProvider } from 'next-intl';
@@ -40,11 +42,14 @@ export default async function LocaleLayout({
   }
 
   const messages = await getMessages();
+  const localization = locale === 'fr' ? frFR : undefined;
 
   return (
-    <NextIntlClientProvider messages={messages}>
-      <TopBar />
-      {children}
-    </NextIntlClientProvider>
+    <ClerkProvider localization={localization}>
+      <NextIntlClientProvider messages={messages}>
+        <TopBar />
+        {children}
+      </NextIntlClientProvider>
+    </ClerkProvider>
   );
 }

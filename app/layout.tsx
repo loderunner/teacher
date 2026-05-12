@@ -1,4 +1,3 @@
-import { ClerkProvider } from '@clerk/nextjs';
 import { Inconsolata, Inter, Poppins } from 'next/font/google';
 import { getLocale } from 'next-intl/server';
 
@@ -35,9 +34,7 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <body className="flex min-h-full flex-col">
-        <ClerkProvider>
-          <ThemeProvider>{children}</ThemeProvider>
-        </ClerkProvider>
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   );

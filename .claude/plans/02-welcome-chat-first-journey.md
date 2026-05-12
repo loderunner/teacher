@@ -441,7 +441,6 @@ Each step is independently verifiable. `[par]` = can run alongside the previous 
 - **AI Elements icons** import from `lucide-react`; accept inside `components/ai-elements/` only.
 - **`maxDuration`** — explicit `export const maxDuration = 60` on the streaming route is cheap insurance.
 - **Server-action redirect** — return `{ id, slug }`; let the client navigate via `useRouter` from `i18n/navigation`.
-- **Clerk UI is English-only by default** — fixing this requires `<ClerkProvider localization={...}>` at the layout. Deferred to a follow-up; users see English Clerk widgets even on `/fr`.
 
 ---
 
