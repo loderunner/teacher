@@ -1,38 +1,21 @@
 # TODO
 
-## Loading & thinking indicators
+## Processing indicators
 
-The message interface does not show anything while the model is processing the
-request. We should show a loading indicator when the model is first processing
-the request, and a thinking indicator while the model is thinking (and the
-client is receiving thinking content).
+The message part of the chat interface does not show anything while the model is
+processing the request. We should show a loading indicator when the model starts
+processing the request, a thinking indicator while the model is thinking (and
+the client is receiving thinking content), and a tool call indicator when the
+model is calling or has called a tool.
 
 ## Tool calls & follow-up message
 
 The AI term should never end on a tool call. After calling a tool, if the turn
 is finished, the LLM should always send a follow-up message to the user, just to
-make the conversation feel more natural.
-
-We should also show a tool call indicator when the model is calling a tool, as
-well as give the user the ability to uncollapse the tool call to see the
-details.
-
-## Layout & scrollability
-
-The syllabus can grow quite long and the Syllabus panel grows quite tall. This
-pushes the chat input out of view. The Syllabus panel should be scrollable,
-wider on wide screens, and only details of a single chapter should be
-disclosable at a time.
-
-The messages view also pushes the prompt input box out of view. The messages
-view should be scrollable, and the prompt input box should be at the bottom of
-the screen. Additionally, the width of the messages and prompt input box are
-very wide on a wide screen. The width should be constrained to feel legible.
-
-In general, the UI should feel app-like, where interactive elements (prompt
-input box, buttons, etc.) appear in fixed positions on the screen, and dynamic
-content (messages, syllabus draft, etc.) occupies a fixed size in which the
-content is scrollable.
+make the conversation feel more natural. Maybe this needs a multi-turn LLM call?
+Or maybe an agentic loop? Should this be done on our side or on the provider's
+side? Read Anthropic blogs and docs, and AI SDK docs, and discover optimal
+practices.
 
 ## Question tool
 

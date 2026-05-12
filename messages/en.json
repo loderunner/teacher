@@ -10,6 +10,7 @@
     "tagline": "What do you want to learn?",
     "draftHeader": "Your syllabus",
     "emptyDraft": "Chat to start sketching out your syllabus.",
+    "emptyChapterSections": "No sections yet.",
     "startJourney": "Start journey",
     "startJourneyDisabledHint": "Add at least one chapter and pick a style to begin.",
     "promptPlaceholder": "Describe what you want to learn…"

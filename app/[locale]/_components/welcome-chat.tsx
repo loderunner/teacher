@@ -148,26 +148,28 @@ export function WelcomeChat({ presets }: Props) {
   return (
     <div className="flex flex-1 gap-6 overflow-hidden p-6">
       {/* Left: chat */}
-      <div className="flex flex-1 flex-col gap-4 overflow-hidden">
-        <Conversation className="flex-1">
-          <ConversationContent>{messageItems}</ConversationContent>
-          <ConversationScrollButton />
-        </Conversation>
+      <section className="flex flex-1 flex-col overflow-hidden">
+        <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 overflow-hidden">
+          <Conversation className="flex-1">
+            <ConversationContent>{messageItems}</ConversationContent>
+            <ConversationScrollButton />
+          </Conversation>
 
-        <PromptInput onSubmit={handleSubmit}>
-          <PromptInputTextarea
-            disabled={streaming}
-            placeholder={t('promptPlaceholder')}
-          />
-          <PromptInputFooter>
-            <div />
-            <PromptInputSubmit status={status} />
-          </PromptInputFooter>
-        </PromptInput>
-      </div>
+          <PromptInput onSubmit={handleSubmit}>
+            <PromptInputTextarea
+              disabled={streaming}
+              placeholder={t('promptPlaceholder')}
+            />
+            <PromptInputFooter>
+              <div />
+              <PromptInputSubmit status={status} />
+            </PromptInputFooter>
+          </PromptInput>
+        </div>
+      </section>
 
       {/* Right: syllabus draft + controls */}
-      <div className="flex w-80 flex-col gap-4 overflow-y-auto">
+      <aside className="flex w-80 flex-col gap-4 overflow-hidden xl:w-96 2xl:w-md">
         <SyllabusDraftPanel draft={draft} />
         <StylePicker presets={presets} value={styleId} onChange={setStyleId} />
         <div>
@@ -185,7 +187,7 @@ export function WelcomeChat({ presets }: Props) {
             {t('startJourney')}
           </button>
         </div>
-      </div>
+      </aside>
     </div>
   );
 }

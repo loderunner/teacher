@@ -33,7 +33,7 @@ export default async function RootLayout({
       lang={locale}
       suppressHydrationWarning
     >
-      <body className="flex min-h-full flex-col">
+      <body className="flex h-full flex-col overflow-hidden">
         <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>

@@ -10,6 +10,7 @@
     "tagline": "Que voulez-vous apprendre ?",
     "draftHeader": "Votre programme",
     "emptyDraft": "Discutez pour commencer à esquisser votre programme.",
+    "emptyChapterSections": "Aucune section pour le moment.",
     "startJourney": "Commencer le parcours",
     "startJourneyDisabledHint": "Ajoutez au moins un chapitre et choisissez un style pour commencer.",
     "promptPlaceholder": "Décrivez ce que vous souhaitez apprendre…"

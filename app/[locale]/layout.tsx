@@ -1,5 +1,5 @@
-import { ClerkProvider } from '@clerk/nextjs';
 import { frFR } from '@clerk/localizations';
+import { ClerkProvider } from '@clerk/nextjs';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { NextIntlClientProvider } from 'next-intl';

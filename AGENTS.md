@@ -65,6 +65,17 @@ without modifying component code.
 
 Never hardcode plain text strings in user-facing components.
 
+## shadcn/ui components are vendored, not imported
+
+shadcn/ui code is copied into `components/ui/` by the CLI — it lives in this
+repository like any other source file. Treat each newly added component as
+unreviewed contributor code: pass it through `pnpm lint:fix`, then review it
+against the coding standards below before using it. Typical adjustments are the
+`cn` import path (`@/lib/tailwind`, not `@/lib/utils`), icon library
+(`@phosphor-icons/react`, not `lucide-react`), quote style, JSDoc on exported
+symbols, and naming conventions. The generated file should feel native to the
+codebase by the time it is committed.
+
 ---
 
 # Coding standards
