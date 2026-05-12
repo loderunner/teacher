@@ -5,6 +5,17 @@
     "deny": ["Edit(./lib/server/db/migrations/**/snapshot.json)"]
   },
   "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pnpm install 1>&2",
+            "timeout": 120
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "hooks": [
