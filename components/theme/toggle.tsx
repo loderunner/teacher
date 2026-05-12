@@ -1,6 +1,7 @@
 'use client';
 
 import { MonitorIcon, MoonIcon, SunIcon } from '@phosphor-icons/react';
+import { useTranslations } from 'next-intl';
 import { useTheme } from 'next-themes';
 import { useSyncExternalStore } from 'react';
 
@@ -19,6 +20,7 @@ const getServerSnapshot = () => false;
 
 /** Dropdown selector for light, dark, and system themes. */
 export function ThemeToggle() {
+  const t = useTranslations('ThemeToggle');
   const { setTheme, theme } = useTheme();
   const mounted = useSyncExternalStore(
     subscribe,
@@ -37,7 +39,7 @@ export function ThemeToggle() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        aria-label="Select theme"
+        aria-label={t('label')}
         className="hover:bg-accent focus-visible:ring-ring inline-flex size-9 cursor-pointer items-center justify-center rounded-md transition-colors focus-visible:ring-1 focus-visible:outline-none"
       >
         <TriggerIcon className="size-4" weight="bold" />
@@ -45,15 +47,15 @@ export function ThemeToggle() {
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={() => setTheme('light')}>
           <SunIcon className="mr-2 size-4" weight="bold" />
-          Light
+          {t('light')}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setTheme('dark')}>
           <MoonIcon className="mr-2 size-4" weight="bold" />
-          Dark
+          {t('dark')}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setTheme('system')}>
           <MonitorIcon className="mr-2 size-4" weight="bold" />
-          System
+          {t('system')}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

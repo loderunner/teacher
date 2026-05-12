@@ -55,6 +55,16 @@ centralized — different tasks may pick different models or settings. Tool
 descriptions are written inline in the tool definition (not in a separate
 strings module) and are not localized — they instruct the model, not the user.
 
+## Text content is decoupled from UI components
+
+The application is built for internationalization (i18n) from the ground up
+using `next-intl`. UI components and pages are responsible for layout and
+behavior, while display text is injected at runtime via translation
+dictionaries. This separation ensures the interface can be fully localized
+without modifying component code.
+
+Never hardcode plain text strings in user-facing components.
+
 ---
 
 # Coding standards

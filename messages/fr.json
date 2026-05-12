@@ -23,5 +23,11 @@
     "label": "Style d'enseignement",
     "teacher": "Enseignant",
     "tutorial": "Tutoriel"
+  },
+  "ThemeToggle": {
+    "label": "Sélectionner le thème",
+    "light": "Clair",
+    "dark": "Sombre",
+    "system": "Système"
   }
 }
