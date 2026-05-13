@@ -21,8 +21,12 @@ No source should be outside the app/ or lib/ directories. All source should be
 within these directories. This does not include config or setup files, or
 Next.js files in standard locations like proxy.ts.
 
+`components/`, `i18n`, `messages/` all belong in the `app/` or `lib/`
+directories.
+
 Add this rule to AGENTS.md, and simplify the tsconfig.json include to only point
-to those directories.
+to those directories. Then fix the ESLint `allowDefaultProject` rule to include
+relevant files at the root of the repo.
 
 ## Persist syllabus draft phase
 
@@ -30,4 +34,3 @@ The syllabus draft phase should be persisted in the database. A journey is
 created immediately after the user sends their first message, and the syllabus
 draft and the messages are persisted in the database. When the user navigates
 back to the journey page, they can resume building their syllabus in chat.
-
