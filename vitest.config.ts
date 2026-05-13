@@ -8,6 +8,7 @@ nextEnv.loadEnvConfig(process.cwd());
 export default defineConfig({
   test: {
     environment: 'node',
+    setupFiles: ['./vitest.setup.ts'],
   },
   resolve: {
     alias: {

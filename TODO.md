@@ -9,11 +9,15 @@ use the answer to understand the user's needs better, and generate a more
 appropriate response. Similar to Anthropic's `AskUserQuestion` tool:
 https://code.claude.com/docs/en/agent-sdk/user-input.md
 
+Find out if a component for this already exists in ai-elements. If not, create
+it, copying the style of the `Confirmation` component.
+
 ## Write tests w/ db mock
 
-Write unit tests for the whole thing. Unit tests use Vitest mocks. Use Drizzle
-mock (https://orm.drizzle.team/docs/goodies#mock-driver) for database mocks, and
-Vitest to mock the actual database responses.
+Write unit tests for the whole project. Unit tests use Vitest mocks. Use Vitest
+and chain-mock to mock the actual database responses. There's an example of this
+in the `getJourney` test. Dispatch subagents to write the tests for different
+parts of the codebase, and avoid context overload.
 
 ## No source outside app/ or lib/
 
