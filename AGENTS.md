@@ -104,11 +104,11 @@ has its unit tests in `lib/foo/bar.test.ts` and its integration tests in
 
 Two test types, each with a different mocking contract:
 
-- **Unit tests** (`*.unit.test.ts`) — test a single module in isolation. Mock
-  every import from outside the module under test using `vi.mock()`, `vi.fn()`.
-- **Integration tests** (`*.test.ts`) — test a module with its real
-  collaborators. Mock only externalities: network calls, databases, file system
-  access, and third-party APIs.
+- **Unit tests** — test a single module in isolation. Mock every import from
+  outside the module under test using `vi.mock()`, `vi.fn()`.
+- **Integration tests** — test a module with its real collaborators. Mock only
+  externalities: network calls, databases, file system access, and third-party
+  APIs.
 
 ---
 

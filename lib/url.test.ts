@@ -19,6 +19,35 @@ describe('journeyPath', () => {
       '/journeys/demarrage-rapide-abc1234567',
     );
   });
+
+  it('collapses multiple spaces into a single dash', () => {
+    expect(journeyPath('abc1234567', 'Hello   World')).toBe(
+      '/journeys/hello-world-abc1234567',
+    );
+  });
+
+  it('truncates slugs longer than 80 characters', () => {
+    const longTitle = 'A'.repeat(100);
+    const result = journeyPath('abc1234567', longTitle);
+    const slug = result.slice('/journeys/'.length, -'-abc1234567'.length);
+    expect(slug.length).toBeLessThanOrEqual(80);
+  });
+
+  it('falls back to "journey" when title is an empty string', () => {
+    expect(journeyPath('abc1234567', '')).toBe('/journeys/journey-abc1234567');
+  });
+
+  it('replaces special characters with dashes', () => {
+    expect(journeyPath('abc1234567', 'C++ & Rust!')).toBe(
+      '/journeys/c-rust-abc1234567',
+    );
+  });
+
+  it('strips leading and trailing dashes from the slug', () => {
+    expect(journeyPath('abc1234567', '---hello---')).toBe(
+      '/journeys/hello-abc1234567',
+    );
+  });
 });
 
 describe('parseJourneySlug', () => {
@@ -35,6 +64,12 @@ describe('parseJourneySlug', () => {
 
   it('returns null for a segment that is too short', () => {
     expect(parseJourneySlug('short')).toBeNull();
+    expect(parseJourneySlug('')).toBeNull();
+  });
+
+  it('handles a segment that is exactly 11 characters with a dash at position 0', () => {
+    const result = parseJourneySlug('-abc1234567');
+    expect(result).toEqual({ id: 'abc1234567', slugPart: '' });
   });
 });
 
@@ -105,11 +140,7 @@ describe('parseChapterSlug', () => {
 describe('chapterPath and parseChapterSlug round-trip', () => {
   it('recovers n, slug part, and id from a built chapter URL', () => {
     const journey = { id: 'jid1234567', title: 'Intro to Rust' };
-    const chapter = {
-      id: 'cid1234567',
-      idx: 0,
-      title: 'Installing Python',
-    };
+    const chapter = { id: 'cid1234567', idx: 0, title: 'Installing Python' };
     const fullPath = chapterPath(journey, chapter);
     const segment = fullPath.split('/').pop();
     expect(segment).toBeDefined();
@@ -125,11 +156,7 @@ describe('chapterPath and parseChapterSlug round-trip', () => {
 
   it('recovers from a chapter path with an accented French title', () => {
     const journey = { id: 'jid1234567', title: 'Parcours' };
-    const chapter = {
-      id: 'abc123def4',
-      idx: 1,
-      title: 'Démarrage rapide',
-    };
+    const chapter = { id: 'abc123def4', idx: 1, title: 'Démarrage rapide' };
     const fullPath = chapterPath(journey, chapter);
     const segment = fullPath.split('/').pop();
     expect(segment).toBeDefined();
