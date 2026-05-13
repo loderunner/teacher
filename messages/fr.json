@@ -21,10 +21,10 @@
     "toolCallIndicator": "Mise à jour du programme",
     "syllabusUpdated": "Programme mis à jour"
   },
-  "Journey": {
+  "Chapter": {
+    "position": "Chapitre {n} sur {total}",
     "syllabusHeader": "Programme",
-    "beginChapter": "Commencer le chapitre {n} — bientôt disponible",
-    "resumeChapter": "Reprendre le chapitre {n} — bientôt disponible"
+    "chatComingSoon": "Le chat du chapitre apparaîtra ici."
   },
   "StylePicker": {
     "label": "Style d'enseignement",

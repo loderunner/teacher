@@ -35,12 +35,19 @@
           {
             "type": "command",
             "command": "pnpm lint:fix 1>&2",
-            "timeout": 5
+            "timeout": 10
           },
           {
             "type": "command",
             "command": "pnpm typecheck 1>&2",
-            "timeout": 5
+            "async": true,
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "pnpm test:coverage 1>&2",
+            "async": true,
+            "timeout": 120
           }
         ]
       }

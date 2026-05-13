@@ -76,6 +76,26 @@ against the coding standards below before using it. Typical adjustments are the
 symbols, and naming conventions. The generated file should feel native to the
 codebase by the time it is committed.
 
+## File colocation in `app/`
+
+Route-specific components, server actions, and other modules live directly in
+the route directory alongside `page.tsx` — no `_components/` subdirectory.
+Next.js only serves files named `page`, `layout`, `loading`, etc. as routes, so
+plain `.ts` / `.tsx` files are safe to colocate without becoming endpoints.
+
+```
+app/[locale]/journeys/[journeySlug]/[chapterSlug]/
+├── page.tsx                 ← route entry point
+├── chapter-page.tsx         ← layout component
+├── syllabus-panel.tsx       ← colocated, not a route
+├── style-picker-persist.tsx ← colocated, not a route
+└── set-journey-style.ts     ← colocated server action
+```
+
+Move a file to `components/` (root-level) only when it is used by two or more
+unrelated routes. Do not create intermediate shared directories; if genuine
+sharing appears, lift directly to the root.
+
 ## Testing
 
 Tests live alongside the source files they exercise. A module `lib/foo/bar.ts`
@@ -381,9 +401,9 @@ Rules:
   plain objects or functions.
 - Use `chainMock()` / `chainMocked()` from `chain-mock` for objects with
   chainable method APIs; do not use `vi.mocked()` for these.
-- Extract mocked exports into `const mock*` variables with `vi.mocked()`;
-  prefer calling mock function methods on those over returning a mock object
-  from the `vi.mock` factory.
+- Extract mocked exports into `const mock*` variables with `vi.mocked()`; prefer
+  calling mock function methods on those over returning a mock object from the
+  `vi.mock` factory.
 - Name mock variables with a `mock` prefix: `mockDB`, `mockClient`, `mockUser`.
 - Call `vi.clearAllMocks()` in `beforeEach` to prevent state bleed between
   tests.

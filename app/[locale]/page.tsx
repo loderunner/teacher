@@ -1,6 +1,6 @@
 import { auth } from '@clerk/nextjs/server';
 
-import { WelcomeChat } from './_components/welcome-chat';
+import { WelcomeChat } from './welcome-chat';
 
 import { listPresets } from '@/lib/server/styles/get';
 import { ensureUser } from '@/lib/server/users/ensure';

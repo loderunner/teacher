@@ -41,6 +41,7 @@ import {
   ReasoningContent,
   ReasoningTrigger,
 } from '@/components/ai-elements/reasoning';
+import { ChatPageShell } from '@/components/chat-page-shell';
 import { StylePicker } from '@/components/style-picker';
 import { parseLocale } from '@/i18n/locale';
 import { useRouter } from '@/i18n/navigation';
@@ -255,75 +256,74 @@ export function WelcomeChat({ presets }: Props) {
     });
   };
 
-  return (
-    <div className="flex flex-1 gap-6 overflow-hidden p-6">
-      {/* Left: chat */}
-      <section className="flex flex-1 flex-col overflow-hidden">
-        <div
-          className={cn(
-            'mx-auto flex w-full max-w-3xl flex-1 flex-col',
-            started ? 'gap-4 overflow-hidden' : 'pt-[12vh]',
-          )}
-        >
-          <div
-            className={cn(
-              'overflow-hidden transition-all duration-500',
-              started
-                ? 'max-h-0 -translate-y-2 opacity-0'
-                : 'max-h-[500px] translate-y-0 opacity-100',
-            )}
-          >
-            <div className="mb-10 flex flex-col items-center gap-4 text-center">
-              <CompassIcon className="size-16" weight="bold" />
-              <h1 className="font-heading text-7xl font-black tracking-tight">
-                {t('title')}
-              </h1>
-              <p className="text-muted-foreground text-xl">{t('tagline')}</p>
-            </div>
-          </div>
-
-          {started && (
-            <Conversation className="animate-in fade-in slide-in-from-bottom-4 flex-1 duration-500">
-              <ConversationContent>
-                {messageItems}
-                {indicator !== null && indicator !== 'thinking' && (
-                  <MessageIndicator
-                    key="processing-indicator"
-                    label={indicatorLabels[indicator]}
-                    type={indicator}
-                  />
-                )}
-              </ConversationContent>
-              <ConversationScrollButton />
-            </Conversation>
-          )}
-
-          <PromptInput onSubmit={handleSubmit}>
-            <PromptInputTextarea
-              disabled={streaming}
-              placeholder={t('promptPlaceholder')}
-            />
-            <PromptInputFooter>
-              <div />
-              <PromptInputSubmit status={status} />
-            </PromptInputFooter>
-          </PromptInput>
-
-          {!started && (
-            <div className="mt-3">
-              <StylePicker
-                presets={presets}
-                value={styleId}
-                onChange={setStyleId}
-              />
-            </div>
-          )}
+  const chatRegion = (
+    <div
+      className={cn(
+        'mx-auto flex w-full max-w-3xl flex-1 flex-col',
+        started ? 'gap-4 overflow-hidden' : 'pt-[12vh]',
+      )}
+    >
+      <div
+        className={cn(
+          'overflow-hidden transition-all duration-500',
+          started
+            ? 'max-h-0 -translate-y-2 opacity-0'
+            : 'max-h-[500px] translate-y-0 opacity-100',
+        )}
+      >
+        <div className="mb-10 flex flex-col items-center gap-4 text-center">
+          <CompassIcon className="size-16" weight="bold" />
+          <h1 className="font-heading text-7xl font-black tracking-tight">
+            {t('title')}
+          </h1>
+          <p className="text-muted-foreground text-xl">{t('tagline')}</p>
         </div>
-      </section>
+      </div>
 
-      {/* Right: syllabus draft + controls */}
       {started && (
-        <aside className="animate-in fade-in slide-in-from-right-8 flex w-80 flex-col gap-4 overflow-hidden duration-500 xl:w-96 2xl:w-md">
+        <Conversation className="animate-in fade-in slide-in-from-bottom-4 flex-1 duration-500">
+          <ConversationContent>
+            {messageItems}
+            {indicator !== null && indicator !== 'thinking' && (
+              <MessageIndicator
+                key="processing-indicator"
+                label={indicatorLabels[indicator]}
+                type={indicator}
+              />
+            )}
+          </ConversationContent>
+          <ConversationScrollButton />
+        </Conversation>
+      )}
+
+      <PromptInput onSubmit={handleSubmit}>
+        <PromptInputTextarea
+          disabled={streaming}
+          placeholder={t('promptPlaceholder')}
+        />
+        <PromptInputFooter>
+          <div />
+          <PromptInputSubmit status={status} />
+        </PromptInputFooter>
+      </PromptInput>
+
+      {!started && (
+        <div className="mt-3">
+          <StylePicker
+            presets={presets}
+            value={styleId}
+            onChange={setStyleId}
+          />
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <ChatPageShell>
+      <ChatPageShell.Content>{chatRegion}</ChatPageShell.Content>
+      {started && (
+        <ChatPageShell.Sidebar>
           <SyllabusDraftPanel draft={partialDraft} />
           <StylePicker
             presets={presets}
@@ -345,8 +345,8 @@ export function WelcomeChat({ presets }: Props) {
               {t('startJourney')}
             </button>
           </div>
-        </aside>
+        </ChatPageShell.Sidebar>
       )}
-    </div>
+    </ChatPageShell>
   );
 }

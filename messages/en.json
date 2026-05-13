@@ -21,10 +21,10 @@
     "toolCallIndicator": "Updating syllabus",
     "syllabusUpdated": "Updated syllabus"
   },
-  "Journey": {
+  "Chapter": {
+    "position": "Chapter {n} of {total}",
     "syllabusHeader": "Syllabus",
-    "beginChapter": "Begin Chapter {n} — coming soon",
-    "resumeChapter": "Resume Chapter {n} — coming soon"
+    "chatComingSoon": "The chapter chat will appear here."
   },
   "StylePicker": {
     "label": "Teaching style",

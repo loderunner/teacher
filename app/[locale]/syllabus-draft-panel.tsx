@@ -16,10 +16,11 @@ type Props = {
 type ChapterItemProps = {
   index: number;
   chapter: DeepPartial<Chapter>;
-  emptySectionsLabel: string;
 };
 
-function ChapterItem({ index, chapter, emptySectionsLabel }: ChapterItemProps) {
+function ChapterItem({ index, chapter }: ChapterItemProps) {
+  const t = useTranslations('Welcome');
+
   const sections =
     chapter.sections !== undefined && chapter.sections.length > 0 ? (
       <ul className="ml-4 flex flex-col gap-0.5">
@@ -33,7 +34,7 @@ function ChapterItem({ index, chapter, emptySectionsLabel }: ChapterItemProps) {
       </ul>
     ) : (
       <p className="text-muted-foreground text-xs italic">
-        {emptySectionsLabel}
+        {t('emptyChapterSections')}
       </p>
     );
 
@@ -56,6 +57,7 @@ function ChapterItem({ index, chapter, emptySectionsLabel }: ChapterItemProps) {
   );
 }
 
+/** Live syllabus preview panel for the welcome page sidebar. */
 export function SyllabusDraftPanel({ draft }: Props) {
   const t = useTranslations('Welcome');
 
@@ -65,29 +67,23 @@ export function SyllabusDraftPanel({ draft }: Props) {
         c !== undefined && c.title !== undefined,
     ) ?? [];
 
-  const empty = chapters.length === 0;
-
-  const draftContent = empty ? (
-    <p className="text-muted-foreground text-sm">{t('emptyDraft')}</p>
-  ) : (
-    <Accordion className="flex flex-col">
-      {chapters.map((chapter, i) => (
-        <ChapterItem
-          key={i}
-          chapter={chapter}
-          emptySectionsLabel={t('emptyChapterSections')}
-          index={i}
-        />
-      ))}
-    </Accordion>
-  );
+  const body =
+    chapters.length === 0 ? (
+      <p className="text-muted-foreground text-sm">{t('emptyDraft')}</p>
+    ) : (
+      <Accordion className="flex flex-col">
+        {chapters.map((chapter, i) => (
+          <ChapterItem key={i} chapter={chapter} index={i} />
+        ))}
+      </Accordion>
+    );
 
   return (
     <section className="flex min-h-0 flex-1 flex-col rounded-lg border">
       <h2 className="font-heading border-b p-4 font-semibold">
         {t('draftHeader')}
       </h2>
-      <div className="min-h-0 flex-1 overflow-y-auto p-4">{draftContent}</div>
+      <div className="min-h-0 flex-1 overflow-y-auto p-4">{body}</div>
     </section>
   );
 }

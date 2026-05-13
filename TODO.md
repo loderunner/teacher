@@ -14,10 +14,10 @@ it, copying the style of the `Confirmation` component.
 
 ## Write tests w/ db mock
 
-Write unit tests for the whole project. Unit tests use Vitest mocks. Use Vitest
-and chain-mock to mock the actual database responses. There's an example of this
-in the `getJourney` test. Dispatch subagents to write the tests for different
-parts of the codebase, and avoid context overload.
+Write unit tests for the whole project. Follow the testing conventions in
+@AGENTS.md. There's an example of a DB test in the `getJourney` test. Dispatch
+subagents to write the tests for different parts of the codebase, and avoid
+context overload.
 
 ## No source outside app/ or lib/
 
@@ -45,3 +45,14 @@ When the model updates the syllabus draft, it should show a "diff" of the
 previous draft and the new draft in a collapsed section within the "Updated
 syllabus" message. Not a strict code diff, but still a terse
 added/removed/changed list of edits.
+
+## Teaching style should be immutable
+
+The teaching style should be immutable. It should not be possible to change the
+teaching style after the journey has started. The change in tone would be too
+abrupt. I don't think the LLM would be able to handle it cleanly.
+
+## Hero should always be as wide as possible
+
+The Hero is constrained by the width of the chat region. It should always be as
+wide as possible to show its contents on a single line if possible.

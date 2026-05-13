@@ -1,4 +1,4 @@
-# Story 1 — Chapter Page (D3.1)
+# Story 1 — Chapter Page (D3.1) ✅ Done
 
 ## Context
 
