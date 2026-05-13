@@ -139,7 +139,7 @@ export function ChatPageShell({ sidebar, children }: Props) {
           {children}
         </div>
       </section>
-      <aside className="2xl:w-[28rem] flex w-80 flex-col gap-4 overflow-hidden xl:w-96">
+      <aside className="2xl:w-md flex w-80 flex-col gap-4 overflow-hidden xl:w-96">
         {sidebar}
       </aside>
     </div>

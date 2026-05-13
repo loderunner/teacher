@@ -45,7 +45,7 @@ function ChapterItem({ index, chapter, emptySectionsLabel }: ChapterItemProps) {
             {index + 1}. {chapter.title ?? '…'}
           </span>
           {chapter.summary !== undefined && (
-            <span className="text-muted-foreground text-xs font-normal">
+            <span className="text-muted-foreground font-sans text-xs font-normal">
               {chapter.summary}
             </span>
           )}

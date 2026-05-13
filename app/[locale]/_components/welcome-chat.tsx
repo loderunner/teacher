@@ -1,7 +1,7 @@
 'use client';
 
 import { useChat } from '@ai-sdk/react';
-import { CompassIcon } from '@phosphor-icons/react';
+import { CheckIcon, CompassIcon } from '@phosphor-icons/react';
 import {
   type ChatStatus,
   type DeepPartial,
@@ -18,7 +18,6 @@ import { useState, useTransition } from 'react';
 import { createJourneyAction } from './create-journey';
 import { SyllabusDraftPanel } from './syllabus-draft-panel';
 
-import { CodeBlock } from '@/components/ai-elements/code-block';
 import {
   Conversation,
   ConversationContent,
@@ -42,13 +41,6 @@ import {
   ReasoningContent,
   ReasoningTrigger,
 } from '@/components/ai-elements/reasoning';
-import {
-  Tool,
-  ToolContent,
-  ToolHeader,
-  ToolInput,
-  ToolOutput,
-} from '@/components/ai-elements/tool';
 import { StylePicker } from '@/components/style-picker';
 import { parseLocale } from '@/i18n/locale';
 import { useRouter } from '@/i18n/navigation';
@@ -205,32 +197,24 @@ export function WelcomeChat({ presets }: Props) {
       if (isReasoningUIPart(part)) {
         const partStreaming = streaming && msg === lastMessage;
         return (
-          <Reasoning key={i} isStreaming={partStreaming}>
+          <Reasoning key={i} defaultOpen={false} isStreaming={partStreaming}>
             <ReasoningTrigger getThinkingMessage={getThinkingMessage} />
             <ReasoningContent>{part.text}</ReasoningContent>
           </Reasoning>
         );
       }
       if (isSyllabusDraftToolPart(part)) {
-        const completed = part.state === 'output-available';
-        const toolOutput = completed ? (
-          <CodeBlock
-            code={JSON.stringify(part.output, null, 2)}
-            language="json"
-          />
-        ) : null;
+        if (part.state !== 'output-available') {
+          return null;
+        }
         return (
-          <Tool key={i} defaultOpen={completed}>
-            <ToolHeader state={part.state} type={part.type} />
-            <ToolContent>
-              {part.state !== 'input-streaming' && (
-                <ToolInput input={part.input} />
-              )}
-              {completed && (
-                <ToolOutput errorText={part.errorText} output={toolOutput} />
-              )}
-            </ToolContent>
-          </Tool>
+          <div
+            key={i}
+            className="text-muted-foreground not-prose flex items-center gap-2 text-xs"
+          >
+            <CheckIcon size={12} />
+            <span>{t('syllabusUpdated')}</span>
+          </div>
         );
       }
       if (part.type !== 'text') {
@@ -302,7 +286,7 @@ export function WelcomeChat({ presets }: Props) {
             <Conversation className="animate-in fade-in slide-in-from-bottom-4 flex-1 duration-500">
               <ConversationContent>
                 {messageItems}
-                {indicator !== null && (
+                {indicator !== null && indicator !== 'thinking' && (
                   <MessageIndicator
                     key="processing-indicator"
                     label={indicatorLabels[indicator]}

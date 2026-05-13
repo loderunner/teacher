@@ -18,7 +18,8 @@
     "thinkingInProgress": "Réflexion en cours...",
     "thoughtForSeconds": "Réfléchi pendant {seconds}s",
     "thoughtForFewSeconds": "Réfléchi un moment",
-    "toolCallIndicator": "Mise à jour du programme"
+    "toolCallIndicator": "Mise à jour du programme",
+    "syllabusUpdated": "Programme mis à jour"
   },
   "Journey": {
     "syllabusHeader": "Programme",

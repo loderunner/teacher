@@ -34,3 +34,10 @@ The syllabus draft phase should be persisted in the database. A journey is
 created immediately after the user sends their first message, and the syllabus
 draft and the messages are persisted in the database. When the user navigates
 back to the journey page, they can resume building their syllabus in chat.
+
+## Show a "diff" of the syllabus draft when the model updates it
+
+When the model updates the syllabus draft, it should show a "diff" of the
+previous draft and the new draft in a collapsed section within the "Updated
+syllabus" message. Not a strict code diff, but still a terse
+added/removed/changed list of edits.

@@ -1,6 +1,7 @@
 'use client';
 
 import { BrainIcon, CaretDownIcon } from '@phosphor-icons/react';
+import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import { cjk } from '@streamdown/cjk';
 import { code } from '@streamdown/code';
 import { math } from '@streamdown/math';
@@ -20,32 +21,6 @@ import {
 import { Streamdown } from 'streamdown';
 
 import { Shimmer } from './shimmer';
-
-const useControllableState = <T,>({
-  defaultProp,
-  prop,
-  onChange,
-}: {
-  defaultProp: T;
-  prop?: T;
-  onChange?: (value: T) => void;
-}): [T, (value: T) => void] => {
-  const [internal, setInternal] = useState<T>(defaultProp);
-  const controlled = prop !== undefined;
-  const value = controlled ? prop : internal;
-
-  const setValue = useCallback(
-    (next: T) => {
-      if (!controlled) {
-        setInternal(next);
-      }
-      onChange?.(next);
-    },
-    [controlled, onChange],
-  );
-
-  return [value, setValue];
-};
 
 import {
   Collapsible,
@@ -90,8 +65,8 @@ const AUTO_CLOSE_DELAY = 1000;
 const MS_IN_S = 1000;
 
 /**
- * Collapsible wrapper for model reasoning content. Auto-opens while streaming
- * and auto-closes 1 second after streaming ends. User can re-expand at any time.
+ * Collapsible wrapper for model reasoning content. Opens on mount when streaming
+ * and auto-closes 1 second after streaming ends. User can toggle at any time.
  */
 export const Reasoning = memo(
   ({
@@ -105,7 +80,6 @@ export const Reasoning = memo(
     ...props
   }: ReasoningProps) => {
     const resolvedDefaultOpen = defaultOpen ?? isStreaming;
-    const isExplicitlyClosed = defaultOpen === false;
 
     const [isOpen, setIsOpen] = useControllableState<boolean>({
       defaultProp: resolvedDefaultOpen,
@@ -132,12 +106,6 @@ export const Reasoning = memo(
     }, [isStreaming, setDuration]);
 
     useEffect(() => {
-      if (isStreaming && !isOpen && !isExplicitlyClosed) {
-        setIsOpen(true);
-      }
-    }, [isStreaming, isOpen, setIsOpen, isExplicitlyClosed]);
-
-    useEffect(() => {
       if (
         hasEverStreamedRef.current &&
         !isStreaming &&
@@ -148,7 +116,6 @@ export const Reasoning = memo(
           setIsOpen(false);
           setHasAutoClosed(true);
         }, AUTO_CLOSE_DELAY);
-
         return () => clearTimeout(timer);
       }
     }, [isStreaming, isOpen, setIsOpen, hasAutoClosed]);
@@ -161,7 +128,7 @@ export const Reasoning = memo(
     );
 
     const contextValue = useMemo(
-      () => ({ duration, isOpen: isOpen === true, isStreaming, setIsOpen }),
+      () => ({ duration, isOpen, isStreaming, setIsOpen }),
       [duration, isOpen, isStreaming, setIsOpen],
     );
 
@@ -216,21 +183,21 @@ export const ReasoningTrigger = memo(
     return (
       <CollapsibleTrigger
         className={cn(
-          'text-muted-foreground hover:text-foreground flex w-full items-center gap-2 text-sm transition-colors',
+          'text-muted-foreground hover:text-foreground flex w-full items-center gap-2 text-xs transition-colors',
           className,
         )}
         {...props}
       >
         {children ?? (
           <>
-            <BrainIcon size={16} />
+            <BrainIcon size={12} />
             {getThinkingMessage(isStreaming, duration)}
             <CaretDownIcon
               className={cn(
                 'transition-transform',
                 isOpen ? 'rotate-180' : 'rotate-0',
               )}
-              size={16}
+              size={12}
             />
           </>
         )}
@@ -250,8 +217,21 @@ export type ReasoningContentProps = ComponentProps<
 const streamdownPlugins = { cjk, code, math, mermaid };
 
 /** Scrollable panel that renders the model's reasoning text as markdown. */
-export const ReasoningContent = memo(
-  ({ className, children, ...props }: ReasoningContentProps) => (
+const ReasoningContentInner = ({
+  className,
+  children,
+  ...props
+}: ReasoningContentProps) => {
+  const { isStreaming } = useReasoning();
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isStreaming && scrollRef.current !== null) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [children, isStreaming]);
+
+  return (
     <CollapsibleContent
       className={cn(
         'data-open:animate-collapsible-down data-closed:animate-collapsible-up overflow-hidden',
@@ -260,13 +240,22 @@ export const ReasoningContent = memo(
       {...props}
     >
       <div className="h-(--collapsible-panel-height) data-ending-style:h-0 data-starting-style:h-0">
-        <div className="text-muted-foreground mt-2 max-h-48 overflow-y-auto text-sm">
+        <div
+          ref={scrollRef}
+          className="text-muted-foreground mt-2 max-h-48 overflow-y-auto text-xs"
+          style={{
+            maskImage:
+              'linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%)',
+          }}
+        >
           <Streamdown plugins={streamdownPlugins}>{children}</Streamdown>
         </div>
       </div>
     </CollapsibleContent>
-  ),
-);
+  );
+};
+
+export const ReasoningContent = memo(ReasoningContentInner);
 
 Reasoning.displayName = 'Reasoning';
 ReasoningTrigger.displayName = 'ReasoningTrigger';

@@ -18,7 +18,8 @@
     "thinkingInProgress": "Thinking...",
     "thoughtForSeconds": "Thought for {seconds}s",
     "thoughtForFewSeconds": "Thought for a moment",
-    "toolCallIndicator": "Updating syllabus"
+    "toolCallIndicator": "Updating syllabus",
+    "syllabusUpdated": "Updated syllabus"
   },
   "Journey": {
     "syllabusHeader": "Syllabus",
