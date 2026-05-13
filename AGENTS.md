@@ -76,6 +76,20 @@ against the coding standards below before using it. Typical adjustments are the
 symbols, and naming conventions. The generated file should feel native to the
 codebase by the time it is committed.
 
+## Testing
+
+Tests live alongside the source files they exercise. A module `lib/foo/bar.ts`
+has its unit tests in `lib/foo/bar.test.ts` and its integration tests in
+`lib/foo/bar.integration.test.ts`.
+
+Two test types, each with a different mocking contract:
+
+- **Unit tests** (`*.unit.test.ts`) — test a single module in isolation. Mock
+  every import from outside the module under test using `vi.mock()`, `vi.fn()`.
+- **Integration tests** (`*.test.ts`) — test a module with its real
+  collaborators. Mock only externalities: network calls, databases, file system
+  access, and third-party APIs.
+
 ---
 
 # Coding standards
@@ -303,6 +317,96 @@ Log levels:
 Never emit an `error`-level log and then rethrow. Either handle the error or
 throw it — not both. Logging before rethrowing causes duplicate log lines for
 the same error and false positives when errors are caught higher in the stack.
+
+## Testing
+
+### Test structure
+
+Group tests by exported symbol, then by method or scenario, using nested
+`describe` blocks. Each `it` block must be fully independent — no test may rely
+on state left behind by a sibling.
+
+```ts
+describe('UserService', () => {
+  describe('createUser', () => {
+    it('creates a user with valid input', async () => { ... });
+    it('throws when email is already taken', async () => { ... });
+  });
+
+  describe('deleteUser', () => {
+    it('deletes an existing user', async () => { ... });
+  });
+});
+```
+
+Use `beforeEach` to produce a fresh instance or mock for every test. Use
+`beforeAll`/`afterAll` only for expensive shared resources that are genuinely
+read-only within the suite (e.g. a started server).
+
+### Mocking in unit tests
+
+Declare all `vi.mock()` calls at the top of the file, after all imports. Extract
+mocked exports into named `const mock*` variables with `vi.mocked()`, then call
+mock function methods on those variables. Prefer this over returning a mock
+object from the `vi.mock` factory — it keeps setup close to the test and avoids
+hidden state.
+
+```ts
+import { send } from './mailer';
+
+vi.mock('./mailer');
+
+const mockSend = vi.mocked(send);
+
+describe('UserService', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('sends a welcome email on creation', async () => {
+    mockSend.mockResolvedValueOnce({ messageId: 'abc' });
+
+    await new UserService().createUser('a@b.com');
+
+    expect(mockSend).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ to: 'a@b.com' }),
+    );
+  });
+});
+```
+
+Rules:
+
+- Use `mockDeep<T>()` from `vitest-mock-extended` only for class mocks, not
+  plain objects or functions.
+- Use `chainMock()` / `chainMocked()` from `chain-mock` for objects with
+  chainable method APIs; do not use `vi.mocked()` for these.
+- Extract mocked exports into `const mock*` variables with `vi.mocked()`;
+  prefer calling mock function methods on those over returning a mock object
+  from the `vi.mock` factory.
+- Name mock variables with a `mock` prefix: `mockDB`, `mockClient`, `mockUser`.
+- Call `vi.clearAllMocks()` in `beforeEach` to prevent state bleed between
+  tests.
+- Use `vi.useFakeTimers()` / `vi.useRealTimers()` in `beforeAll`/`afterAll` when
+  the module under test uses `Date`, `setTimeout`, or `setInterval`.
+
+### Assertions
+
+Use `expect` from Vitest. Prefer the most specific matcher available — it
+produces a better failure message than a generic `toBe(true)`.
+
+```ts
+// correct
+expect(result).toEqual({ id: 1, name: 'Dan' });
+expect(fn).toHaveBeenCalledExactlyOnceWith('arg');
+await expect(promise).rejects.toThrow('error message');
+expect(items).toHaveLength(3);
+expect(str).toContain('substring');
+
+// incorrect — prefer specific matchers
+expect(result !== null).toBe(true);
+expect(fn.mock.calls.length).toBe(1);
+```
 
 ## Git
 
