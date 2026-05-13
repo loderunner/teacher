@@ -20,14 +20,17 @@ export function ChapterPage({ journey, chapter, presets }: Props) {
   return (
     <ChatPageShell>
       <ChatPageShell.Content>
-        <div className="flex flex-col gap-1">
-          <p className="text-muted-foreground text-sm">
-            {t('position', {
-              n: chapter.idx + 1,
-              total: journey.chapters.length,
-            })}
-          </p>
-          <h1 className="text-3xl font-bold">{chapter.title}</h1>
+        <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 overflow-hidden">
+          <div className="flex flex-col gap-1">
+            <p className="text-muted-foreground text-sm">
+              {t('position', {
+                n: chapter.idx + 1,
+                total: journey.chapters.length,
+              })}
+            </p>
+            <h1 className="text-3xl font-bold">{chapter.title}</h1>
+          </div>
+          <p className="text-muted-foreground">{t('chatComingSoon')}</p>
         </div>
         <ChapterChat chapter={chapter} journey={journey} />
       </ChatPageShell.Content>

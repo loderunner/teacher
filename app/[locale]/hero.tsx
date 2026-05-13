@@ -43,7 +43,7 @@ export function Hero({ presets }: Props) {
   };
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col pt-[12vh]">
+    <div className="flex w-full flex-1 flex-col pt-[12vh]">
       <div className="mb-10 flex flex-col items-center gap-4 text-center">
         <CompassIcon className="size-16" weight="bold" />
         <h1 className="font-heading text-7xl font-black tracking-tight">

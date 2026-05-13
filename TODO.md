@@ -52,11 +52,6 @@ The teaching style should be immutable. It should not be possible to change the
 teaching style after the journey has started. The change in tone would be too
 abrupt. I don't think the LLM would be able to handle it cleanly.
 
-## Hero should always be as wide as possible
-
-The Hero is constrained by the width of the chat region. It should always be as
-wide as possible to show its contents on a single line if possible.
-
 ## "Journey" in the top bar should be a link to the journey home page
 
 The "Journey" in the top bar should be a link to the journey home page. It

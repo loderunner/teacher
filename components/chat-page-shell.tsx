@@ -19,16 +19,11 @@ function Root({ children }: RootProps) {
   );
 }
 
-/**
- * Left chat column. Constrains content width to `max-w-3xl` and handles
- * overflow so the conversation scrolls independently of the sidebar.
- */
+/** Left chat column. Handles overflow so the conversation scrolls independently of the sidebar. */
 function Content({ children }: ContentProps) {
   return (
     <section className="flex flex-1 flex-col overflow-hidden">
-      <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 overflow-hidden">
-        {children}
-      </div>
+      {children}
     </section>
   );
 }
