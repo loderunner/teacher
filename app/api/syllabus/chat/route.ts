@@ -1,6 +1,6 @@
 import { auth } from '@clerk/nextjs/server';
 import {
-  type ModelMessage,
+  type SystemModelMessage,
   type UIMessage,
   convertToModelMessages,
   smoothStream,
@@ -74,23 +74,25 @@ export async function POST(req: Request): Promise<Response> {
     return new Response('Invalid style', { status: 400 });
   }
 
-  const system = composeSyllabusSystemPrompt({ style, locale });
-  const history = await convertToModelMessages(messages);
+  const system: SystemModelMessage = {
+    role: 'system',
+    content: composeSyllabusSystemPrompt({ style, locale }),
+    providerOptions: ephemeralCache,
+  };
 
-  const modelMessages: ModelMessage[] = [
-    { role: 'system', content: system, providerOptions: ephemeralCache },
-    ...history.map((message, index) =>
-      index === history.length - 1
-        ? { ...message, providerOptions: ephemeralCache }
-        : message,
-    ),
-  ];
+  const history = await convertToModelMessages(messages);
+  const modelMessages = history.map((message, index) =>
+    index === history.length - 1
+      ? { ...message, providerOptions: ephemeralCache }
+      : message,
+  );
 
   const initialUserMessage =
     messages.filter((message) => message.role === 'user').length === 1;
 
   const result = streamText({
     model: 'anthropic/claude-sonnet-4-6',
+    system,
     messages: modelMessages,
     tools,
     stopWhen: stepCountIs(5),
@@ -100,7 +102,7 @@ export async function POST(req: Request): Promise<Response> {
         ...(initialUserMessage ? { effort: 'max' } : {}),
       },
     },
-    experimental_transform: smoothStream(),
+    experimental_transform: smoothStream({ delayInMs: null }),
   });
 
   return result.toUIMessageStreamResponse();
