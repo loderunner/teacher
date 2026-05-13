@@ -1,3 +1,4 @@
+import { type DeepPartial } from 'ai';
 import { useTranslations } from 'next-intl';
 
 import {
@@ -6,15 +7,15 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import type { Syllabus } from '@/lib/server/syllabus/schema';
+import type { Chapter, Syllabus } from '@/lib/server/syllabus/schema';
 
 type Props = {
-  draft: Syllabus | null;
+  draft: DeepPartial<Syllabus> | null;
 };
 
 type ChapterItemProps = {
   index: number;
-  chapter: Syllabus['chapters'][number];
+  chapter: DeepPartial<Chapter>;
   emptySectionsLabel: string;
 };
 
@@ -22,11 +23,13 @@ function ChapterItem({ index, chapter, emptySectionsLabel }: ChapterItemProps) {
   const sections =
     chapter.sections !== undefined && chapter.sections.length > 0 ? (
       <ul className="ml-4 flex flex-col gap-0.5">
-        {chapter.sections.map((section, j) => (
-          <li key={j} className="text-muted-foreground list-disc text-xs">
-            {section}
-          </li>
-        ))}
+        {chapter.sections
+          .filter((s): s is string => s !== undefined)
+          .map((section, j) => (
+            <li key={j} className="text-muted-foreground list-disc text-xs">
+              {section}
+            </li>
+          ))}
       </ul>
     ) : (
       <p className="text-muted-foreground text-xs italic">
@@ -39,7 +42,7 @@ function ChapterItem({ index, chapter, emptySectionsLabel }: ChapterItemProps) {
       <AccordionTrigger>
         <div className="flex flex-1 flex-col gap-1 pr-2">
           <span className="text-sm font-medium">
-            {index + 1}. {chapter.title}
+            {index + 1}. {chapter.title ?? '…'}
           </span>
           {chapter.summary !== undefined && (
             <span className="text-muted-foreground text-xs font-normal">
@@ -56,13 +59,19 @@ function ChapterItem({ index, chapter, emptySectionsLabel }: ChapterItemProps) {
 export function SyllabusDraftPanel({ draft }: Props) {
   const t = useTranslations('Welcome');
 
-  const empty = draft === null || draft.chapters.length === 0;
+  const chapters =
+    draft?.chapters?.filter(
+      (c): c is DeepPartial<Chapter> =>
+        c !== undefined && c.title !== undefined,
+    ) ?? [];
+
+  const empty = chapters.length === 0;
 
   const draftContent = empty ? (
     <p className="text-muted-foreground text-sm">{t('emptyDraft')}</p>
   ) : (
     <Accordion className="flex flex-col">
-      {draft.chapters.map((chapter, i) => (
+      {chapters.map((chapter, i) => (
         <ChapterItem
           key={i}
           chapter={chapter}

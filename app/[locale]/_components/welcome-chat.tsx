@@ -4,6 +4,7 @@ import { useChat } from '@ai-sdk/react';
 import { CompassIcon } from '@phosphor-icons/react';
 import {
   type ChatStatus,
+  type DeepPartial,
   DefaultChatTransport,
   type InferUITools,
   type ToolUIPart,
@@ -92,7 +93,9 @@ function deriveProcessingIndicator(
 }
 
 /**
- * Returns the latest syllabus draft from assistant tool parts, if any.
+ * Returns the latest complete syllabus draft from assistant tool parts, if any.
+ * Only considers fully-received tool inputs (`input-available`, `output-available`).
+ * Used for journey creation where a validated complete draft is required.
  *
  * @param messages Chat messages from `useChat`.
  * @returns The most recent `fullDraft` from `tool-updateSyllabusDraft`, or null.
@@ -113,6 +116,42 @@ function deriveLatestSyllabusDraft(
         (part.state === 'output-available' || part.state === 'input-available')
       ) {
         return part.input.fullDraft;
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * Returns the latest syllabus draft including partial data during streaming.
+ * Includes the `input-streaming` state so the panel updates in real-time as
+ * the model writes each chapter.
+ *
+ * @param messages Chat messages from `useChat`.
+ * @returns The most recent (possibly partial) `fullDraft`, or null.
+ */
+function derivePartialDraft(
+  messages: SyllabusChatUIMessage[],
+): DeepPartial<Syllabus> | null {
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const msg = messages[i];
+    if (msg.role !== 'assistant') {
+      continue;
+    }
+    const { parts } = msg;
+    for (let j = parts.length - 1; j >= 0; j--) {
+      const part = parts[j];
+      if (!isSyllabusDraftToolPart(part)) {
+        continue;
+      }
+      if (
+        part.state === 'output-available' ||
+        part.state === 'input-available'
+      ) {
+        return part.input.fullDraft;
+      }
+      if (part.state === 'input-streaming') {
+        return part.input?.fullDraft ?? null;
       }
     }
   }
@@ -142,6 +181,7 @@ export function WelcomeChat({ presets }: Props) {
   const indicator = deriveProcessingIndicator(status, messages);
 
   const draft = deriveLatestSyllabusDraft(messages);
+  const displayDraft = derivePartialDraft(messages);
 
   const started = messages.length > 0;
 
@@ -258,7 +298,7 @@ export function WelcomeChat({ presets }: Props) {
       {/* Right: syllabus draft + controls */}
       {started && (
         <aside className="animate-in fade-in slide-in-from-right-8 flex w-80 flex-col gap-4 overflow-hidden duration-500 xl:w-96 2xl:w-md">
-          <SyllabusDraftPanel draft={draft} />
+          <SyllabusDraftPanel draft={displayDraft} />
           <StylePicker
             presets={presets}
             value={styleId}

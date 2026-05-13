@@ -38,11 +38,3 @@ The syllabus draft phase should be persisted in the database. A journey is
 created immediately after the user sends their first message, and the syllabus
 draft and the messages are persisted in the database. When the user navigates
 back to the journey page, they can resume building their syllabus in chat.
-
-## Stream partial object for syllabus draft
-
-When the model is generating the syllabus draft, it should stream the partial
-object to the client. The client should then update the syllabus draft state
-with the partial object. We'll need the syllabus draft panel to be able to
-handle partial objects gracefully. This will let the user see the progress of
-the syllabus draft generation.
