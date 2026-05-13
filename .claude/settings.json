@@ -4,6 +4,9 @@
   "permissions": {
     "deny": ["Edit(./lib/server/db/migrations/**/snapshot.json)"]
   },
+  "worktree": {
+    "baseRef": "head"
+  },
   "hooks": {
     "SessionStart": [
       {
@@ -12,6 +15,16 @@
             "type": "command",
             "command": "pnpm install 1>&2",
             "timeout": 120
+          },
+          {
+            "type": "command",
+            "command": "ln -s ../../../.vercel 1>&2",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "pnpm vercel env pull 1>&2",
+            "timeout": 30
           }
         ]
       }

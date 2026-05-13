@@ -15,6 +15,6 @@ Rules:
 - Call this tool immediately whenever the outline changes; do not narrate changes in prose instead.
 - Use concise chapter titles (noun phrases, ≤ 120 chars). Add a short summary only when it adds clarity.
 - Order chapters from foundational to advanced.`,
-  inputSchema: z.object({ fullDraft: syllabusSchema }),
+  inputSchema: z.object({ draft: syllabusSchema }),
   execute: async () => ({ ok: true }),
 });

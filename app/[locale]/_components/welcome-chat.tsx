@@ -93,46 +93,18 @@ function deriveProcessingIndicator(
 }
 
 /**
- * Returns the latest complete syllabus draft from assistant tool parts, if any.
- * Only considers fully-received tool inputs (`input-available`, `output-available`).
- * Used for journey creation where a validated complete draft is required.
+ * Walks assistant tool parts once (newest first) and returns the latest
+ * complete syllabus for persistence and the latest display value for the panel.
  *
  * @param messages Chat messages from `useChat`.
- * @returns The most recent `fullDraft` from `tool-updateSyllabusDraft`, or null.
+ * @returns Latest complete `draft` for journey creation and latest `partialDraft`
+ *   for the live panel (includes streaming tool input).
  */
-function deriveLatestSyllabusDraft(
-  messages: SyllabusChatUIMessage[],
-): Syllabus | null {
-  for (let i = messages.length - 1; i >= 0; i--) {
-    const msg = messages[i];
-    if (msg.role !== 'assistant') {
-      continue;
-    }
-    const { parts } = msg;
-    for (let j = parts.length - 1; j >= 0; j--) {
-      const part = parts[j];
-      if (
-        isSyllabusDraftToolPart(part) &&
-        (part.state === 'output-available' || part.state === 'input-available')
-      ) {
-        return part.input.fullDraft;
-      }
-    }
-  }
-  return null;
-}
+function deriveDrafts(messages: SyllabusChatUIMessage[]) {
+  let draft: Syllabus | null = null;
+  let partialDraft: DeepPartial<Syllabus> | null = null;
+  let partialResolved = false;
 
-/**
- * Returns the latest syllabus draft including partial data during streaming.
- * Includes the `input-streaming` state so the panel updates in real-time as
- * the model writes each chapter.
- *
- * @param messages Chat messages from `useChat`.
- * @returns The most recent (possibly partial) `fullDraft`, or null.
- */
-function derivePartialDraft(
-  messages: SyllabusChatUIMessage[],
-): DeepPartial<Syllabus> | null {
   for (let i = messages.length - 1; i >= 0; i--) {
     const msg = messages[i];
     if (msg.role !== 'assistant') {
@@ -144,18 +116,34 @@ function derivePartialDraft(
       if (!isSyllabusDraftToolPart(part)) {
         continue;
       }
-      if (
-        part.state === 'output-available' ||
-        part.state === 'input-available'
-      ) {
-        return part.input.fullDraft;
+
+      if (!partialResolved) {
+        if (
+          part.state === 'output-available' ||
+          part.state === 'input-available'
+        ) {
+          partialDraft = part.input.draft;
+          partialResolved = true;
+        } else if (part.state === 'input-streaming') {
+          partialDraft = part.input?.draft ?? null;
+          partialResolved = true;
+        }
       }
-      if (part.state === 'input-streaming') {
-        return part.input?.fullDraft ?? null;
+
+      if (
+        draft === null &&
+        (part.state === 'output-available' || part.state === 'input-available')
+      ) {
+        draft = part.input.draft;
+      }
+
+      if (partialResolved && draft !== null) {
+        return { draft, partialDraft };
       }
     }
   }
-  return null;
+
+  return { draft, partialDraft };
 }
 
 export function WelcomeChat({ presets }: Props) {
@@ -180,8 +168,7 @@ export function WelcomeChat({ presets }: Props) {
 
   const indicator = deriveProcessingIndicator(status, messages);
 
-  const draft = deriveLatestSyllabusDraft(messages);
-  const displayDraft = derivePartialDraft(messages);
+  const { draft, partialDraft } = deriveDrafts(messages);
 
   const started = messages.length > 0;
 
@@ -298,7 +285,7 @@ export function WelcomeChat({ presets }: Props) {
       {/* Right: syllabus draft + controls */}
       {started && (
         <aside className="animate-in fade-in slide-in-from-right-8 flex w-80 flex-col gap-4 overflow-hidden duration-500 xl:w-96 2xl:w-md">
-          <SyllabusDraftPanel draft={displayDraft} />
+          <SyllabusDraftPanel draft={partialDraft} />
           <StylePicker
             presets={presets}
             value={styleId}
