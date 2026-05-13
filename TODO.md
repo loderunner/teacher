@@ -31,8 +31,3 @@ created immediately after the user sends their first message, and the syllabus
 draft and the messages are persisted in the database. When the user navigates
 back to the journey page, they can resume building their syllabus in chat.
 
-## Speak before and after tool call
-
-In the syllabus chat, sometimes the model will jump straight into the update
-syllabus tool call, without communicating with the user. Read Anthropic blogs
-and the AI SDK docs, and discover optimal practices.
