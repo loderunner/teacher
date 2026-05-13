@@ -15,6 +15,9 @@
     "startJourneyDisabledHint": "Add at least one chapter and pick a style to begin.",
     "promptPlaceholder": "Describe what you want to learn…",
     "thinkingIndicator": "Thinking",
+    "thinkingInProgress": "Thinking...",
+    "thoughtForSeconds": "Thought for {seconds}s",
+    "thoughtForFewSeconds": "Thought for a moment",
     "toolCallIndicator": "Updating syllabus"
   },
   "Journey": {

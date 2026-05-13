@@ -9,14 +9,6 @@ use the answer to understand the user's needs better, and generate a more
 appropriate response. Similar to Anthropic's `AskUserQuestion` tool:
 https://code.claude.com/docs/en/agent-sdk/user-input.md
 
-## Show thinking & tool call content
-
-The user should be able to see the model's thinking and tool call content in the
-chat interface as it's streaming. The thinking and tool call content should be
-closed in a collapsible section by default. The height of the uncollapsed
-collapsible section should be fixed, as thinking and tool call content can be
-quite long.
-
 ## Write tests w/ db mock
 
 Write unit tests for the whole thing. Unit tests use Vitest mocks. Use Drizzle

@@ -8,6 +8,22 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  @keyframes collapsible-down {
+    from {
+      height: 0;
+    }
+    to {
+      height: var(--collapsible-panel-height, auto);
+    }
+  }
+  @keyframes collapsible-up {
+    from {
+      height: var(--collapsible-panel-height, auto);
+    }
+    to {
+      height: 0;
+    }
+  }
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-atkinson-next);

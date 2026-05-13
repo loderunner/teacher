@@ -10,6 +10,7 @@ import {
   type ToolUIPart,
   type UIDataTypes,
   type UIMessage,
+  isReasoningUIPart,
 } from 'ai';
 import { useLocale, useTranslations } from 'next-intl';
 import { useState, useTransition } from 'react';
@@ -17,6 +18,7 @@ import { useState, useTransition } from 'react';
 import { createJourneyAction } from './create-journey';
 import { SyllabusDraftPanel } from './syllabus-draft-panel';
 
+import { CodeBlock } from '@/components/ai-elements/code-block';
 import {
   Conversation,
   ConversationContent,
@@ -35,6 +37,18 @@ import {
   PromptInputSubmit,
   PromptInputTextarea,
 } from '@/components/ai-elements/prompt-input';
+import {
+  Reasoning,
+  ReasoningContent,
+  ReasoningTrigger,
+} from '@/components/ai-elements/reasoning';
+import {
+  Tool,
+  ToolContent,
+  ToolHeader,
+  ToolInput,
+  ToolOutput,
+} from '@/components/ai-elements/tool';
 import { StylePicker } from '@/components/style-picker';
 import { parseLocale } from '@/i18n/locale';
 import { useRouter } from '@/i18n/navigation';
@@ -175,9 +189,50 @@ export function WelcomeChat({ presets }: Props) {
   const startable =
     draft !== null && draft.chapters.length > 0 && styleId.length > 0;
 
+  const getThinkingMessage = (isStreaming: boolean, duration?: number) => {
+    if (isStreaming || duration === 0) {
+      return t('thinkingInProgress');
+    }
+    if (duration === undefined) {
+      return t('thoughtForFewSeconds');
+    }
+    return t('thoughtForSeconds', { seconds: duration });
+  };
+
   const lastMessage = messages[messages.length - 1];
   const messageItems = messages.map((msg) => {
     const parts = msg.parts.map((part, i) => {
+      if (isReasoningUIPart(part)) {
+        const partStreaming = streaming && msg === lastMessage;
+        return (
+          <Reasoning key={i} isStreaming={partStreaming}>
+            <ReasoningTrigger getThinkingMessage={getThinkingMessage} />
+            <ReasoningContent>{part.text}</ReasoningContent>
+          </Reasoning>
+        );
+      }
+      if (isSyllabusDraftToolPart(part)) {
+        const completed = part.state === 'output-available';
+        const toolOutput = completed ? (
+          <CodeBlock
+            code={JSON.stringify(part.output, null, 2)}
+            language="json"
+          />
+        ) : null;
+        return (
+          <Tool key={i} defaultOpen={completed}>
+            <ToolHeader state={part.state} type={part.type} />
+            <ToolContent>
+              {part.state !== 'input-streaming' && (
+                <ToolInput input={part.input} />
+              )}
+              {completed && (
+                <ToolOutput errorText={part.errorText} output={toolOutput} />
+              )}
+            </ToolContent>
+          </Tool>
+        );
+      }
       if (part.type !== 'text') {
         return null;
       }
