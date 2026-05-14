@@ -1,5 +1,48 @@
 # Story 2 — Chapter Chat (D3.2)
 
+**Status: complete**
+
+## Implementation notes
+
+Delivered as planned with the following deviations:
+
+**Chapter routing uses chapter ID, not 1-based index.** The route is
+`POST /api/journeys/[id]/chapters/[chapterId]/chat` where `[chapterId]` is the
+chapter's nanoid. The page layer already resolved chapters by ID; the API now
+matches. Index-based routing would silently map to the wrong chapter if chapters
+are ever reordered (Story 4).
+
+**`lib/journey-chat/` replaces the planned `components/chat-scaffold.tsx`.**
+An initial `ChatScaffold` component was created and then rejected as the wrong
+level of abstraction — the `renderPart` factory pattern added complexity without
+meaningful factorisation. The final shared primitive lives in `lib/journey-chat/`
+as two exports:
+- `useJourneyChat` — generic hook wrapping `useChat` with locale injection and
+  per-submit `body` forwarding, eliminating stale-closure issues.
+- `JourneyChatView` — generic presentation component handling text, reasoning,
+  and step-start parts directly. Tool call and data parts are delegated to an
+  optional `MessagePartDelegate` component prop, which makes the welcome-chat
+  syllabus tool UI opt-in rather than baked into the scaffold.
+
+`welcome-chat.tsx` was also retrofitted to use both hooks as part of this
+change, so both pages now share the same rendering primitive.
+
+**Processing indicator placement.** The `MessageIndicator` (loading spinner)
+renders between the conversation and the prompt input rather than inside the
+last `MessageContent`. This keeps the indicator visually separate from message
+content and avoids tying it to a specific message.
+
+**`lib/chapter-chat/` feature module** ships as planned: `prompts.ts` composes
+the chapter-phase system prompt (style fragment + bilingual rules + latency
+hint + syllabus outline + current chapter + learner memory), and `tools.ts`
+exports `createUpdateMemoryTool`, a factory that closes over `userId` and
+`journeyId` at request scope.
+
+**`lib/server/journeys/updateMemory.ts`** and unit tests ship as planned.
+`getJourney` now selects and exposes `memory` on the `Journey` type.
+
+---
+
 ## Context
 
 Story 1 of D3 (see `.claude/plans/03-chapter-page.md`) lands the chapter

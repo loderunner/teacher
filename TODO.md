@@ -43,8 +43,8 @@ back to the journey page, they can resume building their syllabus in chat.
 
 When the model updates the syllabus draft, it should show a "diff" of the
 previous draft and the new draft in a collapsed section within the "Updated
-syllabus" message. Not a strict code diff, but still a terse
-added/removed/changed list of edits.
+syllabus" message, similar to the Reasoning. Not a strict code diff, but still a
+terse added/removed/changed list of edits.
 
 ## Teaching style should be immutable
 
