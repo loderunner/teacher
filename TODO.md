@@ -41,25 +41,6 @@ previous draft and the new draft in a collapsed section within the "Updated
 syllabus" message, similar to the Reasoning. Not a strict code diff, but still a
 terse added/removed/changed list of edits.
 
-## Teaching style should be immutable
-
-The teaching style should be immutable. It should not be possible to change the
-teaching style after the journey has started. The change in tone would be too
-abrupt. I don't think the LLM would be able to handle it cleanly.
-
-## "Journey" in the top bar should be a link to the journey home page
-
-The "Journey" in the top bar should be a link to the journey home page. It
-should not be a button.
-
-## Error boundary for 404 & 500 errors
-
-Put an error boundary around the main app layout, and where relevant inside the
-child pages, so that a user can still navigate to other pages if the current
-page is not available.
-
-While you're at it, customize and localize the 404 and 500 pages.
-
 ## Smooth hero ↔ syllabus-chat transition
 
 The hero (`/`) and the syllabus chat (`/journeys/new`) currently render as two
