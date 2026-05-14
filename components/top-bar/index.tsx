@@ -1,18 +1,19 @@
 import { ClerkLoaded, ClerkLoading, Show, UserButton } from '@clerk/nextjs';
 
-import { HomeButton } from './home-button';
-
 import { LocalePicker } from '@/components/locale/picker';
 import { ThemeToggle } from '@/components/theme/toggle';
+import { Link } from '@/i18n/navigation';
 
 export default function TopBar() {
   return (
     <header className="border-border flex h-14 items-center justify-between border-b px-4">
       <div className="flex items-center gap-3">
-        <HomeButton />
-        <span className="font-heading font-semibold tracking-tight">
+        <Link
+          className="font-heading font-semibold tracking-tight"
+          href="/journeys"
+        >
           Journey
-        </span>
+        </Link>
       </div>
       <div className="flex items-center gap-2">
         <LocalePicker />
