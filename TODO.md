@@ -12,13 +12,6 @@ https://code.claude.com/docs/en/agent-sdk/user-input.md
 Find out if a component for this already exists in ai-elements. If not, create
 it, copying the style of the `Confirmation` component.
 
-## Write tests w/ db mock
-
-Write unit tests for the whole project. Follow the testing conventions in
-@AGENTS.md. There's an example of a DB test in the `getJourney` test. Dispatch
-subagents to write the tests for different parts of the codebase, and avoid
-context overload.
-
 ## No source outside app/ or lib/
 
 No source should be outside the app/ or lib/ directories. All source should be
@@ -58,12 +51,6 @@ abrupt. I don't think the LLM would be able to handle it cleanly.
 
 The "Journey" in the top bar should be a link to the journey home page. It
 should not be a button.
-
-## Don't return 404 on locked chapters
-
-When a chapter is locked, it should not return a 404. It should return the
-chapter page with a "This chapter is locked" message and a link back to the
-active chapter.
 
 ## Error boundary for 404 & 500 errors
 
