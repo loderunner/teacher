@@ -52,16 +52,22 @@ export function Hero({ presets }: Props) {
         <p className="text-muted-foreground text-xl">{t('tagline')}</p>
       </div>
 
-      <PromptInput onSubmit={handleSubmit}>
-        <PromptInputTextarea placeholder={t('promptPlaceholder')} />
-        <PromptInputFooter>
-          <div />
-          <PromptInputSubmit status="ready" />
-        </PromptInputFooter>
-      </PromptInput>
+      <div className="mx-auto flex w-full max-w-3xl flex-col">
+        <PromptInput onSubmit={handleSubmit}>
+          <PromptInputTextarea placeholder={t('promptPlaceholder')} />
+          <PromptInputFooter>
+            <div />
+            <PromptInputSubmit status="ready" />
+          </PromptInputFooter>
+        </PromptInput>
 
-      <div className="mt-3">
-        <StylePicker presets={presets} value={styleId} onChange={setStyleId} />
+        <div className="mt-3">
+          <StylePicker
+            presets={presets}
+            value={styleId}
+            onChange={setStyleId}
+          />
+        </div>
       </div>
     </div>
   );

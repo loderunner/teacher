@@ -35,25 +35,27 @@ export function LockedChapterPage({
   return (
     <ChatPageShell>
       <ChatPageShell.Content>
-        <div className="flex flex-col gap-1">
-          <p className="text-muted-foreground text-sm">
-            {t('position', {
-              n: chapter.idx + 1,
-              total: journey.chapters.length,
-            })}
-          </p>
-          <h1 className="text-3xl font-bold">{chapter.title}</h1>
-        </div>
-        <div className="flex flex-col gap-4">
-          <p className="text-muted-foreground">{t('locked')}</p>
-          {activeChapterPath !== undefined && (
-            <Link
-              className="underline hover:no-underline"
-              href={activeChapterPath}
-            >
-              {t('goToActiveChapter')}
-            </Link>
-          )}
+        <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
+          <div className="flex flex-col gap-1">
+            <p className="text-muted-foreground text-sm">
+              {t('position', {
+                n: chapter.idx + 1,
+                total: journey.chapters.length,
+              })}
+            </p>
+            <h1 className="text-3xl font-bold">{chapter.title}</h1>
+          </div>
+          <div className="flex flex-col gap-4">
+            <p className="text-muted-foreground">{t('locked')}</p>
+            {activeChapterPath !== undefined && (
+              <Link
+                className="underline hover:no-underline"
+                href={activeChapterPath}
+              >
+                {t('goToActiveChapter')}
+              </Link>
+            )}
+          </div>
         </div>
       </ChatPageShell.Content>
       <ChatPageShell.Sidebar>

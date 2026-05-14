@@ -20,7 +20,7 @@ export function ChapterPage({ journey, chapter, presets }: Props) {
   return (
     <ChatPageShell>
       <ChatPageShell.Content>
-        <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-4 overflow-hidden">
+        <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
           <div className="flex flex-col gap-1">
             <p className="text-muted-foreground text-sm">
               {t('position', {

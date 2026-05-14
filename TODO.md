@@ -37,7 +37,9 @@ relevant files at the root of the repo.
 The syllabus draft phase should be persisted in the database. A journey is
 created immediately after the user sends their first message, and the syllabus
 draft and the messages are persisted in the database. When the user navigates
-back to the journey page, they can resume building their syllabus in chat.
+back to the journey page, they can resume building their syllabus in chat. In
+fact, the syllabus draft chat should still be available to peruse, kind of like
+a "Chapter 0".
 
 ## Show a "diff" of the syllabus draft when the model updates it
 
@@ -98,3 +100,5 @@ then each entity package. It's not any more `server` than the other packages in
 journey and syllabus.
 
 We should restructure this to make more sense. What do you propose?
+
+## Stop button doesn't stop
