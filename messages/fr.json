@@ -45,5 +45,16 @@
     "light": "Clair",
     "dark": "Sombre",
     "system": "Système"
+  },
+  "NotFound": {
+    "title": "Page introuvable",
+    "description": "La page que vous recherchez n'existe pas ou a été déplacée.",
+    "backHome": "Retourner à l'accueil"
+  },
+  "Error": {
+    "title": "Une erreur s'est produite",
+    "description": "Une erreur inattendue s'est produite. Veuillez réessayer.",
+    "tryAgain": "Réessayer",
+    "backHome": "Retourner à l'accueil"
   }
 }
