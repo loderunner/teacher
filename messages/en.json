@@ -24,7 +24,10 @@
   },
   "Chapter": {
     "position": "Chapter {n} of {total}",
-    "syllabusHeader": "Syllabus"
+    "syllabusHeader": "Syllabus",
+    "chatComingSoon": "The chapter chat will appear here.",
+    "locked": "This chapter is locked. Complete the active chapter to unlock it.",
+    "goToActiveChapter": "Go to active chapter"
   },
   "ChapterChat": {
     "promptPlaceholder": "Ask anything about this chapter…"

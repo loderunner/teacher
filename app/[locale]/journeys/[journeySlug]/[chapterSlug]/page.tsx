@@ -2,6 +2,7 @@ import { auth } from '@clerk/nextjs/server';
 import { notFound } from 'next/navigation';
 
 import { ChapterPage } from './chapter-page';
+import { LockedChapterPage } from './locked-chapter-page';
 
 import { permanentRedirect } from '@/i18n/navigation';
 import { getJourney } from '@/lib/server/journeys/get';
@@ -43,16 +44,28 @@ export default async function Page({
     notFound();
   }
 
-  if (chapter.status === 'locked') {
-    notFound();
-  }
-
   const canonical = chapterPath(journey, chapter);
   if (`/journeys/${journeySlug}/${chapterSlug}` !== canonical) {
     permanentRedirect({ href: canonical, locale });
   }
 
   const presets = listPresets();
+
+  if (chapter.status === 'locked') {
+    const activeChapter = journey.chapters.find((c) => c.status === 'active');
+    const activeChapterPath =
+      activeChapter !== undefined
+        ? chapterPath(journey, activeChapter)
+        : undefined;
+    return (
+      <LockedChapterPage
+        activeChapterPath={activeChapterPath}
+        chapter={chapter}
+        journey={journey}
+        presets={presets}
+      />
+    );
+  }
 
   return <ChapterPage chapter={chapter} journey={journey} presets={presets} />;
 }
