@@ -23,8 +23,10 @@
   },
   "Chapter": {
     "position": "Chapitre {n} sur {total}",
-    "syllabusHeader": "Programme",
-    "chatComingSoon": "Le chat du chapitre apparaîtra ici."
+    "syllabusHeader": "Programme"
+  },
+  "ChapterChat": {
+    "promptPlaceholder": "Posez vos questions sur ce chapitre…"
   },
   "StylePicker": {
     "label": "Style d'enseignement",

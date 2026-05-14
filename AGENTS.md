@@ -158,16 +158,26 @@ Put acronyms in all uppercase, except when the acronym starts a camelCase name.
 ### Closures
 
 When defining a closure inside a function body, prefer assigning an arrow
-function to a `const` variable over a `function` declaration.
+function to a `const` variable over a nested `function` declaration.
+
+An inline arrow callback is fine when the whole callback is three lines or fewer
+(counting the line that contains `=>` and any continuation lines), for example
+in `filter`, `map`, `reduce`, or Vitest `expect` helpers. If it grows past that,
+assign it to a `const` (or extract a named function) instead of inlining.
 
 ```ts
-// correct
+// correct — short enough to inline
+function processItems(items: string[]) {
+  return items.map((item: string) => item.trim().toLowerCase());
+}
+
+// correct — named when you want a stable reference or clearer call site
 function processItems(items: string[]) {
   const format = (item: string) => item.trim().toLowerCase();
   return items.map(format);
 }
 
-// incorrect
+// incorrect — nested function declaration
 function processItems(items: string[]) {
   function format(item: string) {
     return item.trim().toLowerCase();
@@ -337,6 +347,26 @@ Log levels:
 Never emit an `error`-level log and then rethrow. Either handle the error or
 throw it — not both. Logging before rethrowing causes duplicate log lines for
 the same error and false positives when errors are caught higher in the stack.
+
+## HTTP status codes
+
+Use status codes that accurately reflect the nature of the failure, not just the
+nearest approximation.
+
+- **400 Bad Request** — the request body or query parameters are malformed or
+  semantically invalid. The client sent something that cannot be understood or
+  processed as-is.
+- **404 Not Found** — the addressed resource does not exist. This includes route
+  parameters that are syntactically invalid (e.g. a non-numeric ID segment): the
+  URL simply points to nothing.
+- **401 Unauthorized** — the request lacks valid authentication credentials.
+- **403 Forbidden** — the request is authenticated but the caller does not have
+  permission to access the resource.
+
+The key distinction between 400 and 404 when parsing route parameters: if the
+parameter is part of the URL path and its value makes no sense as a resource
+identifier, the address is effectively non-existent — return 404, not 400.
+Reserve 400 for problems with the request _body_.
 
 ## Testing
 

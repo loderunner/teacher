@@ -1,3 +1,5 @@
+/* eslint-disable no-constant-binary-expression */
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 import { describe, expect, it } from 'vitest';
 
 import { cn } from './tailwind';
@@ -12,9 +14,9 @@ describe('cn', () => {
   });
 
   it('ignores falsy values', () => {
-    expect(cn('px-2', false && 'py-1', null, undefined, 0 && 'mt-1')).toBe(
-      'px-2',
-    );
+    expect(
+      cn('px-2', false && 'py-1', null, undefined, Boolean(0) && 'mt-1'),
+    ).toBe('px-2');
   });
 
   it('returns an empty string when given no input', () => {

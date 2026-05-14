@@ -56,3 +56,22 @@ abrupt. I don't think the LLM would be able to handle it cleanly.
 
 The Hero is constrained by the width of the chat region. It should always be as
 wide as possible to show its contents on a single line if possible.
+
+## "Journey" in the top bar should be a link to the journey home page
+
+The "Journey" in the top bar should be a link to the journey home page. It
+should not be a button.
+
+## Don't return 404 on locked chapters
+
+When a chapter is locked, it should not return a 404. It should return the
+chapter page with a "This chapter is locked" message and a link back to the
+active chapter.
+
+## Error boundary for 404 & 500 errors
+
+Put an error boundary around the main app layout, and where relevant inside the
+child pages, so that a user can still navigate to other pages if the current
+page is not available.
+
+While you're at it, customize and localize the 404 and 500 pages.

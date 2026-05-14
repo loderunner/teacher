@@ -1,8 +1,9 @@
 import { chainMocked } from 'chain-mock';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { db } from '@/lib/server/db';
 import { getJourney } from './get';
+
+import { db } from '@/lib/server/db';
 
 vi.mock('@/lib/server/db');
 
@@ -25,7 +26,13 @@ describe('getJourney', () => {
     };
 
     mockDb.select.from.where.mockResolvedValueOnce([
-      { id: '123', title: 'Test Journey', styleId: '456', syllabus },
+      {
+        id: '123',
+        title: 'Test Journey',
+        styleId: '456',
+        memory: '',
+        syllabus,
+      },
     ]);
     mockDb.select.from.where.orderBy.mockResolvedValueOnce([
       {
@@ -43,6 +50,7 @@ describe('getJourney', () => {
       id: '123',
       title: 'Test Journey',
       styleId: '456',
+      memory: '',
       syllabus,
       chapters: [
         {
@@ -73,7 +81,13 @@ describe('getJourney', () => {
     };
 
     mockDb.select.from.where.mockResolvedValueOnce([
-      { id: '123', title: 'Multi-Chapter Journey', styleId: '456', syllabus },
+      {
+        id: '123',
+        title: 'Multi-Chapter Journey',
+        styleId: '456',
+        memory: 'Learner prefers examples.',
+        syllabus,
+      },
     ]);
     mockDb.select.from.where.orderBy.mockResolvedValueOnce([
       {
@@ -95,6 +109,7 @@ describe('getJourney', () => {
     const journey = await getJourney({ userId: '789', id: '123' });
 
     expect(journey).not.toBeNull();
+    expect(journey!.memory).toBe('Learner prefers examples.');
     expect(journey!.chapters).toHaveLength(2);
     expect(journey!.chapters[0]).toEqual({
       id: 'ch-1',

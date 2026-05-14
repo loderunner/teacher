@@ -1,9 +1,11 @@
+import assert from 'node:assert';
+
 import { describe, expect, it, vi } from 'vitest';
+
+import { updateSyllabusDraft } from './tool';
 
 vi.mock('ai', () => ({ tool: (config: unknown) => config }));
 vi.mock('@/lib/server/syllabus/schema', () => ({ syllabusSchema: {} }));
-
-import { updateSyllabusDraft } from './tool';
 
 describe('updateSyllabusDraft', () => {
   it('is defined', () => {
@@ -16,10 +18,9 @@ describe('updateSyllabusDraft', () => {
 
   it('execute resolves to { ok: true }', async () => {
     const { execute } = updateSyllabusDraft;
-    if (execute === undefined) {
-      expect.fail('execute is undefined');
-      return;
-    }
+    expect(execute).toBeDefined();
+    assert(execute !== undefined);
+
     const result = await execute(
       { draft: { chapters: [] } },
       { toolCallId: 'test-call', messages: [] },

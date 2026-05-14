@@ -1,4 +1,4 @@
-import { chainMock, type ChainMock } from 'chain-mock';
+import { type ChainMock, chainMock } from 'chain-mock';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createJourney } from './create';

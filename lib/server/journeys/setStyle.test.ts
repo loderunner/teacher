@@ -1,8 +1,9 @@
 import { chainMocked } from 'chain-mock';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { db } from '@/lib/server/db';
 import { setJourneyStyle } from './setStyle';
+
+import { db } from '@/lib/server/db';
 
 vi.mock('@/lib/server/db');
 
@@ -24,9 +25,8 @@ describe('setJourneyStyle', () => {
   });
 
   it('accepts all three required params and completes without throwing', async () => {
-    const act = () =>
-      setJourneyStyle({ userId: 'u-abc', id: 'j-xyz', styleId: 's-999' });
-
-    await expect(act()).resolves.not.toThrow();
+    await expect(
+      setJourneyStyle({ userId: 'u-abc', id: 'j-xyz', styleId: 's-999' }),
+    ).resolves.not.toThrow();
   });
 });

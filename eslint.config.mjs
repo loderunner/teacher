@@ -4,6 +4,7 @@ import loderunnerFormatting from 'eslint-config-loderunner/formatting';
 import loderunnerImport from 'eslint-config-loderunner/import';
 import loderunnerReact from 'eslint-config-loderunner/react';
 import loderunnerTs from 'eslint-config-loderunner/typescript';
+import loderunnerVitest from 'eslint-config-loderunner/vitest';
 import nextVitals from 'eslint-config-next/core-web-vitals';
 import nextTs from 'eslint-config-next/typescript';
 
@@ -14,6 +15,7 @@ const eslintConfig = defineConfig([
   ...loderunnerTs,
   ...loderunnerReact,
   ...loderunnerImport,
+  ...loderunnerVitest,
   {
     languageOptions: {
       parserOptions: {
@@ -43,6 +45,7 @@ const eslintConfig = defineConfig([
     'next-env.d.ts',
     '.agents/**',
     '.claude/**',
+    'coverage/**',
   ]),
 ]);
 

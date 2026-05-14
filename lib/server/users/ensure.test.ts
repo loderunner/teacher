@@ -1,15 +1,13 @@
 import { chainMocked } from 'chain-mock';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { db } from '@/lib/server/db';
-import { users } from '@/lib/server/db/schema';
 import { ensureUser } from './ensure';
 
-vi.mock('react', async (importOriginal) => {
-  const mod = await importOriginal<typeof import('react')>();
-  return { ...mod, cache: (fn: unknown) => fn };
-});
+import { db } from '@/lib/server/db';
+import { users } from '@/lib/server/db/schema';
 
+// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+vi.mock('react', () => ({ cache: (fn: Function) => fn }));
 vi.mock('@/lib/server/db');
 
 const mockDb = chainMocked(db);

@@ -1,5 +1,6 @@
 import { useTranslations } from 'next-intl';
 
+import { ChapterChat } from './chapter-chat';
 import { StylePickerPersist } from './style-picker-persist';
 import { SyllabusPanel } from './syllabus-panel';
 
@@ -28,7 +29,7 @@ export function ChapterPage({ journey, chapter, presets }: Props) {
           </p>
           <h1 className="text-3xl font-bold">{chapter.title}</h1>
         </div>
-        <p className="text-muted-foreground">{t('chatComingSoon')}</p>
+        <ChapterChat chapter={chapter} journey={journey} />
       </ChatPageShell.Content>
       <ChatPageShell.Sidebar>
         <SyllabusPanel currentIdx={chapter.idx} journey={journey} />

@@ -194,11 +194,15 @@ export function WelcomeChat({ presets }: Props) {
 
   const lastMessage = messages[messages.length - 1];
   const messageItems = messages.map((msg) => {
+    const isLast = msg === lastMessage;
     const parts = msg.parts.map((part, i) => {
       if (isReasoningUIPart(part)) {
-        const partStreaming = streaming && msg === lastMessage;
         return (
-          <Reasoning key={i} defaultOpen={false} isStreaming={partStreaming}>
+          <Reasoning
+            key={i}
+            defaultOpen={false}
+            isStreaming={streaming && isLast}
+          >
             <ReasoningTrigger getThinkingMessage={getThinkingMessage} />
             <ReasoningContent>{part.text}</ReasoningContent>
           </Reasoning>
@@ -222,14 +226,25 @@ export function WelcomeChat({ presets }: Props) {
         return null;
       }
       return (
-        <MessageResponse key={i} isAnimating={streaming && msg === lastMessage}>
+        <MessageResponse key={i} isAnimating={streaming && isLast}>
           {part.text}
         </MessageResponse>
       );
     });
+    const processingIndicator =
+      isLast && indicator !== null && indicator !== 'thinking' ? (
+        <MessageIndicator
+          key="indicator"
+          label={indicatorLabels[indicator]}
+          type={indicator}
+        />
+      ) : null;
     return (
       <Message key={msg.id} from={msg.role}>
-        <MessageContent>{parts}</MessageContent>
+        <MessageContent>
+          {parts}
+          {processingIndicator}
+        </MessageContent>
       </Message>
     );
   });
@@ -256,72 +271,64 @@ export function WelcomeChat({ presets }: Props) {
     });
   };
 
-  const chatRegion = (
-    <div
-      className={cn(
-        'mx-auto flex w-full max-w-3xl flex-1 flex-col',
-        started ? 'gap-4 overflow-hidden' : 'pt-[12vh]',
-      )}
-    >
-      <div
-        className={cn(
-          'overflow-hidden transition-all duration-500',
-          started
-            ? 'max-h-0 -translate-y-2 opacity-0'
-            : 'max-h-[500px] translate-y-0 opacity-100',
-        )}
-      >
-        <div className="mb-10 flex flex-col items-center gap-4 text-center">
-          <CompassIcon className="size-16" weight="bold" />
-          <h1 className="font-heading text-7xl font-black tracking-tight">
-            {t('title')}
-          </h1>
-          <p className="text-muted-foreground text-xl">{t('tagline')}</p>
-        </div>
-      </div>
-
-      {started && (
-        <Conversation className="animate-in fade-in slide-in-from-bottom-4 flex-1 duration-500">
-          <ConversationContent>
-            {messageItems}
-            {indicator !== null && indicator !== 'thinking' && (
-              <MessageIndicator
-                key="processing-indicator"
-                label={indicatorLabels[indicator]}
-                type={indicator}
-              />
-            )}
-          </ConversationContent>
-          <ConversationScrollButton />
-        </Conversation>
-      )}
-
-      <PromptInput onSubmit={handleSubmit}>
-        <PromptInputTextarea
-          disabled={streaming}
-          placeholder={t('promptPlaceholder')}
-        />
-        <PromptInputFooter>
-          <div />
-          <PromptInputSubmit status={status} />
-        </PromptInputFooter>
-      </PromptInput>
-
-      {!started && (
-        <div className="mt-3">
-          <StylePicker
-            presets={presets}
-            value={styleId}
-            onChange={setStyleId}
-          />
-        </div>
-      )}
-    </div>
-  );
-
   return (
     <ChatPageShell>
-      <ChatPageShell.Content>{chatRegion}</ChatPageShell.Content>
+      {/* Content */}
+      <ChatPageShell.Content>
+        <div
+          className={cn(
+            'mx-auto flex w-full max-w-3xl flex-1 flex-col',
+            started ? 'gap-4 overflow-hidden' : 'pt-[12vh]',
+          )}
+        >
+          <div
+            className={cn(
+              'overflow-hidden transition-all duration-500',
+              started
+                ? 'max-h-0 -translate-y-2 opacity-0'
+                : 'max-h-[500px] translate-y-0 opacity-100',
+            )}
+          >
+            <div className="mb-10 flex flex-col items-center gap-4 text-center">
+              <CompassIcon className="size-16" weight="bold" />
+              <h1 className="font-heading text-7xl font-black tracking-tight">
+                {t('title')}
+              </h1>
+              <p className="text-muted-foreground text-xl">{t('tagline')}</p>
+            </div>
+          </div>
+
+          {started && (
+            <Conversation className="animate-in fade-in slide-in-from-bottom-4 flex-1 duration-500">
+              <ConversationContent>{messageItems}</ConversationContent>
+              <ConversationScrollButton />
+            </Conversation>
+          )}
+
+          <PromptInput onSubmit={handleSubmit}>
+            <PromptInputTextarea
+              disabled={streaming}
+              placeholder={t('promptPlaceholder')}
+            />
+            <PromptInputFooter>
+              <div />
+              <PromptInputSubmit status={status} />
+            </PromptInputFooter>
+          </PromptInput>
+
+          {!started && (
+            <div className="mt-3">
+              <StylePicker
+                presets={presets}
+                value={styleId}
+                onChange={setStyleId}
+              />
+            </div>
+          )}
+        </div>
+      </ChatPageShell.Content>
+
+      {/* Sidebar */}
       {started && (
         <ChatPageShell.Sidebar>
           <SyllabusDraftPanel draft={partialDraft} />
