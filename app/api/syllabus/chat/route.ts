@@ -31,8 +31,8 @@ export type RequestBody = {
   locale: Locale;
 };
 
-const requestBodySchema = z.object({
-  messages: z.array(z.unknown()),
+const requestBodySchema: z.ZodType<RequestBody> = z.object({
+  messages: z.array(z.custom<UIMessage>()),
   styleId: z.string().min(1),
   locale: z.union([z.literal('en'), z.literal('fr')]),
 });
@@ -49,7 +49,7 @@ export async function POST(req: Request): Promise<Response> {
     return new Response('Unauthorized', { status: 401 });
   }
 
-  let parsed: z.infer<typeof requestBodySchema>;
+  let parsed: RequestBody;
   try {
     parsed = requestBodySchema.parse(await req.json());
   } catch {

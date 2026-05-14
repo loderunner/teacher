@@ -29,8 +29,8 @@ export type RequestBody = {
   locale: Locale;
 };
 
-const requestBodySchema = z.object({
-  messages: z.array(z.unknown()),
+const requestBodySchema: z.ZodType<RequestBody> = z.object({
+  messages: z.array(z.custom<UIMessage>()),
   locale: z.union([z.literal('en'), z.literal('fr')]),
 });
 
@@ -53,7 +53,7 @@ export async function POST(
 
   const { journeyId, chapterId } = await context.params;
 
-  let parsed: z.infer<typeof requestBodySchema>;
+  let parsed: RequestBody;
   try {
     parsed = requestBodySchema.parse(await req.json());
   } catch {
@@ -62,11 +62,13 @@ export async function POST(
 
   const { locale } = parsed;
 
-  let messages: UIMessage[];
-  try {
-    messages = await validateUIMessages({ messages: parsed.messages });
-  } catch {
-    return new Response('Bad Request', { status: 400 });
+  let messages: UIMessage[] = [];
+  if (parsed.messages.length > 0) {
+    try {
+      messages = await validateUIMessages({ messages: parsed.messages });
+    } catch {
+      return new Response('Bad Request', { status: 400 });
+    }
   }
 
   await ensureUser(userId);
@@ -97,11 +99,19 @@ export async function POST(
   };
 
   const history = await convertToModelMessages(messages);
-  const modelMessages = history.map((message, index) =>
-    index === history.length - 1
-      ? { ...message, providerOptions: ephemeralCache }
-      : message,
-  );
+
+  // Anthropic requires at least one message. When the client sends an empty
+  // history (assistant-first turn), inject a silent start cue so the model
+  // responds from the system prompt alone.
+  const startCue = { role: 'user' as const, content: 'Begin.' };
+  const modelMessages =
+    history.length === 0
+      ? [startCue]
+      : history.map((message, index) =>
+          index === history.length - 1
+            ? { ...message, providerOptions: ephemeralCache }
+            : message,
+        );
 
   const result = streamText({
     model: 'anthropic/claude-sonnet-4-6',

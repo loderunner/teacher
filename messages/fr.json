@@ -25,12 +25,11 @@
   "Chapter": {
     "position": "Chapitre {n} sur {total}",
     "syllabusHeader": "Programme",
-    "chatComingSoon": "Le chat du chapitre apparaîtra ici.",
     "locked": "Ce chapitre est verrouillé. Complétez le chapitre actif pour le déverrouiller.",
     "goToActiveChapter": "Aller au chapitre actif"
   },
   "ChapterChat": {
-    "promptPlaceholder": "Posez vos questions sur ce chapitre…"
+    "promptPlaceholder": "Discutez pour continuer ce chapitre…"
   },
   "StylePicker": {
     "label": "Style d'enseignement",

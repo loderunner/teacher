@@ -1,6 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
+import { useEffect, useRef } from 'react';
 
 import { JourneyChatView, useJourneyChat } from '@/lib/journey-chat';
 import type { Journey, JourneyChapter } from '@/lib/server/journeys/get';
@@ -20,9 +21,18 @@ type Props = {
  */
 export function ChapterChat({ journey, chapter }: Props) {
   const t = useTranslations('ChapterChat');
-  const { messages, status, handleSubmit } = useJourneyChat({
+  const { messages, status, handleSubmit, triggerResponse } = useJourneyChat({
     api: `/api/journeys/${journey.id}/chapters/${chapter.id}/chat`,
   });
+
+  const startedRef = useRef(false);
+  useEffect(() => {
+    if (startedRef.current) {
+      return;
+    }
+    startedRef.current = true;
+    triggerResponse();
+  }, [triggerResponse]);
 
   return (
     <JourneyChatView

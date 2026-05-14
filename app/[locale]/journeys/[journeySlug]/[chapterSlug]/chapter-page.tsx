@@ -30,7 +30,6 @@ export function ChapterPage({ journey, chapter, presets }: Props) {
             </p>
             <h1 className="text-3xl font-bold">{chapter.title}</h1>
           </div>
-          <p className="text-muted-foreground">{t('chatComingSoon')}</p>
         </div>
         <ChapterChat chapter={chapter} journey={journey} />
       </ChatPageShell.Content>

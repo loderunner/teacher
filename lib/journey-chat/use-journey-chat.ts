@@ -3,6 +3,7 @@
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport, type UIMessage } from 'ai';
 import { useLocale } from 'next-intl';
+import { useCallback } from 'react';
 
 import type { PromptInputMessage } from '@/components/ai-elements/prompt-input';
 import { parseLocale } from '@/i18n/locale';
@@ -26,10 +27,10 @@ export type HandleSubmitParams = PromptInputMessage & {
  * closures.
  *
  * @param params - API route configuration.
- * @returns Messages, status, streaming flag, and a submit handler.
+ * @returns Messages, status, streaming flag, a submit handler, and a trigger function.
  *
  * @example
- * const { messages, status, streaming, handleSubmit } = useJourneyChat({
+ * const { messages, status, streaming, handleSubmit, triggerResponse } = useJourneyChat({
  *   api: '/api/journeys/123/chapters/456/chat',
  * });
  */
@@ -47,5 +48,19 @@ export function useJourneyChat<TMessage extends UIMessage = UIMessage>({
     void sendMessage({ text }, { body: { locale, ...body } });
   };
 
-  return { messages, sendMessage, status, streaming, handleSubmit };
+  const triggerResponse = useCallback(
+    (body?: Record<string, unknown>) => {
+      void sendMessage(undefined, { body: { locale, ...body } });
+    },
+    [sendMessage, locale],
+  );
+
+  return {
+    messages,
+    sendMessage,
+    status,
+    streaming,
+    handleSubmit,
+    triggerResponse,
+  };
 }
