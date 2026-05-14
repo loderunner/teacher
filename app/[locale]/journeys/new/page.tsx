@@ -1,11 +1,11 @@
 import { auth } from '@clerk/nextjs/server';
 
-import { Hero } from './hero';
+import { SyllabusChat } from './syllabus-chat';
 
 import { listPresets } from '@/lib/server/styles/get';
 import { ensureUser } from '@/lib/server/users/ensure';
 
-export default async function Home() {
+export default async function Page() {
   const { userId } = await auth();
   await ensureUser(userId!);
 
@@ -13,7 +13,7 @@ export default async function Home() {
 
   return (
     <main className="flex flex-1 flex-col overflow-hidden">
-      <Hero presets={presets} />
+      <SyllabusChat presets={presets} />
     </main>
   );
 }

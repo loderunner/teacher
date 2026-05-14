@@ -75,3 +75,31 @@ child pages, so that a user can still navigate to other pages if the current
 page is not available.
 
 While you're at it, customize and localize the 404 and 500 pages.
+
+## Smooth hero ↔ syllabus-chat transition
+
+The hero (`/`) and the syllabus chat (`/journeys/new`) currently render as two
+separate pages with a hard navigation. We want a smooth transition that makes
+them feel continuous, especially around the `PromptInput`.
+
+Approach sketch:
+
+- Give the hero's `PromptInput` and the chat page's `PromptInput` the same
+  `view-transition-name` so the browser morphs them across navigation.
+- Wrap the `router.push('/journeys/new')` call in `startViewTransition` and use
+  `addTransitionType('hero-to-chat')` so we can scope CSS animations to this
+  specific navigation direction.
+- Animate the hero (title, tagline, compass) out, and slide the empty
+  conversation in from the bottom.
+
+See `.claude/skills/vercel-react-view-transitions/SKILL.md` for the React 19
+`<ViewTransition>` and `addTransitionType` APIs.
+
+## Restructure server packages
+
+Right now we have one `lib/server` package which basically only has `db/` and
+then each entity package. It's not any more `server` than the other packages in
+`lib/`. And then we have 3 `*-chat` packages, with unclear boundaries between
+journey and syllabus.
+
+We should restructure this to make more sense. What do you propose?

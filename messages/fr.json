@@ -14,12 +14,13 @@
     "startJourney": "Commencer le parcours",
     "startJourneyDisabledHint": "Ajoutez au moins un chapitre et choisissez un style pour commencer.",
     "promptPlaceholder": "Décrivez ce que vous souhaitez apprendre…",
-    "thinkingIndicator": "En train de réfléchir",
+    "updatingSyllabus": "Mise à jour du programme",
+    "syllabusUpdated": "Programme mis à jour"
+  },
+  "JourneyChat": {
     "thinkingInProgress": "Réflexion en cours...",
     "thoughtForSeconds": "Réfléchi pendant {seconds}s",
-    "thoughtForFewSeconds": "Réfléchi un moment",
-    "toolCallIndicator": "Mise à jour du programme",
-    "syllabusUpdated": "Programme mis à jour"
+    "thoughtForFewSeconds": "Réfléchi un moment"
   },
   "Chapter": {
     "position": "Chapitre {n} sur {total}",

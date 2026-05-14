@@ -47,6 +47,24 @@ A feature module combines entities + AI + UI orchestration to deliver a
 user-facing capability. Example: `lib/syllabus-chat/` owns the chat-driven
 syllabus-building flow — its prompts, its tool, and its bootstrap step.
 
+## Multi-file modules export through a barrel
+
+When a feature module spans multiple files, expose its public API through a
+single `index.ts` barrel. Consumers import from the module directory, not from
+internal files.
+
+```ts
+// correct
+import { useJourneyChat, JourneyChatView } from '@/lib/journey-chat';
+
+// incorrect — leaks internal file structure to consumers
+import { useJourneyChat } from '@/lib/journey-chat/use-journey-chat';
+import { JourneyChatView } from '@/lib/journey-chat/view';
+```
+
+The barrel re-exports only what is part of the module's public contract.
+Internal helpers that are not meant for outside use are not re-exported.
+
 ## A feature owns its AI config
 
 Prompts, tool definitions, model identifiers, and decoding parameters live with
