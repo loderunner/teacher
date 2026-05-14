@@ -1,20 +1,18 @@
 import { useTranslations } from 'next-intl';
 
 import { ChapterChat } from './chapter-chat';
-import { StylePickerPersist } from './style-picker-persist';
+import { StyleLabel } from './style-label';
 import { SyllabusPanel } from './syllabus-panel';
 
 import { ChatPageShell } from '@/components/chat-page-shell';
 import type { Journey, JourneyChapter } from '@/lib/server/journeys/get';
-import type { Style } from '@/lib/server/styles/get';
 
 type Props = {
   journey: Journey;
   chapter: JourneyChapter;
-  presets: Style[];
 };
 
-export function ChapterPage({ journey, chapter, presets }: Props) {
+export function ChapterPage({ journey, chapter }: Props) {
   const t = useTranslations('Chapter');
 
   return (
@@ -35,11 +33,7 @@ export function ChapterPage({ journey, chapter, presets }: Props) {
       </ChatPageShell.Content>
       <ChatPageShell.Sidebar>
         <SyllabusPanel currentIdx={chapter.idx} journey={journey} />
-        <StylePickerPersist
-          initialStyleId={journey.styleId}
-          journeyId={journey.id}
-          presets={presets}
-        />
+        <StyleLabel styleId={journey.styleId} />
       </ChatPageShell.Sidebar>
     </ChatPageShell>
   );

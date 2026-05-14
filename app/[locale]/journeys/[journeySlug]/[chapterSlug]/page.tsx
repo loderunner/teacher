@@ -6,7 +6,6 @@ import { LockedChapterPage } from './locked-chapter-page';
 
 import { permanentRedirect } from '@/i18n/navigation';
 import { getJourney } from '@/lib/server/journeys/get';
-import { listPresets } from '@/lib/server/styles/get';
 import { ensureUser } from '@/lib/server/users/ensure';
 import { chapterPath, parseChapterSlug, parseJourneySlug } from '@/lib/url';
 
@@ -49,8 +48,6 @@ export default async function Page({
     permanentRedirect({ href: canonical, locale });
   }
 
-  const presets = listPresets();
-
   if (chapter.status === 'locked') {
     const activeChapter = journey.chapters.find((c) => c.status === 'active');
     const activeChapterPath =
@@ -62,10 +59,9 @@ export default async function Page({
         activeChapterPath={activeChapterPath}
         chapter={chapter}
         journey={journey}
-        presets={presets}
       />
     );
   }
 
-  return <ChapterPage chapter={chapter} journey={journey} presets={presets} />;
+  return <ChapterPage chapter={chapter} journey={journey} />;
 }

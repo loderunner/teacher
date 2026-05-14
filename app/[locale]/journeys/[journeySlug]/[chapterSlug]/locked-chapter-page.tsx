@@ -1,12 +1,11 @@
 import { useTranslations } from 'next-intl';
 
-import { StylePickerPersist } from './style-picker-persist';
+import { StyleLabel } from './style-label';
 import { SyllabusPanel } from './syllabus-panel';
 
 import { ChatPageShell } from '@/components/chat-page-shell';
 import { Link } from '@/i18n/navigation';
 import type { Journey, JourneyChapter } from '@/lib/server/journeys/get';
-import type { Style } from '@/lib/server/styles/get';
 
 /** Props for {@link LockedChapterPage}. */
 type Props = {
@@ -14,8 +13,6 @@ type Props = {
   journey: Journey;
   /** The locked chapter being viewed. */
   chapter: JourneyChapter;
-  /** Available teaching style presets. */
-  presets: Style[];
   /**
    * Path of the current active chapter to link to.
    * `undefined` when no active chapter exists (all chapters are done).
@@ -27,7 +24,6 @@ type Props = {
 export function LockedChapterPage({
   journey,
   chapter,
-  presets,
   activeChapterPath,
 }: Props) {
   const t = useTranslations('Chapter');
@@ -60,11 +56,7 @@ export function LockedChapterPage({
       </ChatPageShell.Content>
       <ChatPageShell.Sidebar>
         <SyllabusPanel currentIdx={chapter.idx} journey={journey} />
-        <StylePickerPersist
-          initialStyleId={journey.styleId}
-          journeyId={journey.id}
-          presets={presets}
-        />
+        <StyleLabel styleId={journey.styleId} />
       </ChatPageShell.Sidebar>
     </ChatPageShell>
   );
