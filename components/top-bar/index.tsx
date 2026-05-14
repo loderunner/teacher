@@ -8,10 +8,7 @@ export default function TopBar() {
   return (
     <header className="border-border flex h-14 items-center justify-between border-b px-4">
       <div className="flex items-center gap-3">
-        <Link
-          className="font-heading font-semibold tracking-tight"
-          href="/journeys"
-        >
+        <Link className="font-heading font-semibold tracking-tight" href="/">
           Journey
         </Link>
       </div>

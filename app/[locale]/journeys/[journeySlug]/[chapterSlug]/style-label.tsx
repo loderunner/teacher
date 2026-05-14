@@ -12,7 +12,9 @@ type Props = {
 export function StyleLabel({ styleId }: Props) {
   const t = useTranslations('StylePicker');
   const style = getStyle(styleId);
-  if (style === null) {return null;}
+  if (style === null) {
+    return null;
+  }
 
   return (
     <div className="flex flex-col gap-2">
