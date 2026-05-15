@@ -16,7 +16,6 @@ import {
   useEffect,
   useMemo,
   useRef,
-  useState,
 } from 'react';
 import { Streamdown } from 'streamdown';
 
@@ -61,12 +60,11 @@ export type ReasoningProps = ComponentProps<typeof Collapsible> & {
   duration?: number;
 };
 
-const AUTO_CLOSE_DELAY = 1000;
 const MS_IN_S = 1000;
 
 /**
- * Collapsible wrapper for model reasoning content. Opens on mount when streaming
- * and auto-closes 1 second after streaming ends. User can toggle at any time.
+ * Collapsible wrapper for model reasoning content. Open state is fully
+ * controlled by the user; use `defaultOpen` to set the initial state.
  */
 export const Reasoning = memo(
   ({
@@ -91,34 +89,16 @@ export const Reasoning = memo(
       prop: durationProp,
     });
 
-    const hasEverStreamedRef = useRef(isStreaming);
-    const [hasAutoClosed, setHasAutoClosed] = useState(false);
     const startTimeRef = useRef<number | null>(null);
 
     useEffect(() => {
       if (isStreaming) {
-        hasEverStreamedRef.current = true;
         startTimeRef.current ??= Date.now();
       } else if (startTimeRef.current !== null) {
         setDuration(Math.ceil((Date.now() - startTimeRef.current) / MS_IN_S));
         startTimeRef.current = null;
       }
     }, [isStreaming, setDuration]);
-
-    useEffect(() => {
-      if (
-        hasEverStreamedRef.current &&
-        !isStreaming &&
-        isOpen &&
-        !hasAutoClosed
-      ) {
-        const timer = setTimeout(() => {
-          setIsOpen(false);
-          setHasAutoClosed(true);
-        }, AUTO_CLOSE_DELAY);
-        return () => clearTimeout(timer);
-      }
-    }, [isStreaming, isOpen, setIsOpen, hasAutoClosed]);
 
     const handleOpenChange = useCallback(
       (newOpen: boolean) => {
