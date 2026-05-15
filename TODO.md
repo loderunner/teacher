@@ -38,8 +38,14 @@ a "Chapter 0".
 
 When the model updates the syllabus draft, it should show a "diff" of the
 previous draft and the new draft in a collapsed section within the "Updated
-syllabus" message, similar to the Reasoning. Not a strict code diff, but still a
-terse added/removed/changed list of edits.
+syllabus" message, similar to the Reasoning collapsible. Not a strict code diff,
+but still a terse added/removed/changed list of edits.
+
+We should also be able to have the same view when the model proposes changes to
+the syllabus through the `proposeSyllabusChange` tool.
+
+The user should always be able to disclose or collapse the diff, even after the
+changes have been applied.
 
 ## Smooth hero ↔ syllabus-chat transition
 

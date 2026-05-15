@@ -1,16 +1,32 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { useCallback, useEffect, useRef, useState, useTransition } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from 'react';
+import { z } from 'zod';
 
 import { completeChapterAction } from './complete-chapter';
 import { StyleLabel } from './style-label';
+import { SyllabusChangeCard } from './syllabus-change-card';
 import { SyllabusPanel } from './syllabus-panel';
 
 import { ChatPageShell } from '@/components/chat-page-shell';
-import { useRouter } from '@/i18n/navigation';
+import { usePathname, useRouter } from '@/i18n/navigation';
 import { JourneyChatView, useJourneyChat } from '@/lib/journey-chat';
+import type { MessagePartDelegateProps } from '@/lib/journey-chat/view';
 import type { Journey, JourneyChapter } from '@/lib/server/journeys/get';
+import { syllabusSchema } from '@/lib/server/syllabus/schema';
+
+const proposalInputSchema = z.object({
+  reason: z.string(),
+  newSyllabus: syllabusSchema,
+});
 
 type Props = {
   journey: Journey;
@@ -21,9 +37,11 @@ export function ChapterPage({ journey, chapter }: Props) {
   const t = useTranslations('Chapter');
   const tChat = useTranslations('ChapterChat');
   const router = useRouter();
+  const pathname = usePathname();
 
   const {
     messages,
+    setMessages,
     status,
     stop,
     handleSubmit,
@@ -33,6 +51,58 @@ export function ChapterPage({ journey, chapter }: Props) {
   } = useJourneyChat({
     api: `/api/journeys/${journey.id}/chapters/${chapter.id}/chat`,
   });
+
+  const [appliedToolCallIds, setAppliedToolCallIds] = useState(
+    () => new Set<string>(),
+  );
+
+  const handleSyllabusApplied = useCallback(
+    (toolCallId: string) => {
+      setAppliedToolCallIds((prev) => new Set(prev).add(toolCallId));
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: crypto.randomUUID(),
+          role: 'user',
+          metadata: { type: 'action' },
+          parts: [{ type: 'text', text: tChat('proposalAppliedMessage') }],
+        },
+      ]);
+    },
+    [setMessages, tChat],
+  );
+
+  // Stable component reference — recreated only when journey, pathname, or
+  // appliedToolCallIds changes. SyllabusChangeCard local state (applying,
+  // dismissed) is preserved across streaming re-renders; the applied state
+  // lives here so it survives journey-prop updates after router.refresh().
+  const ChapterPartDelegate = useMemo(
+    () =>
+      function ChapterPartDelegateComponent({
+        part,
+      }: MessagePartDelegateProps) {
+        if (part.type !== 'tool-proposeSyllabusChange') {
+          return null;
+        }
+        const toolCallId = 'toolCallId' in part ? part.toolCallId : '';
+        const raw = 'input' in part ? part.input : undefined;
+        const parsed = proposalInputSchema.safeParse(raw);
+        if (!parsed.success) {
+          return null;
+        }
+        return (
+          <SyllabusChangeCard
+            applied={appliedToolCallIds.has(toolCallId)}
+            currentPath={pathname}
+            journey={journey}
+            proposal={parsed.data}
+            toolCallId={toolCallId}
+            onApplied={() => handleSyllabusApplied(toolCallId)}
+          />
+        );
+      },
+    [journey, pathname, appliedToolCallIds, handleSyllabusApplied],
+  );
 
   const startedRef = useRef(false);
   useEffect(() => {
@@ -80,7 +150,7 @@ export function ChapterPage({ journey, chapter }: Props) {
   return (
     <ChatPageShell>
       <ChatPageShell.Content>
-        <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
+        <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 pb-4">
           <div className="flex flex-col gap-1">
             <p className="text-muted-foreground text-sm">
               {t('position', {
@@ -92,6 +162,7 @@ export function ChapterPage({ journey, chapter }: Props) {
           </div>
         </div>
         <JourneyChatView
+          MessagePartDelegate={ChapterPartDelegate}
           messages={messages}
           placeholder={tChat('promptPlaceholder')}
           status={status}

@@ -37,7 +37,18 @@
     "promptPlaceholder": "Discutez pour continuer ce chapitre…",
     "completeChapter": "Passer au chapitre suivant",
     "completeJourney": "Marquer ce chapitre comme terminé",
-    "completeError": "Impossible de terminer le chapitre. Réessayez."
+    "completeError": "Impossible de terminer le chapitre. Réessayez.",
+    "proposalReasonHeader": "Modification proposée du programme",
+    "proposalApply": "Appliquer",
+    "proposalDismiss": "Ignorer",
+    "proposalDismissed": "Ignoré",
+    "proposalApplied": "Appliqué",
+    "proposalAppliedMessage": "J'ai appliqué la modification suggérée du programme.",
+    "proposalAdded": "Ajouté·s : {titles}",
+    "proposalRemoved": "Supprimé·s : {titles}",
+    "proposalRenamed": "Renommé : {oldTitle} → {newTitle}",
+    "proposalReordered": "Chapitres réordonnés",
+    "proposalApplyError": "Impossible d'appliquer la modification. Réessayez."
   },
   "StylePicker": {
     "label": "Style d'enseignement",

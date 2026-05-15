@@ -2,6 +2,12 @@ import { z } from 'zod';
 
 /** Zod schema for a single chapter in a syllabus. */
 export const chapterSchema = z.object({
+  id: z
+    .string()
+    .optional()
+    .describe(
+      'Existing chapter ID. Present when this chapter maps to a row in the database (preserve, rename, or reorder). Omit for brand-new chapters.',
+    ),
   title: z
     .string()
     .min(1)

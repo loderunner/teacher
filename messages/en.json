@@ -37,7 +37,18 @@
     "promptPlaceholder": "Chat to continue this chapter…",
     "completeChapter": "Go to next chapter",
     "completeJourney": "Mark this chapter complete",
-    "completeError": "Could not complete the chapter. Try again."
+    "completeError": "Could not complete the chapter. Try again.",
+    "proposalReasonHeader": "Suggested syllabus change",
+    "proposalApply": "Apply",
+    "proposalDismiss": "Dismiss",
+    "proposalDismissed": "Dismissed",
+    "proposalApplied": "Applied",
+    "proposalAppliedMessage": "I applied the suggested syllabus change.",
+    "proposalAdded": "Added: {titles}",
+    "proposalRemoved": "Removed: {titles}",
+    "proposalRenamed": "Renamed: {oldTitle} → {newTitle}",
+    "proposalReordered": "Reordered chapters",
+    "proposalApplyError": "Could not apply the change. Try again."
   },
   "StylePicker": {
     "label": "Teaching style",

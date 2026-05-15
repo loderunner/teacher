@@ -13,6 +13,7 @@ import type { Locale } from '@/i18n/locale';
 import { composeChapterSystemPrompt } from '@/lib/chapter-chat/prompts';
 import {
   createMarkChapterCompleteTool,
+  createProposeSyllabusChangeTool,
   createUpdateMemoryTool,
 } from '@/lib/chapter-chat/tools';
 import { getJourney } from '@/lib/server/journeys/get';
@@ -100,6 +101,7 @@ export async function POST(
   const tools = {
     updateMemory: createUpdateMemoryTool({ userId, journeyId: journey.id }),
     markChapterComplete: createMarkChapterCompleteTool(),
+    proposeSyllabusChange: createProposeSyllabusChangeTool(),
   };
 
   const history = await convertToModelMessages(messages);

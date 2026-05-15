@@ -406,6 +406,35 @@ export const MessageIndicator = ({ label }: MessageIndicatorProps) => (
   </Message>
 );
 
+/** Props for the {@link MessageEvent} note. */
+export type MessageEventProps = HTMLAttributes<HTMLDivElement>;
+
+/**
+ * Full-width centered note for system actions in the conversation timeline
+ * (e.g. "Applied the suggested syllabus change."). Clearly distinct from
+ * user or assistant bubbles.
+ *
+ * @example
+ * <MessageEvent>Syllabus change applied.</MessageEvent>
+ */
+export const MessageEvent = ({
+  children,
+  className,
+  ...props
+}: MessageEventProps) => (
+  <div
+    className={cn(
+      'text-muted-foreground flex items-center gap-3 py-1 text-xs',
+      className,
+    )}
+    {...props}
+  >
+    <div className="bg-border h-px flex-1" />
+    <span>{children}</span>
+    <div className="bg-border h-px flex-1" />
+  </div>
+);
+
 /** Props for the {@link MessageToolbar} row. */
 export type MessageToolbarProps = ComponentProps<'div'>;
 

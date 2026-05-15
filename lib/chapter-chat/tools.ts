@@ -2,6 +2,36 @@ import { tool } from 'ai';
 import { z } from 'zod';
 
 import { updateJourneyMemory } from '@/lib/server/journeys/updateMemory';
+import { syllabusSchema } from '@/lib/server/syllabus/schema';
+
+/**
+ * Builds an AI SDK tool that lets the model propose a full replacement of the
+ * journey's syllabus, surfaced to the learner as a confirmation card.
+ *
+ * Signal-only: the tool emits a recognisable tool part; the actual apply
+ * happens in `applySyllabusChangeAction` when the user clicks Apply.
+ *
+ * @returns A `proposeSyllabusChange` tool.
+ */
+export function createProposeSyllabusChangeTool() {
+  return tool({
+    description: `Propose a replacement for the journey's syllabus. Fire this tool only when there is a concrete pedagogical reason in the current conversation — the learner asked for a deeper dive that warrants its own chapter, or wants to skip a section that turned out to be unnecessary, etc.
+
+Rules:
+- Always pass the FULL new syllabus, never a partial delta. The server replaces the syllabus wholesale.
+- Each existing chapter in the system prompt's syllabus block is prefixed with its id in brackets, e.g. "1. [abc123def4] Installing Python". For every chapter in your proposal that maps to an existing one (preserved, reordered, or renamed), copy its id into the chapter object's \`id\` field verbatim. For brand-new chapters you are inserting, omit \`id\` entirely.
+- Renaming a chapter is expressed by keeping its existing \`id\` and changing its \`title\`. Reordering is expressed by keeping ids the same and changing the array order.
+- The server rejects any proposal that drops an id belonging to a \`done\` or \`active\` chapter. Never remove the learner's completed or current chapters.
+- Do not propose to change the title of the chapter currently being taught unless the learner asked for it. Renaming the current chapter mid-chapter is disruptive.
+- The user must confirm the proposal by clicking Apply. After firing the tool, end your message — do not continue teaching in the same turn. Use this tool sparingly: a proposed change interrupts flow.
+- Include a short \`reason\` (one or two sentences in the learner's language) explaining why the change is helpful. The reason is shown to the learner above the diff.`,
+    inputSchema: z.object({
+      reason: z.string().min(1).max(500),
+      newSyllabus: syllabusSchema,
+    }),
+    execute: async () => ({ ok: true }),
+  });
+}
 
 /**
  * Builds an AI SDK tool that signals chapter completion. The model emits this

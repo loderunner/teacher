@@ -37,6 +37,7 @@ import {
   MessageBranchPrevious,
   MessageBranchSelector,
   MessageContent,
+  MessageEvent,
   MessageIndicator,
   MessageResponse,
   MessageToolbar,
@@ -265,6 +266,18 @@ export function JourneyChatView<TMessage extends UIMessage = UIMessage>({
         .filter(isTextUIPart)
         .map((p) => p.text)
         .join('\n');
+
+      const metadata = msg.metadata;
+      const isAction =
+        typeof metadata === 'object' &&
+        metadata !== null &&
+        'type' in metadata &&
+        metadata.type === 'action';
+
+      if (isAction) {
+        return <MessageEvent key={msg.id}>{text}</MessageEvent>;
+      }
+
       const editing = editingId === msg.id;
 
       return (
