@@ -69,4 +69,30 @@ journey and syllabus.
 
 We should restructure this to make more sense. What do you propose?
 
-## Stop button doesn't stop
+## Change memory from single string to string array
+
+The memory is currently a single markdown string. We should instead have a list
+of memories, and only append to memories. The prompt should mention that if two
+memories contradict, the more recent memory should be used.
+
+## Abuse guardrails
+
+We should guard against the user abusing the LLM to generate inappropriate
+content. I think we should have a cheap and fast check for each incoming message
+to see if it's likely to be abuse. If it is, we should reject the message and
+tell the user to stop.
+
+Remember this app is intended for educational use, starting with
+middle-schoolers. So we shouldn't underestimate both the LLM's ability to
+generate inappropriate content, and the user's ability to be creative and
+persistent in asking for it.
+
+I'm even thinking this could be a pre-chat guardrail that EVERY chat endpoint
+goes through. So we don't have to check for abuse in every single chat prompt,
+conflating concerns, and make it general.
+
+## Add some padding to the reasoning text
+
+Let's give a little padding to the reasoning text so that, when it's scrolled
+completely to the top or bottom, the user doesn't see the gradient mask
+overlapping the text.
