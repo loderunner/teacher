@@ -29,7 +29,10 @@
     "goToActiveChapter": "Go to active chapter"
   },
   "ChapterChat": {
-    "promptPlaceholder": "Chat to continue this chapter…"
+    "promptPlaceholder": "Chat to continue this chapter…",
+    "completeChapter": "Go to next chapter",
+    "completeJourney": "Mark this chapter complete",
+    "completeError": "Could not complete the chapter. Try again."
   },
   "StylePicker": {
     "label": "Teaching style",

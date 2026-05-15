@@ -3,6 +3,27 @@ import { z } from 'zod';
 
 import { updateJourneyMemory } from '@/lib/server/journeys/updateMemory';
 
+/**
+ * Builds an AI SDK tool that signals chapter completion. The model emits this
+ * once, and the UI surfaces a "Go to next chapter" button. The actual state
+ * transition happens in `completeChapterAction` when the user clicks.
+ *
+ * @returns A signal-only `markChapterComplete` tool.
+ */
+export function createMarkChapterCompleteTool() {
+  return tool({
+    description: `Signal that the current chapter is complete and the learner is ready to move on.
+
+Rules:
+- Fire this tool exactly once, when the chapter's material is fully covered AND the learner has demonstrated grasp of the key ideas. Do not fire it speculatively.
+- After firing this tool, end your message. Do not continue teaching in the same turn.
+- Never claim the chapter is complete in prose without also calling this tool — the tool call is the canonical signal the UI listens for to show the "Go to next chapter" button.
+- This tool does not move the learner forward by itself. The user clicks a button to confirm.`,
+    inputSchema: z.object({}),
+    execute: async () => ({ ok: true }),
+  });
+}
+
 /** Parameters for building the chapter-chat `updateMemory` tool. */
 export type CreateUpdateMemoryToolParams = {
   /** Clerk user ID of the owner of the journey. */

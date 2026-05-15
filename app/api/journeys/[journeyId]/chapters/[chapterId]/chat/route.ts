@@ -11,7 +11,10 @@ import { z } from 'zod';
 
 import type { Locale } from '@/i18n/locale';
 import { composeChapterSystemPrompt } from '@/lib/chapter-chat/prompts';
-import { createUpdateMemoryTool } from '@/lib/chapter-chat/tools';
+import {
+  createMarkChapterCompleteTool,
+  createUpdateMemoryTool,
+} from '@/lib/chapter-chat/tools';
 import { getJourney } from '@/lib/server/journeys/get';
 import { getStyle } from '@/lib/server/styles/get';
 import { ensureUser } from '@/lib/server/users/ensure';
@@ -96,6 +99,7 @@ export async function POST(
 
   const tools = {
     updateMemory: createUpdateMemoryTool({ userId, journeyId: journey.id }),
+    markChapterComplete: createMarkChapterCompleteTool(),
   };
 
   const history = await convertToModelMessages(messages);
