@@ -408,7 +408,7 @@ export function JourneyChatView<TMessage extends UIMessage = UIMessage>({
   });
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-end gap-4 overflow-hidden">
+    <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-end gap-4 overflow-hidden px-1 pb-1">
       {messages.length > 0 && (
         <Conversation className="flex-1">
           <ConversationContent>{messageItems}</ConversationContent>
