@@ -34,12 +34,18 @@ export function Hero({ presets }: Props) {
   const defaultStyleId = presets.length > 0 ? presets[0].id : 'teacher';
   const [styleId, setStyleId] = useState(defaultStyleId);
 
-  const handleSubmit = ({ text }: PromptInputMessage) => {
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = ({ text }: PromptInputMessage): Promise<void> => {
     if (text.trim() === '') {
-      return;
+      return Promise.resolve();
     }
+    setSubmitting(true);
     storeInitialDraft({ text, styleId });
     router.push('/journeys/new');
+    // Never resolves — keeps the text in the input during navigation.
+    // The component unmounts when navigation completes, so there is no leak.
+    return new Promise(() => {});
   };
 
   return (
@@ -54,10 +60,13 @@ export function Hero({ presets }: Props) {
 
       <div className="mx-auto flex w-full max-w-3xl flex-col">
         <PromptInput onSubmit={handleSubmit}>
-          <PromptInputTextarea placeholder={t('promptPlaceholder')} />
+          <PromptInputTextarea
+            disabled={submitting}
+            placeholder={t('promptPlaceholder')}
+          />
           <PromptInputFooter>
             <div />
-            <PromptInputSubmit status="ready" />
+            <PromptInputSubmit status={submitting ? 'submitted' : 'ready'} />
           </PromptInputFooter>
         </PromptInput>
 
