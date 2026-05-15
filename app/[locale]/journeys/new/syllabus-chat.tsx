@@ -126,7 +126,7 @@ export function SyllabusChat({ presets }: Props) {
   );
   const [pending, startTransition] = useTransition();
 
-  const { messages, status, streaming, handleSubmit } =
+  const { messages, status, stop, streaming, handleSubmit } =
     useJourneyChat<SyllabusChatUIMessage>({ api: '/api/syllabus/chat' });
 
   // The hydratedRef guard prevents StrictMode's double-effect from sending the
@@ -179,6 +179,7 @@ export function SyllabusChat({ presets }: Props) {
           messages={messages}
           placeholder={t('promptPlaceholder')}
           status={status}
+          onStop={stop}
           onSubmit={(msg) => handleSubmit({ ...msg, body: { styleId } })}
         />
       </ChatPageShell.Content>

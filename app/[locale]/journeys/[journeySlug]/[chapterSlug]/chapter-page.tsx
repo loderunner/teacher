@@ -22,9 +22,10 @@ export function ChapterPage({ journey, chapter }: Props) {
   const tChat = useTranslations('ChapterChat');
   const router = useRouter();
 
-  const { messages, status, handleSubmit, triggerResponse } = useJourneyChat({
-    api: `/api/journeys/${journey.id}/chapters/${chapter.id}/chat`,
-  });
+  const { messages, status, stop, handleSubmit, triggerResponse } =
+    useJourneyChat({
+      api: `/api/journeys/${journey.id}/chapters/${chapter.id}/chat`,
+    });
 
   const startedRef = useRef(false);
   useEffect(() => {
@@ -87,6 +88,7 @@ export function ChapterPage({ journey, chapter }: Props) {
           messages={messages}
           placeholder={tChat('promptPlaceholder')}
           status={status}
+          onStop={stop}
           onSubmit={handleSubmit}
         />
       </ChatPageShell.Content>

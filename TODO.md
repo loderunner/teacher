@@ -90,9 +90,3 @@ persistent in asking for it.
 I'm even thinking this could be a pre-chat guardrail that EVERY chat endpoint
 goes through. So we don't have to check for abuse in every single chat prompt,
 conflating concerns, and make it general.
-
-## Add some padding to the reasoning text
-
-Let's give a little padding to the reasoning text so that, when it's scrolled
-completely to the top or bottom, the user doesn't see the gradient mask
-overlapping the text.

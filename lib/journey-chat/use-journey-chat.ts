@@ -38,7 +38,7 @@ export function useJourneyChat<TMessage extends UIMessage = UIMessage>({
   api,
 }: UseJourneyChatParams) {
   const locale = parseLocale(useLocale());
-  const { messages, sendMessage, status } = useChat<TMessage>({
+  const { messages, sendMessage, status, stop } = useChat<TMessage>({
     transport: new DefaultChatTransport({ api }),
   });
 
@@ -59,6 +59,7 @@ export function useJourneyChat<TMessage extends UIMessage = UIMessage>({
     messages,
     sendMessage,
     status,
+    stop,
     streaming,
     handleSubmit,
     triggerResponse,

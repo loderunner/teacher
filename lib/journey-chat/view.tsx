@@ -78,6 +78,8 @@ export type JourneyChatViewProps<TMessage extends UIMessage = UIMessage> = {
   placeholder: string;
   /** Called when the user submits a message. */
   onSubmit: (message: PromptInputMessage) => void;
+  /** Called when the user clicks the stop button during streaming. */
+  onStop?: () => void;
   /**
    * Optional component for rendering tool call and data parts.
    * Text and reasoning parts are always handled by the view itself.
@@ -109,6 +111,7 @@ export function JourneyChatView<TMessage extends UIMessage = UIMessage>({
   status,
   placeholder,
   onSubmit,
+  onStop,
   MessagePartDelegate,
 }: JourneyChatViewProps<TMessage>) {
   const t = useTranslations('JourneyChat');
@@ -195,7 +198,7 @@ export function JourneyChatView<TMessage extends UIMessage = UIMessage>({
         <PromptInputTextarea disabled={streaming} placeholder={placeholder} />
         <PromptInputFooter>
           <div />
-          <PromptInputSubmit status={status} />
+          <PromptInputSubmit status={status} onStop={onStop} />
         </PromptInputFooter>
       </PromptInput>
     </div>
