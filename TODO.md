@@ -96,10 +96,3 @@ persistent in asking for it.
 I'm even thinking this could be a pre-chat guardrail that EVERY chat endpoint
 goes through. So we don't have to check for abuse in every single chat prompt,
 conflating concerns, and make it general.
-
-## UI issues
-
-- shadow from prompt input is clipped
-- text from welcome prompt input disappears before navigation
-- /journeys/new page is useless without a draft in session storage: redirect to
-  /

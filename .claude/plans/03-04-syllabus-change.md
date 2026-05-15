@@ -1,4 +1,4 @@
-# Story 4 — Propose Syllabus Change (D3.4)
+# Story 4 — Propose Syllabus Change (D3.4) ✅ Done
 
 ## Context
 
