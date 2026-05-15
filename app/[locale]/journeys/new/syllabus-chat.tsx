@@ -121,6 +121,7 @@ export function SyllabusChat({ presets }: Props) {
   // retrieveInitialDraft does NOT remove the entry — safe to call here because
   // React StrictMode invokes lazy initializers twice, and both calls must see
   // the same data.
+  const [hasDraft] = useState(() => retrieveInitialDraft() !== null);
   const [styleId, setStyleId] = useState<string>(
     () => retrieveInitialDraft()?.styleId ?? defaultStyleId,
   );
@@ -150,6 +151,7 @@ export function SyllabusChat({ presets }: Props) {
     clearInitialDraft();
 
     if (draft === null) {
+      router.replace('/');
       return;
     }
 
@@ -160,6 +162,10 @@ export function SyllabusChat({ presets }: Props) {
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  if (!hasDraft) {
+    return null;
+  }
 
   const { draft, partialDraft } = deriveDrafts(messages);
 
