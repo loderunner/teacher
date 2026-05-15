@@ -228,7 +228,9 @@ const ReasoningContentInner = ({
               'linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%)',
           }}
         >
-          <Streamdown plugins={streamdownPlugins}>{children}</Streamdown>
+          <div className="py-4">
+            <Streamdown plugins={streamdownPlugins}>{children}</Streamdown>
+          </div>
         </div>
       </div>
     </CollapsibleContent>
