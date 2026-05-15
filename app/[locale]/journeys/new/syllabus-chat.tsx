@@ -126,8 +126,15 @@ export function SyllabusChat({ presets }: Props) {
   );
   const [pending, startTransition] = useTransition();
 
-  const { messages, status, stop, streaming, handleSubmit } =
-    useJourneyChat<SyllabusChatUIMessage>({ api: '/api/syllabus/chat' });
+  const {
+    messages,
+    status,
+    stop,
+    streaming,
+    handleSubmit,
+    handleRegenerate,
+    handleEditMessage,
+  } = useJourneyChat<SyllabusChatUIMessage>({ api: '/api/syllabus/chat' });
 
   // The hydratedRef guard prevents StrictMode's double-effect from sending the
   // first message twice. clearInitialDraft removes the entry so a page refresh
@@ -179,6 +186,12 @@ export function SyllabusChat({ presets }: Props) {
           messages={messages}
           placeholder={t('promptPlaceholder')}
           status={status}
+          onEditUserMessage={(messageId, text) =>
+            handleEditMessage({ messageId, text, body: { styleId } })
+          }
+          onRegenerate={(messageId) =>
+            handleRegenerate({ messageId, body: { styleId } })
+          }
           onStop={stop}
           onSubmit={(msg) => handleSubmit({ ...msg, body: { styleId } })}
         />

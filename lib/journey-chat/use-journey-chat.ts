@@ -20,6 +20,24 @@ export type HandleSubmitParams = PromptInputMessage & {
   body?: Record<string, unknown>;
 };
 
+/** Parameters for {@link UseJourneyChatReturn.handleRegenerate}. */
+export type HandleRegenerateParams = {
+  /** ID of the assistant message to regenerate. Defaults to the last assistant message. */
+  messageId?: string;
+  /** Extra fields merged into the request body alongside `locale`. */
+  body?: Record<string, unknown>;
+};
+
+/** Parameters for {@link UseJourneyChatReturn.handleEditMessage}. */
+export type HandleEditMessageParams = {
+  /** ID of the user message to replace. */
+  messageId: string;
+  /** New message text. */
+  text: string;
+  /** Extra fields merged into the request body alongside `locale`. */
+  body?: Record<string, unknown>;
+};
+
 /**
  * Generic chat hook that wraps `useChat` with locale injection and a
  * per-message `body` argument so callers can forward feature-specific
@@ -38,14 +56,29 @@ export function useJourneyChat<TMessage extends UIMessage = UIMessage>({
   api,
 }: UseJourneyChatParams) {
   const locale = parseLocale(useLocale());
-  const { messages, sendMessage, status, stop } = useChat<TMessage>({
-    transport: new DefaultChatTransport({ api }),
-  });
+  const { messages, sendMessage, status, stop, regenerate } = useChat<TMessage>(
+    { transport: new DefaultChatTransport({ api }) },
+  );
 
   const streaming = status === 'streaming' || status === 'submitted';
 
   const handleSubmit = ({ text, body }: HandleSubmitParams) => {
     void sendMessage({ text }, { body: { locale, ...body } });
+  };
+
+  const handleRegenerate = ({
+    messageId,
+    body,
+  }: HandleRegenerateParams = {}) => {
+    void regenerate({ messageId, body: { locale, ...body } });
+  };
+
+  const handleEditMessage = ({
+    messageId,
+    text,
+    body,
+  }: HandleEditMessageParams) => {
+    void sendMessage({ text, messageId }, { body: { locale, ...body } });
   };
 
   const triggerResponse = useCallback(
@@ -62,6 +95,8 @@ export function useJourneyChat<TMessage extends UIMessage = UIMessage>({
     stop,
     streaming,
     handleSubmit,
+    handleRegenerate,
+    handleEditMessage,
     triggerResponse,
   };
 }

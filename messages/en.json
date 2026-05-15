@@ -20,7 +20,12 @@
   "JourneyChat": {
     "thinkingInProgress": "Thinking...",
     "thoughtForSeconds": "Thought for {seconds}s",
-    "thoughtForFewSeconds": "Thought for a moment"
+    "thoughtForFewSeconds": "Thought for a moment",
+    "regenerate": "Regenerate",
+    "copy": "Copy",
+    "editMessage": "Edit",
+    "cancelEdit": "Cancel",
+    "saveEdit": "Save"
   },
   "Chapter": {
     "position": "Chapter {n} of {total}",
