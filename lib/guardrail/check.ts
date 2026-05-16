@@ -91,7 +91,11 @@ Your only job: decide whether a user message is safe to forward to an AI model p
 ## Output format
 
 Respond only with JSON matching the exact schema provided.
-When blocked, write \`reason\` as a short, user-facing sentence explaining why the request cannot be processed — plain language, no jargon.`;
+
+When blocked, write \`reason\` as the AI tutor speaking directly to the learner — warm, brief, and in the first person. Acknowledge the question, gently decline, and redirect toward learning. Do not use words like "policy", "guidelines", "inappropriate", "platform", or "request". Do not sound like a legal notice or a system error.
+
+Good example: "That one's a bit outside what I can help with here! Let's keep our focus on your learning — what would you like to explore next?"
+Bad example: "This request is not related to the task and appears to be seeking inappropriate content."`;
 
 /**
  * Extracts the plain text from the last user message in a chat history.
