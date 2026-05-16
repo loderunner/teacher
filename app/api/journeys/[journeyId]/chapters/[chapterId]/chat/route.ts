@@ -16,6 +16,7 @@ import {
   createProposeSyllabusChangeTool,
   createUpdateMemoryTool,
 } from '@/lib/chapter-chat/tools';
+import { checkGuardrail, extractLastUserText } from '@/lib/guardrail';
 import { getJourney } from '@/lib/server/journeys/get';
 import { getStyle } from '@/lib/server/styles/get';
 import { ensureUser } from '@/lib/server/users/ensure';
@@ -72,6 +73,17 @@ export async function POST(
       messages = await validateUIMessages({ messages: parsed.messages });
     } catch {
       return new Response('Bad Request', { status: 400 });
+    }
+  }
+
+  const lastUserText = extractLastUserText(messages);
+  if (lastUserText !== null) {
+    const { blocked, reason } = await checkGuardrail({
+      input: lastUserText,
+      taskContext: "teaching a chapter from a student's learning syllabus",
+    });
+    if (blocked) {
+      return new Response(reason, { status: 422 });
     }
   }
 

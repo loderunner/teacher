@@ -7,6 +7,7 @@ import { z } from 'zod';
 
 import { parseLocale } from '@/i18n/locale';
 import { generateChapterSummary } from '@/lib/chapter-chat/complete';
+import { checkGuardrail, extractLastUserText } from '@/lib/guardrail';
 import { completeChapter } from '@/lib/server/chapters/complete';
 import { getJourney } from '@/lib/server/journeys/get';
 import { getStyle } from '@/lib/server/styles/get';
@@ -58,6 +59,18 @@ export async function completeChapterAction(
 
   const parsed = inputSchema.parse(input);
   const messages = await validateUIMessages({ messages: parsed.messages });
+
+  const lastUserText = extractLastUserText(messages);
+  if (lastUserText !== null) {
+    const { blocked, reason } = await checkGuardrail({
+      input: lastUserText,
+      taskContext:
+        'generating a summary of a completed educational chapter lesson',
+    });
+    if (blocked) {
+      throw new Error(reason);
+    }
+  }
 
   const journey = await getJourney({ userId, id: parsed.journeyId });
   if (journey === null) {

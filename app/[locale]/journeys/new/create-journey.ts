@@ -5,6 +5,7 @@ import type { UIMessage } from 'ai';
 import { getLocale } from 'next-intl/server';
 
 import { parseLocale } from '@/i18n/locale';
+import { checkGuardrail, extractLastUserText } from '@/lib/guardrail';
 import { createJourney } from '@/lib/server/journeys/create';
 import { type Syllabus, syllabusSchema } from '@/lib/server/syllabus/schema';
 import { ensureUser } from '@/lib/server/users/ensure';
@@ -44,6 +45,18 @@ export async function createJourneyAction(
   const { userId } = await auth();
   if (userId === null) {
     throw new Error('Unauthorized');
+  }
+
+  const lastUserText = extractLastUserText(input.messages);
+  if (lastUserText !== null) {
+    const { blocked, reason } = await checkGuardrail({
+      input: lastUserText,
+      taskContext:
+        'generating metadata to start a new educational learning journey from a completed syllabus conversation',
+    });
+    if (blocked) {
+      throw new Error(reason);
+    }
   }
 
   await ensureUser(userId);
