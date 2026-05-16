@@ -17,7 +17,7 @@ type SidebarContextValue = {
   toggle: () => void;
   close: () => void;
   hasSidebar: boolean;
-  registerSidebar: () => () => void;
+  setHasSidebar: (value: boolean) => void;
 };
 
 const SidebarContext = createContext<SidebarContextValue>({
@@ -25,7 +25,7 @@ const SidebarContext = createContext<SidebarContextValue>({
   toggle: () => {},
   close: () => {},
   hasSidebar: false,
-  registerSidebar: () => () => {},
+  setHasSidebar: () => {},
 });
 
 type RootProps = {
@@ -50,14 +50,10 @@ function Root({ children }: RootProps) {
 
   const toggle = useCallback(() => setOpen((o) => !o), []);
   const close = useCallback(() => setOpen(false), []);
-  const registerSidebar = useCallback(() => {
-    setHasSidebar(true);
-    return () => setHasSidebar(false);
-  }, []);
 
   return (
     <SidebarContext.Provider
-      value={{ open, toggle, close, hasSidebar, registerSidebar }}
+      value={{ open, toggle, close, hasSidebar, setHasSidebar }}
     >
       <div className="relative flex flex-1 overflow-hidden p-4 md:gap-6 md:p-6">
         {children}
@@ -97,12 +93,13 @@ function Content({ children }: ContentProps) {
 
 /** Right sidebar column — fixed width on desktop, slide-in drawer on mobile. */
 function Sidebar({ children }: SidebarProps) {
-  const { open, close, registerSidebar } = useContext(SidebarContext);
+  const { open, close, setHasSidebar } = useContext(SidebarContext);
   const t = useTranslations('Chapter');
 
   useEffect(() => {
-    return registerSidebar();
-  }, [registerSidebar]);
+    setHasSidebar(true);
+    return () => setHasSidebar(false);
+  }, [setHasSidebar]);
 
   return (
     <aside
