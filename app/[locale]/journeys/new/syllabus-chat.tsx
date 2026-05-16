@@ -205,7 +205,7 @@ export function SyllabusChat({ presets }: Props) {
         {startable && (
           <div className="mx-auto flex w-full max-w-3xl justify-end px-1 pb-1">
             <button
-              className="border-foreground bg-foreground text-background flex items-center gap-2 rounded border px-4 py-2 text-sm font-medium transition-opacity disabled:opacity-40"
+              className="border-foreground bg-foreground text-background flex w-full items-center justify-center gap-2 rounded border px-4 py-2 text-sm font-medium transition-opacity disabled:opacity-40 md:w-auto md:justify-start"
               disabled={pending || streaming}
               type="button"
               onClick={handleStartJourney}
