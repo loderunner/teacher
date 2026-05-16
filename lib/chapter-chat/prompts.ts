@@ -33,6 +33,14 @@ Vous disposez d'un outil \`proposeSyllabusChange\`. Utilisez-le uniquement lorsq
 La réflexion étendue ajoute de la latence et ne doit être utilisée que lorsqu'elle améliore significativement la qualité de la réponse. En cas de doute, répondez directement.`,
 };
 
+/**
+ * English task description for the chapter-teaching phase.
+ * Passed to the abuse guardrail so it can detect prompt injection attempts
+ * that target the chapter workflow or its tools (`updateMemory`,
+ * `markChapterComplete`, `proposeSyllabusChange`).
+ */
+export const chapterTaskDescription: string = chapterPhase.en;
+
 const summaryInstructions: Record<Locale, string> = {
   en: `Summarise what was actually taught in this chapter and what the learner demonstrated. Write in the second person ("You learned…, you explored…, you practised…").
 

@@ -130,6 +130,7 @@ export function SyllabusChat({ presets }: Props) {
 
   const {
     messages,
+    setMessages,
     status,
     stop,
     streaming,
@@ -181,6 +182,17 @@ export function SyllabusChat({ presets }: Props) {
     const syllabus = draft;
     startTransition(async () => {
       const result = await createJourneyAction({ messages, syllabus, styleId });
+      if (!result.ok) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: crypto.randomUUID(),
+            role: 'assistant',
+            parts: [{ type: 'text', text: result.reason }],
+          },
+        ]);
+        return;
+      }
       router.push(result.path);
     });
   };

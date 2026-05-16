@@ -7,6 +7,7 @@ import { z } from 'zod';
 
 import { parseLocale } from '@/i18n/locale';
 import { generateChapterSummary } from '@/lib/chapter-chat/complete';
+import { chapterTaskDescription } from '@/lib/chapter-chat/prompts';
 import { checkGuardrail, extractLastUserText } from '@/lib/guardrail';
 import { completeChapter } from '@/lib/server/chapters/complete';
 import { getJourney } from '@/lib/server/journeys/get';
@@ -23,11 +24,24 @@ export type CompleteChapterInput = {
   messages: UIMessage[];
 };
 
-/** Result returned by {@link completeChapterAction}. */
-export type CompleteChapterResult = {
-  /** Canonical URL of the next chapter, or `null` when there is no next. */
-  nextChapterPath: string | null;
-};
+/**
+ * Result returned by {@link completeChapterAction}.
+ * Either a successful completion or a guardrail refusal with a user-facing
+ * reason to display in the chat.
+ */
+export type CompleteChapterResult =
+  | {
+      /** Chapter was completed successfully. */
+      ok: true;
+      /** Canonical URL of the next chapter, or `null` when there is no next. */
+      nextChapterPath: string | null;
+    }
+  | {
+      /** Request was blocked by the abuse guardrail. */
+      ok: false;
+      /** User-facing reason to display in the chat. */
+      reason: string;
+    };
 
 const inputSchema = z.object({
   journeyId: z.string().min(1),
@@ -45,8 +59,11 @@ const inputSchema = z.object({
  * misleading recap. The input is still validated for structural safety via
  * `validateUIMessages` before being passed to the LLM.
  *
+ * Returns `{ ok: false, reason }` when the guardrail blocks the last user
+ * message in the transcript. Throws on system-level errors (auth, database).
+ *
  * @param input - Journey ID, chapter index, and chat transcript.
- * @returns The canonical path of the next chapter, or `null` if last chapter.
+ * @returns Completion result or a guardrail refusal.
  * @throws Error when the caller is not authenticated or inputs are invalid.
  */
 export async function completeChapterAction(
@@ -64,11 +81,10 @@ export async function completeChapterAction(
   if (lastUserText !== null) {
     const { blocked, reason } = await checkGuardrail({
       input: lastUserText,
-      taskContext:
-        'generating a summary of a completed educational chapter lesson',
+      taskContext: chapterTaskDescription,
     });
     if (blocked) {
-      throw new Error(reason);
+      return { ok: false, reason };
     }
   }
 
@@ -86,6 +102,7 @@ export async function completeChapterAction(
     const nextIdx = parsed.chapterIdx + 1;
     const next = journey.chapters.find((c) => c.idx === nextIdx) ?? null;
     return {
+      ok: true,
       nextChapterPath: next === null ? null : chapterPath(journey, next),
     };
   }
@@ -112,13 +129,13 @@ export async function completeChapterAction(
   });
 
   if (nextIdx === null) {
-    return { nextChapterPath: null };
+    return { ok: true, nextChapterPath: null };
   }
 
   const nextChapter = journey.chapters.find((c) => c.idx === nextIdx);
   if (nextChapter === undefined) {
-    return { nextChapterPath: null };
+    return { ok: true, nextChapterPath: null };
   }
 
-  return { nextChapterPath: chapterPath(journey, nextChapter) };
+  return { ok: true, nextChapterPath: chapterPath(journey, nextChapter) };
 }

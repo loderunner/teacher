@@ -136,6 +136,17 @@ export function ChapterPage({ journey, chapter }: Props) {
           chapterIdx: chapter.idx,
           messages,
         });
+        if (!result.ok) {
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: crypto.randomUUID(),
+              role: 'assistant',
+              parts: [{ type: 'text', text: result.reason }],
+            },
+          ]);
+          return;
+        }
         if (result.nextChapterPath !== null) {
           router.push(result.nextChapterPath);
         } else {
@@ -145,7 +156,7 @@ export function ChapterPage({ journey, chapter }: Props) {
         setCompleteError(tChat('completeError'));
       }
     });
-  }, [journey.id, chapter.idx, router, tChat, messages]);
+  }, [journey.id, chapter.idx, router, tChat, messages, setMessages]);
 
   return (
     <ChatPageShell>

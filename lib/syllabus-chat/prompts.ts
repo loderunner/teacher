@@ -22,6 +22,13 @@ L'appel à \`updateSyllabusDraft\` met silencieusement à jour un panneau visibl
 Lorsque le brouillon contient au moins un chapitre et que l'utilisateur signale qu'il est prêt, suggérez-lui de cliquer sur « Commencer le parcours » — n'appelez aucun outil de démarrage vous-même.`,
 };
 
+/**
+ * English task description for the syllabus-building phase.
+ * Passed to the abuse guardrail so it can detect prompt injection attempts
+ * that target the syllabus workflow or the `updateSyllabusDraft` tool.
+ */
+export const syllabusTaskDescription: string = syllabusPhase.en;
+
 /** Parameters for composing the syllabus-phase system prompt. */
 export type ComposeSyllabusSystemPromptParams = {
   /** Teaching style whose fragment is prepended to the prompt. */

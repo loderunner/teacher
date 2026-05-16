@@ -115,5 +115,4 @@ it to mobile.
 ### Syllabus chat
 
 - i can only see the syllabus sidebar in the viewport. how can we hide it and
-make it displayable without taking up too much screen real estate?
-
+  make it displayable without taking up too much screen real estate?

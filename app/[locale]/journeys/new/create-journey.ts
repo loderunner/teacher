@@ -10,6 +10,7 @@ import { createJourney } from '@/lib/server/journeys/create';
 import { type Syllabus, syllabusSchema } from '@/lib/server/syllabus/schema';
 import { ensureUser } from '@/lib/server/users/ensure';
 import { bootstrapJourney } from '@/lib/syllabus-chat/bootstrap';
+import { syllabusTaskDescription } from '@/lib/syllabus-chat/prompts';
 import { journeyPath } from '@/lib/url';
 
 /** Input for the {@link createJourneyAction} server action. */
@@ -22,21 +23,38 @@ export type CreateJourneyInput = {
   styleId: string;
 };
 
-/** Result returned by {@link createJourneyAction} after a journey is created. */
-export type CreateJourneyResult = {
-  /** Newly created journey ID. */
-  id: string;
-  /** URL path to the journey page, e.g. `/journeys/intro-to-rust-abc1234567`. */
-  path: string;
-};
+/**
+ * Result returned by {@link createJourneyAction}.
+ * Either a successfully created journey or a guardrail refusal with a
+ * user-facing reason to display in the chat.
+ */
+export type CreateJourneyResult =
+  | {
+      /** Journey was created successfully. */
+      ok: true;
+      /** Newly created journey ID. */
+      id: string;
+      /** URL path to the journey page, e.g. `/journeys/intro-to-rust-abc1234567`. */
+      path: string;
+    }
+  | {
+      /** Request was blocked by the abuse guardrail. */
+      ok: false;
+      /** User-facing reason to display in the chat. */
+      reason: string;
+    };
 
 /**
  * Server action that bootstraps and persists a new learning journey.
  * Derives a title and learner memory from the chat transcript, then
  * creates the journey and its chapters in the database.
  *
+ * Returns `{ ok: false, reason }` when the guardrail blocks the last
+ * user message in the transcript. Throws on system-level errors (auth,
+ * database).
+ *
  * @param input - Chat messages, syllabus, and style selection.
- * @returns The new journey's ID and URL path.
+ * @returns The new journey's ID and URL path, or a guardrail refusal.
  * @throws Error when the caller is not authenticated.
  */
 export async function createJourneyAction(
@@ -51,11 +69,10 @@ export async function createJourneyAction(
   if (lastUserText !== null) {
     const { blocked, reason } = await checkGuardrail({
       input: lastUserText,
-      taskContext:
-        'generating metadata to start a new educational learning journey from a completed syllabus conversation',
+      taskContext: syllabusTaskDescription,
     });
     if (blocked) {
-      throw new Error(reason);
+      return { ok: false, reason };
     }
   }
 
@@ -78,5 +95,9 @@ export async function createJourneyAction(
     memory,
   });
 
-  return { id: journey.id, path: journeyPath(journey.id, journey.title) };
+  return {
+    ok: true,
+    id: journey.id,
+    path: journeyPath(journey.id, journey.title),
+  };
 }

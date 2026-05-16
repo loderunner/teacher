@@ -1,15 +1,27 @@
 import type { UIMessage } from 'ai';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { checkGuardrail, extractLastUserText } from './check';
+import {
+  checkGuardrail,
+  createRefusalStreamResponse,
+  extractLastUserText,
+} from './check';
 
-const { mockGenerateText } = vi.hoisted(() => ({
+const {
+  mockGenerateText,
+  mockCreateUIMessageStream,
+  mockCreateUIMessageStreamResponse,
+} = vi.hoisted(() => ({
   mockGenerateText: vi.fn(),
+  mockCreateUIMessageStream: vi.fn(),
+  mockCreateUIMessageStreamResponse: vi.fn(),
 }));
 
 vi.mock('ai', () => ({
   Output: { object: vi.fn() },
   generateText: mockGenerateText,
+  createUIMessageStream: mockCreateUIMessageStream,
+  createUIMessageStreamResponse: mockCreateUIMessageStreamResponse,
 }));
 
 describe('extractLastUserText', () => {
@@ -101,6 +113,64 @@ describe('extractLastUserText', () => {
   });
 });
 
+describe('createRefusalStreamResponse', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('calls createUIMessageStream and returns createUIMessageStreamResponse result', () => {
+    const fakeStream = {} as ReadableStream;
+    const fakeResponse = new Response('ok');
+    mockCreateUIMessageStream.mockReturnValueOnce(fakeStream);
+    mockCreateUIMessageStreamResponse.mockReturnValueOnce(fakeResponse);
+
+    const result = createRefusalStreamResponse('This request is not allowed.');
+
+    expect(mockCreateUIMessageStream).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ execute: expect.any(Function) }),
+    );
+    expect(mockCreateUIMessageStreamResponse).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ stream: fakeStream }),
+    );
+    expect(result).toBe(fakeResponse);
+  });
+
+  it('writes start, text parts, and finish chunks with the reason text', () => {
+    const writtenChunks: unknown[] = [];
+    const fakeWriter = { write: (chunk: unknown) => writtenChunks.push(chunk) };
+    mockCreateUIMessageStream.mockImplementationOnce(
+      ({
+        execute,
+      }: {
+        execute: (opts: { writer: typeof fakeWriter }) => void;
+      }) => {
+        execute({ writer: fakeWriter });
+        return {} as ReadableStream;
+      },
+    );
+    mockCreateUIMessageStreamResponse.mockReturnValueOnce(new Response());
+
+    createRefusalStreamResponse('You cannot request that here.');
+
+    expect(writtenChunks).toContainEqual({ type: 'start' });
+    expect(writtenChunks).toContainEqual(
+      expect.objectContaining({ type: 'text-start' }),
+    );
+    expect(writtenChunks).toContainEqual(
+      expect.objectContaining({
+        type: 'text-delta',
+        delta: 'You cannot request that here.',
+      }),
+    );
+    expect(writtenChunks).toContainEqual(
+      expect.objectContaining({ type: 'text-end' }),
+    );
+    expect(writtenChunks).toContainEqual(
+      expect.objectContaining({ type: 'finish' }),
+    );
+  });
+});
+
 describe('checkGuardrail', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -165,6 +235,7 @@ describe('checkGuardrail', () => {
 
     const { prompt } = mockGenerateText.mock.calls[0][0];
     expect(prompt).toContain('helping a student build a learning syllabus');
+    expect(prompt).toContain('Task the AI is about to perform');
   });
 
   it('includes the user input in the prompt', async () => {

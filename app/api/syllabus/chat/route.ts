@@ -11,10 +11,17 @@ import {
 import { z } from 'zod';
 
 import type { Locale } from '@/i18n/locale';
-import { checkGuardrail, extractLastUserText } from '@/lib/guardrail';
+import {
+  checkGuardrail,
+  createRefusalStreamResponse,
+  extractLastUserText,
+} from '@/lib/guardrail';
 import { getStyle } from '@/lib/server/styles/get';
 import { ensureUser } from '@/lib/server/users/ensure';
-import { composeSyllabusSystemPrompt } from '@/lib/syllabus-chat/prompts';
+import {
+  composeSyllabusSystemPrompt,
+  syllabusTaskDescription,
+} from '@/lib/syllabus-chat/prompts';
 import { updateSyllabusDraft } from '@/lib/syllabus-chat/tool';
 
 export const maxDuration = 60;
@@ -72,11 +79,10 @@ export async function POST(req: Request): Promise<Response> {
   if (lastUserText !== null) {
     const { blocked, reason } = await checkGuardrail({
       input: lastUserText,
-      taskContext:
-        'helping a student plan a learning syllabus for a new educational journey',
+      taskContext: syllabusTaskDescription,
     });
     if (blocked) {
-      return new Response(reason, { status: 422 });
+      return createRefusalStreamResponse(reason);
     }
   }
 

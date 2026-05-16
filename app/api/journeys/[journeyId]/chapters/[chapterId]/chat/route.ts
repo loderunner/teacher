@@ -10,13 +10,20 @@ import {
 import { z } from 'zod';
 
 import type { Locale } from '@/i18n/locale';
-import { composeChapterSystemPrompt } from '@/lib/chapter-chat/prompts';
+import {
+  chapterTaskDescription,
+  composeChapterSystemPrompt,
+} from '@/lib/chapter-chat/prompts';
 import {
   createMarkChapterCompleteTool,
   createProposeSyllabusChangeTool,
   createUpdateMemoryTool,
 } from '@/lib/chapter-chat/tools';
-import { checkGuardrail, extractLastUserText } from '@/lib/guardrail';
+import {
+  checkGuardrail,
+  createRefusalStreamResponse,
+  extractLastUserText,
+} from '@/lib/guardrail';
 import { getJourney } from '@/lib/server/journeys/get';
 import { getStyle } from '@/lib/server/styles/get';
 import { ensureUser } from '@/lib/server/users/ensure';
@@ -80,10 +87,10 @@ export async function POST(
   if (lastUserText !== null) {
     const { blocked, reason } = await checkGuardrail({
       input: lastUserText,
-      taskContext: "teaching a chapter from a student's learning syllabus",
+      taskContext: chapterTaskDescription,
     });
     if (blocked) {
-      return new Response(reason, { status: 422 });
+      return createRefusalStreamResponse(reason);
     }
   }
 
