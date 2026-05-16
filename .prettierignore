@@ -2,3 +2,4 @@
 .agents/
 lib/server/db/migrations/
 pnpm-lock.yaml
+vercel.json
