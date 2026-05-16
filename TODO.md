@@ -96,3 +96,24 @@ persistent in asking for it.
 I'm even thinking this could be a pre-chat guardrail that EVERY chat endpoint
 goes through. So we don't have to check for abuse in every single chat prompt,
 conflating concerns, and make it general.
+
+## CI
+
+Run linter and tests and migrations before deploying.
+
+## Mobile UI
+
+This app was designed with desktop in mind, but now we're going to have to adapt
+it to mobile.
+
+### Welcome chat
+
+- padding around content (top bar is fine)
+- reduce hero font, make sure it fits in the screen width
+- teaching style either centered or right-aligned
+
+### Syllabus chat
+
+- i can only see the syllabus sidebar in the viewport. how can we hide it and
+make it displayable without taking up too much screen real estate?
+
