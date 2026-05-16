@@ -1,5 +1,6 @@
 'use client';
 
+import { BookOpenIcon } from '@phosphor-icons/react';
 import {
   type DeepPartial,
   type InferUITools,
@@ -184,23 +185,11 @@ export function SyllabusChat({ presets }: Props) {
     });
   };
 
-  const startButton = startable ? (
-    <button
-      className="border-foreground bg-foreground text-background w-full rounded border px-4 py-2 text-sm font-medium transition-opacity disabled:opacity-40"
-      disabled={pending || streaming}
-      type="button"
-      onClick={handleStartJourney}
-    >
-      {t('startJourney')}
-    </button>
-  ) : null;
-
   return (
     <ChatPageShell>
       <ChatPageShell.Content>
         <JourneyChatView
           MessagePartDelegate={SyllabusPartDelegate}
-          beforeInput={startButton}
           messages={messages}
           placeholder={t('promptPlaceholder')}
           status={status}
@@ -213,6 +202,19 @@ export function SyllabusChat({ presets }: Props) {
           onStop={stop}
           onSubmit={(msg) => handleSubmit({ ...msg, body: { styleId } })}
         />
+        {startable && (
+          <div className="mx-auto w-full max-w-3xl px-1 pb-1">
+            <button
+              className="border-foreground bg-foreground text-background flex items-center gap-2 rounded border px-4 py-2 text-sm font-medium transition-opacity disabled:opacity-40"
+              disabled={pending || streaming}
+              type="button"
+              onClick={handleStartJourney}
+            >
+              <BookOpenIcon size={15} weight="bold" />
+              {t('startJourney')}
+            </button>
+          </div>
+        )}
       </ChatPageShell.Content>
 
       {started && (
