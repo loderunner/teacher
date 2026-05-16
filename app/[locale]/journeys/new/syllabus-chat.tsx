@@ -1,6 +1,6 @@
 'use client';
 
-import { BookOpenIcon } from '@phosphor-icons/react';
+import { ArrowRightIcon } from '@phosphor-icons/react';
 import {
   type DeepPartial,
   type InferUITools,
@@ -203,14 +203,14 @@ export function SyllabusChat({ presets }: Props) {
           onSubmit={(msg) => handleSubmit({ ...msg, body: { styleId } })}
         />
         {startable && (
-          <div className="mx-auto w-full max-w-3xl px-1 pb-1">
+          <div className="mx-auto flex w-full max-w-3xl justify-end px-1 pb-1">
             <button
               className="border-foreground bg-foreground text-background flex items-center gap-2 rounded border px-4 py-2 text-sm font-medium transition-opacity disabled:opacity-40"
               disabled={pending || streaming}
               type="button"
               onClick={handleStartJourney}
             >
-              <BookOpenIcon size={15} weight="bold" />
+              <ArrowRightIcon size={15} weight="bold" />
               {t('startJourney')}
             </button>
           </div>

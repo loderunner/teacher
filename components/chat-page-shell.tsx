@@ -1,6 +1,6 @@
 'use client';
 
-import { XIcon } from '@phosphor-icons/react';
+import { NotebookIcon, XIcon } from '@phosphor-icons/react';
 import { useTranslations } from 'next-intl';
 import {
   createContext,
@@ -63,14 +63,15 @@ function Root({ children }: RootProps) {
         {children}
         {hasSidebar && (
           <button
+            aria-label={t('syllabusHeader')}
             className={cn(
-              'border-foreground bg-background fixed top-[4.5rem] right-4 z-30 rounded-full border px-3 py-1.5 text-sm font-medium shadow-md transition-opacity md:hidden',
+              'border-foreground bg-background fixed top-[4.5rem] right-4 z-30 rounded-full border p-2.5 shadow-md transition-opacity md:hidden',
               open && 'pointer-events-none opacity-0',
             )}
             type="button"
             onClick={toggle}
           >
-            {t('syllabusHeader')}
+            <NotebookIcon size={18} weight="bold" />
           </button>
         )}
         {open && (
