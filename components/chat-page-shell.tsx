@@ -1,6 +1,6 @@
 'use client';
 
-import { ListIcon, XIcon } from '@phosphor-icons/react';
+import { XIcon } from '@phosphor-icons/react';
 import { useTranslations } from 'next-intl';
 import {
   createContext,
@@ -46,6 +46,7 @@ type SidebarProps = {
 function Root({ children }: RootProps) {
   const [open, setOpen] = useState(false);
   const [hasSidebar, setHasSidebar] = useState(false);
+  const t = useTranslations('Chapter');
 
   const toggle = useCallback(() => setOpen((o) => !o), []);
   const close = useCallback(() => setOpen(false), []);
@@ -62,15 +63,14 @@ function Root({ children }: RootProps) {
         {children}
         {hasSidebar && (
           <button
-            aria-label="View syllabus"
             className={cn(
-              'border-foreground bg-background fixed top-[4.5rem] right-4 z-30 flex items-center justify-center rounded-full border p-2.5 shadow-md transition-opacity md:hidden',
+              'border-foreground bg-background fixed top-[4.5rem] right-4 z-30 rounded-full border px-3 py-1.5 text-sm font-medium shadow-md transition-opacity md:hidden',
               open && 'pointer-events-none opacity-0',
             )}
             type="button"
             onClick={toggle}
           >
-            <ListIcon size={18} weight="bold" />
+            {t('syllabusHeader')}
           </button>
         )}
         {open && (

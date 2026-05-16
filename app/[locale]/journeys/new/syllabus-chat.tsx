@@ -184,11 +184,23 @@ export function SyllabusChat({ presets }: Props) {
     });
   };
 
+  const startButton = startable ? (
+    <button
+      className="border-foreground bg-foreground text-background w-full rounded border px-4 py-2 text-sm font-medium transition-opacity disabled:opacity-40"
+      disabled={pending || streaming}
+      type="button"
+      onClick={handleStartJourney}
+    >
+      {t('startJourney')}
+    </button>
+  ) : null;
+
   return (
     <ChatPageShell>
       <ChatPageShell.Content>
         <JourneyChatView
           MessagePartDelegate={SyllabusPartDelegate}
+          beforeInput={startButton}
           messages={messages}
           placeholder={t('promptPlaceholder')}
           status={status}
@@ -211,21 +223,6 @@ export function SyllabusChat({ presets }: Props) {
             value={styleId}
             onChange={setStyleId}
           />
-          <div>
-            {!startable && (
-              <p className="text-muted-foreground mb-2 text-xs">
-                {t('startJourneyDisabledHint')}
-              </p>
-            )}
-            <button
-              className="border-foreground bg-foreground text-background w-full rounded border px-4 py-2 text-sm font-medium transition-opacity disabled:opacity-40"
-              disabled={!startable || pending || streaming}
-              type="button"
-              onClick={handleStartJourney}
-            >
-              {t('startJourney')}
-            </button>
-          </div>
         </ChatPageShell.Sidebar>
       )}
     </ChatPageShell>

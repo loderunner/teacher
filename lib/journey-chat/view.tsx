@@ -106,6 +106,11 @@ export type JourneyChatViewProps<TMessage extends UIMessage = UIMessage> = {
    * Text and reasoning parts are always handled by the view itself.
    */
   MessagePartDelegate?: ComponentType<MessagePartDelegateProps<TMessage>>;
+  /**
+   * Optional node rendered between the conversation (or loading indicator)
+   * and the prompt input — useful for CTAs like a "Start journey" button.
+   */
+  beforeInput?: React.ReactNode;
 };
 
 // Maps assistant message IDs to their previous text versions (before each regeneration).
@@ -193,6 +198,7 @@ export function JourneyChatView<TMessage extends UIMessage = UIMessage>({
   onRegenerate,
   onEditUserMessage,
   MessagePartDelegate,
+  beforeInput,
 }: JourneyChatViewProps<TMessage>) {
   const t = useTranslations('JourneyChat');
   const streaming = status === 'streaming' || status === 'submitted';
@@ -416,6 +422,7 @@ export function JourneyChatView<TMessage extends UIMessage = UIMessage>({
         </Conversation>
       )}
       {showLoadingIndicator && <MessageIndicator type="loading" />}
+      {beforeInput}
       <PromptInput onSubmit={onSubmit}>
         <PromptInputTextarea disabled={streaming} placeholder={placeholder} />
         <PromptInputFooter>
