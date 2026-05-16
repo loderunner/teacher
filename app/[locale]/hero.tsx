@@ -49,13 +49,15 @@ export function Hero({ presets }: Props) {
   };
 
   return (
-    <div className="flex w-full flex-1 flex-col pt-[12vh]">
-      <div className="mb-10 flex flex-col items-center gap-4 text-center">
-        <CompassIcon className="size-16" weight="bold" />
-        <h1 className="font-heading text-7xl font-black tracking-tight">
+    <div className="flex w-full flex-1 flex-col px-4 pt-[6vh] sm:pt-[12vh]">
+      <div className="mb-8 flex flex-col items-center gap-4 text-center sm:mb-10">
+        <CompassIcon className="size-14 sm:size-16" weight="bold" />
+        <h1 className="font-heading text-5xl font-black tracking-tight sm:text-7xl">
           {t('title')}
         </h1>
-        <p className="text-muted-foreground text-xl">{t('tagline')}</p>
+        <p className="text-muted-foreground text-lg sm:text-xl">
+          {t('tagline')}
+        </p>
       </div>
 
       <div className="mx-auto flex w-full max-w-3xl flex-col">
@@ -70,7 +72,7 @@ export function Hero({ presets }: Props) {
           </PromptInputFooter>
         </PromptInput>
 
-        <div className="mt-3">
+        <div className="mt-3 flex justify-end sm:justify-start">
           <StylePicker
             presets={presets}
             value={styleId}

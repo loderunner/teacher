@@ -295,7 +295,7 @@ export function JourneyChatView<TMessage extends UIMessage = UIMessage>({
             <>
               <MessageContent>{text}</MessageContent>
               {onEditUserMessage !== undefined && !streaming && (
-                <MessageActions className="justify-end opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
+                <MessageActions className="justify-end transition-opacity focus-within:opacity-100 sm:opacity-0 sm:group-hover:opacity-100">
                   <MessageAction
                     label={t('editMessage')}
                     tooltip={t('editMessage')}

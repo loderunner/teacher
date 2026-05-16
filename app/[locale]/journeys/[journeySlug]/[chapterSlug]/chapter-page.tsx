@@ -173,17 +173,13 @@ export function ChapterPage({ journey, chapter }: Props) {
           onStop={stop}
           onSubmit={handleSubmit}
         />
-      </ChatPageShell.Content>
-      <ChatPageShell.Sidebar>
-        <SyllabusPanel currentIdx={chapter.idx} journey={journey} />
-        <StyleLabel styleId={journey.styleId} />
         {chapterComplete && (
-          <div>
+          <div className="mx-auto flex w-full max-w-3xl flex-col justify-end px-1 pb-1">
             {completeError !== null && (
               <p className="text-destructive mb-2 text-sm">{completeError}</p>
             )}
             <button
-              className="border-foreground bg-foreground text-background w-full rounded border px-4 py-2 text-sm font-medium transition-opacity disabled:opacity-40"
+              className="border-foreground bg-foreground text-background w-full rounded border px-4 py-2 text-sm font-medium transition-opacity disabled:opacity-40 md:w-auto md:self-end"
               disabled={completing}
               type="button"
               onClick={handleComplete}
@@ -192,6 +188,10 @@ export function ChapterPage({ journey, chapter }: Props) {
             </button>
           </div>
         )}
+      </ChatPageShell.Content>
+      <ChatPageShell.Sidebar>
+        <SyllabusPanel currentIdx={chapter.idx} journey={journey} />
+        <StyleLabel styleId={journey.styleId} />
       </ChatPageShell.Sidebar>
     </ChatPageShell>
   );

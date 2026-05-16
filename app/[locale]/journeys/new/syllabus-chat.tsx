@@ -1,5 +1,6 @@
 'use client';
 
+import { ArrowRightIcon } from '@phosphor-icons/react';
 import {
   type DeepPartial,
   type InferUITools,
@@ -201,6 +202,19 @@ export function SyllabusChat({ presets }: Props) {
           onStop={stop}
           onSubmit={(msg) => handleSubmit({ ...msg, body: { styleId } })}
         />
+        {startable && (
+          <div className="mx-auto flex w-full max-w-3xl justify-end px-1 pb-1">
+            <button
+              className="border-foreground bg-foreground text-background flex w-full items-center justify-center gap-2 rounded border px-4 py-2 text-sm font-medium transition-opacity disabled:opacity-40 md:w-auto md:justify-start"
+              disabled={pending || streaming}
+              type="button"
+              onClick={handleStartJourney}
+            >
+              <ArrowRightIcon size={15} weight="bold" />
+              {t('startJourney')}
+            </button>
+          </div>
+        )}
       </ChatPageShell.Content>
 
       {started && (
@@ -211,21 +225,6 @@ export function SyllabusChat({ presets }: Props) {
             value={styleId}
             onChange={setStyleId}
           />
-          <div>
-            {!startable && (
-              <p className="text-muted-foreground mb-2 text-xs">
-                {t('startJourneyDisabledHint')}
-              </p>
-            )}
-            <button
-              className="border-foreground bg-foreground text-background w-full rounded border px-4 py-2 text-sm font-medium transition-opacity disabled:opacity-40"
-              disabled={!startable || pending || streaming}
-              type="button"
-              onClick={handleStartJourney}
-            >
-              {t('startJourney')}
-            </button>
-          </div>
         </ChatPageShell.Sidebar>
       )}
     </ChatPageShell>
