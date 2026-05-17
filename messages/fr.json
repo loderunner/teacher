@@ -8,6 +8,7 @@
   "Welcome": {
     "title": "Commencer un Parcours",
     "tagline": "Que voulez-vous apprendre ?",
+    "creatingJourney": "Préparation de votre parcours…",
     "draftHeader": "Votre programme",
     "emptyDraft": "Discutez pour commencer à esquisser votre programme.",
     "emptyChapterSections": "Aucune section pour le moment.",
@@ -30,6 +31,8 @@
   "Chapter": {
     "position": "Chapitre {n} sur {total}",
     "syllabusHeader": "Programme",
+    "syllabusChat": "Chat du programme",
+    "syllabusChapterLabel": "Comment nous avons construit cela",
     "locked": "Ce chapitre est verrouillé. Complétez le chapitre actif pour le déverrouiller.",
     "goToActiveChapter": "Aller au chapitre actif"
   },
@@ -75,5 +78,9 @@
     "description": "Une erreur inattendue s'est produite. Veuillez réessayer.",
     "tryAgain": "Réessayer",
     "backHome": "Retourner à l'accueil"
+  },
+  "SyllabusPage": {
+    "header": "Chat du programme",
+    "description": "La conversation où nous avons construit votre programme."
   }
 }

@@ -3,7 +3,7 @@ import { useTranslations } from 'next-intl';
 
 import { Link } from '@/i18n/navigation';
 import type { Journey, JourneyChapter } from '@/lib/server/journeys/get';
-import { chapterPath } from '@/lib/url';
+import { chapterPath, syllabusTranscriptPath } from '@/lib/url';
 
 type Props = {
   journey: Journey;
@@ -70,6 +70,19 @@ export function SyllabusPanel({ journey, currentIdx }: Props) {
       </h2>
       <div className="min-h-0 flex-1 overflow-y-auto p-4">
         <ol className="flex flex-col">
+          {journey.hasSyllabusChat ? (
+            <li>
+              <Link
+                className="rounded px-2 py-1 text-sm hover:underline"
+                href={syllabusTranscriptPath(journey)}
+              >
+                <span className="font-medium">{t('syllabusChat')}</span>
+                <span className="text-muted-foreground block text-xs">
+                  {t('syllabusChapterLabel')}
+                </span>
+              </Link>
+            </li>
+          ) : null}
           {journey.chapters.map((chapter) => (
             <ChapterItem
               key={chapter.id}

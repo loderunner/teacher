@@ -1,8 +1,12 @@
 import { auth } from '@clerk/nextjs/server';
 import { notFound } from 'next/navigation';
 
+import { JourneySyllabusChat } from './journey-syllabus-chat';
+
 import { permanentRedirect, redirect } from '@/i18n/navigation';
 import { getJourney } from '@/lib/server/journeys/get';
+import { getMessages } from '@/lib/server/messages';
+import { listPresets } from '@/lib/server/styles/get';
 import { ensureUser } from '@/lib/server/users/ensure';
 import { chapterPath, journeyPath, parseJourneySlug } from '@/lib/url';
 
@@ -23,6 +27,25 @@ export default async function Page({
   const journey = await getJourney({ userId: userId!, id: parsed.id });
   if (journey === null) {
     notFound();
+  }
+
+  if (journey.status === 'drafting') {
+    const canonicalJourney = journeyPath(journey.id, journey.title);
+    if (`/journeys/${journeySlug}` !== canonicalJourney) {
+      permanentRedirect({ href: canonicalJourney, locale });
+    }
+
+    const initialMessages = await getMessages({
+      journeyId: journey.id,
+      chapterId: null,
+    });
+    return (
+      <JourneySyllabusChat
+        initialMessages={initialMessages}
+        journey={journey}
+        presets={listPresets()}
+      />
+    );
   }
 
   if (journey.chapters.length === 0) {

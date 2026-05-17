@@ -1,16 +1,15 @@
 'use client';
 
 import { CheckIcon } from '@phosphor-icons/react';
+import type { UIMessage } from 'ai';
 import { useTranslations } from 'next-intl';
-
-import type { SyllabusChatUIMessage } from './syllabus-chat';
 
 import type { MessagePartDelegateProps } from '@/lib/journey-chat/view';
 
 /** Renders `tool-updateSyllabusDraft` parts inline in the conversation. */
 export function SyllabusPartDelegate({
   part,
-}: MessagePartDelegateProps<SyllabusChatUIMessage>) {
+}: MessagePartDelegateProps<UIMessage>) {
   const t = useTranslations('Welcome');
 
   if (part.type !== 'tool-updateSyllabusDraft') {
