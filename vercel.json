@@ -1,3 +1,0 @@
-{
-  "buildCommand": "pnpm lint && pnpm typecheck && pnpm build && pnpm db:migrate:deploy"
-}
