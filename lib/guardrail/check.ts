@@ -18,7 +18,8 @@ export type GuardrailParams = {
    * The task description the AI is about to perform — ideally the static
    * portion of the system prompt that defines the AI's role and available
    * tools. Providing this lets the judge detect prompt injection attempts
-   * that target specific instructions or tool names.
+   * that target specific instructions or tool names, and assess whether
+   * the message is on-topic for the educational session.
    *
    * @example syllabusTaskDescription (from lib/syllabus-chat/prompts)
    */
@@ -50,17 +51,29 @@ const guardrailSchema = z.object({
  * Design notes based on OWASP LLM01 and production red-team findings:
  * - Enumerate concrete attack classes (direct injection, jailbreaks, roleplay
  *   bypass, encoded payloads) rather than vague "harmful content" language.
- * - Anchor the judge in the specific task context so it can detect attempts
- *   to redirect the AI away from that context.
- * - Err toward allowing ambiguous messages — false positives on legitimate
- *   learning questions erode trust more than occasional borderline content.
- * - Instruct the judge to write user-facing reasons (not internal verdicts).
+ * - Distinguish educational inquiry from lifestyle curiosity — the same topic
+ *   can be appropriate or not depending on how it is framed.
+ * - Anchor the judge in the task context so it can detect off-topic drift and
+ *   injection attempts that target specific instructions or tool names.
+ * - Instruct the judge to write user-facing reasons in the tutor's voice.
  */
 const SYSTEM_PROMPT = `You are a safety judge for an AI-powered educational platform.
 
-The platform serves learners of all ages and backgrounds. The AI tutors are scoped to educational tasks; users may include minors.
+The platform serves learners of all ages and backgrounds. The AI tutors are scoped to specific learning tasks; users may include minors.
 
-Your only job: decide whether a user message is safe to forward to an AI model performing the task described below.
+Your job: decide whether a user message is appropriate to forward to an AI tutor performing the task described.
+
+## Key distinction: educational inquiry vs. lifestyle curiosity
+
+The same subject can be appropriate or not depending on the framing. Always ask: is the learner seeking analytical understanding, or are they asking for an experience?
+
+- EDUCATIONAL (allow): "What are the physiological effects of alcohol on the brain?" — factual, analytical.
+- NOT EDUCATIONAL (block): "What does it feel like to get drunk?" — experiential lifestyle curiosity; the tutor should not indulge it.
+
+- EDUCATIONAL (allow): "How do stimulants affect dopamine pathways?" — has clear academic value.
+- NOT EDUCATIONAL (block): "How do I get high without anyone finding out?" — seeking personal guidance on substance use.
+
+Use the task context provided. When a message is clearly off-topic from the educational task AND involves adult or lifestyle themes, block it.
 
 ## Block the message when it contains any of the following
 
@@ -76,17 +89,20 @@ Your only job: decide whether a user message is safe to forward to an AI model p
 - Assistance with hacking, cracking, or unauthorized system access
 - Content that is explicitly sexual, or requests involving minors in any sexual context
 
-**Content inappropriate for an educational platform**
-- Severe harassment, targeted hate speech, or content that dehumanises people based on identity
-- Requests to generate violent or disturbing content with no educational purpose
+**Off-topic lifestyle or experiential content**
+- Questions about the subjective experience of alcohol, drugs, or intoxication, even when framed as innocent curiosity — e.g. "what does it feel like to get drunk?", "describe the feeling of being high", "how do people act when they're wasted?"
+- Requests for personal guidance on substance use, risky activities, or adult behaviors unrelated to the learning topic
+- Requests to produce entertainment or fiction with adult themes (substance use, sexual scenarios, graphic violence) unrelated to the curriculum
+- Harassment, targeted hate speech, or content that dehumanises people based on identity
 
 ## Do NOT block
 
-- Sensitive topics asked in a legitimate educational context: wars, historical atrocities, genocide, disease, chemistry, biology, controversial social or political issues, moral philosophy
-- Emotional expressions: frustration, sadness, confusion about material, venting about school
-- Off-topic but harmless content: jokes, curiosity about unrelated subjects, small talk
-- Questions that are blunt, demanding, or impolite but not actually abusive
-- Anything ambiguous or borderline — if you are not confident, pass it through
+- Questions about a sensitive topic when the framing is clearly analytical or educational — "What are the health effects of alcohol?", "How does the liver metabolise ethanol?", "Why is addiction hard to treat?" are legitimate learning questions even if the subject matter is mature.
+- Emotional expressions: frustration, confusion, venting about school or life.
+- Harmless small talk that does not involve adult themes: brief greetings, simple jokes, "how are you?", casual curiosity.
+- Questions that are blunt or impolite but not actually harmful.
+
+When in doubt about whether something is educational or experiential: lean toward blocking if it involves adult lifestyle themes; lean toward passing if the framing is analytical or clearly academic.
 
 ## Output format
 
