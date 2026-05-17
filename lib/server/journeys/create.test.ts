@@ -1,7 +1,11 @@
-import { type ChainMock, chainMock } from 'chain-mock';
+import { type ChainMock, chainMock, chainMocked } from 'chain-mock';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { createJourney } from './create';
+import { createDraftJourney, createJourney } from './create';
+
+import { db } from '@/lib/server/db';
+
+const mockDb = chainMocked(db);
 
 const { transactionImpl } = vi.hoisted(() => ({
   transactionImpl: vi.fn(),
@@ -15,6 +19,7 @@ vi.mock('@/lib/server/db', () => ({
 describe('createJourney', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockDb.mockReset();
   });
 
   it('creates a journey and inserts chapters when syllabus has chapters', async () => {
@@ -132,5 +137,36 @@ describe('createJourney', () => {
     expect(capturedChapterValues[0].status).toBe('active');
     expect(capturedChapterValues[1].status).toBe('locked');
     expect(capturedChapterValues[2].status).toBe('locked');
+  });
+});
+
+describe('createDraftJourney', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockDb.mockReset();
+  });
+
+  it('inserts a drafting journey with an empty syllabus and memory', async () => {
+    const insertChain = chainMock();
+    insertChain.values.returning.mockResolvedValueOnce([
+      { id: 'draft-id', title: 'Learn Rust' },
+    ]);
+    mockDb.insert.mockReturnValueOnce(insertChain as never);
+
+    const result = await createDraftJourney({
+      userId: 'user-1',
+      title: 'Learn Rust',
+      styleId: 'teacher',
+    });
+
+    expect(result).toEqual({ id: 'draft-id', title: 'Learn Rust' });
+    expect(insertChain.values).toHaveBeenCalledExactlyOnceWith({
+      userId: 'user-1',
+      title: 'Learn Rust',
+      styleId: 'teacher',
+      status: 'drafting',
+      syllabus: { chapters: [] },
+      memory: '',
+    });
   });
 });

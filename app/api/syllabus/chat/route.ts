@@ -12,10 +12,14 @@ import { z } from 'zod';
 
 import type { Locale } from '@/i18n/locale';
 import { getModel } from '@/lib/ai/model';
+import { getJourney } from '@/lib/server/journeys/get';
+import { saveMessages } from '@/lib/server/messages';
 import { getStyle } from '@/lib/server/styles/get';
 import { ensureUser } from '@/lib/server/users/ensure';
-import { composeSyllabusSystemPrompt } from '@/lib/syllabus-chat/prompts';
-import { updateSyllabusDraft } from '@/lib/syllabus-chat/tool';
+import {
+  composeSyllabusSystemPrompt,
+  createUpdateSyllabusDraftTool,
+} from '@/lib/syllabus-chat';
 
 export const maxDuration = 60;
 
@@ -26,6 +30,8 @@ export const maxDuration = 60;
 export type RequestBody = {
   /** Chat history to send to the model. */
   messages: UIMessage[];
+  /** Owning draft journey for persistence and authorization. */
+  journeyId: string;
   /** Teaching style preset ID used to build the system prompt. */
   styleId: string;
   /** Locale for selecting the correct system prompt language. */
@@ -34,13 +40,14 @@ export type RequestBody = {
 
 const requestBodySchema: z.ZodType<RequestBody> = z.object({
   messages: z.array(z.custom<UIMessage>()),
+  journeyId: z.string().min(1),
   styleId: z.string().min(1),
   locale: z.union([z.literal('en'), z.literal('fr')]),
 });
 
-const tools = { updateSyllabusDraft };
-
-const ephemeralCache = { anthropic: { cacheControl: { type: 'ephemeral' } } };
+const ephemeralCache = {
+  anthropic: { cacheControl: { type: 'ephemeral' } },
+};
 
 export async function POST(req: Request): Promise<Response> {
   const { userId } = await auth();
@@ -55,7 +62,7 @@ export async function POST(req: Request): Promise<Response> {
     return new Response('Bad Request', { status: 400 });
   }
 
-  const { styleId, locale } = parsed;
+  const { styleId, locale, journeyId } = parsed;
 
   let messages: UIMessage[];
   try {
@@ -68,10 +75,29 @@ export async function POST(req: Request): Promise<Response> {
 
   await ensureUser(userId);
 
+  const journey = await getJourney({ userId, id: journeyId });
+  if (journey === null) {
+    return new Response('Forbidden', { status: 403 });
+  }
+
+  if (journey.status !== 'drafting') {
+    return new Response('Conflict', { status: 409 });
+  }
+
+  if (journey.styleId !== styleId) {
+    return new Response('Invalid style', { status: 400 });
+  }
+
   const style = getStyle(styleId);
   if (style === null) {
     return new Response('Invalid style', { status: 400 });
   }
+
+  await saveMessages({ journeyId, chapterId: null, messages });
+
+  const tools = {
+    updateSyllabusDraft: createUpdateSyllabusDraftTool({ journeyId }),
+  };
 
   const system: SystemModelMessage = {
     role: 'system',
@@ -105,5 +131,10 @@ export async function POST(req: Request): Promise<Response> {
     experimental_transform: smoothStream({ delayInMs: null }),
   });
 
-  return result.toUIMessageStreamResponse();
+  return result.toUIMessageStreamResponse({
+    originalMessages: messages,
+    onFinish: async ({ messages: updated }) => {
+      await saveMessages({ journeyId, chapterId: null, messages: updated });
+    },
+  });
 }

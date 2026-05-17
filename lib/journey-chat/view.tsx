@@ -91,9 +91,16 @@ export type JourneyChatViewProps<TMessage extends UIMessage = UIMessage> = {
   messages: TMessage[];
   /** Current chat streaming status. */
   status: ChatStatus;
-  /** Placeholder text for the prompt input. */
+  /** Placeholder text for the prompt input (ignored when {@link readOnly} is true). */
   placeholder: string;
-  /** Called when the user submits a message. */
+  /**
+   * When true, omits the prompt and hides edit/regenerate affordances — use for
+   * static transcript pages.
+   */
+  readOnly?: boolean;
+  /** Disables the prompt while inputs such as `journeyId` are not ready yet. */
+  disableInput?: boolean;
+  /** Called when the user submits a message (not invoked when {@link readOnly}). */
   onSubmit: (message: PromptInputMessage) => void;
   /** Called when the user clicks the stop button during streaming. */
   onStop?: () => void;
@@ -188,6 +195,8 @@ export function JourneyChatView<TMessage extends UIMessage = UIMessage>({
   messages,
   status,
   placeholder,
+  readOnly = false,
+  disableInput = false,
   onSubmit,
   onStop,
   onRegenerate,
@@ -294,7 +303,7 @@ export function JourneyChatView<TMessage extends UIMessage = UIMessage>({
           ) : (
             <>
               <MessageContent>{text}</MessageContent>
-              {onEditUserMessage !== undefined && !streaming && (
+              {onEditUserMessage !== undefined && !streaming && !readOnly && (
                 <MessageActions className="justify-end transition-opacity focus-within:opacity-100 sm:opacity-0 sm:group-hover:opacity-100">
                   <MessageAction
                     label={t('editMessage')}
@@ -377,13 +386,15 @@ export function JourneyChatView<TMessage extends UIMessage = UIMessage>({
           </MessageBranchContent>
           {!isActivelyStreaming && (
             <MessageToolbar>
-              <MessageBranchSelector>
-                <MessageBranchPrevious />
-                <MessageBranchPage />
-                <MessageBranchNext />
-              </MessageBranchSelector>
+              {!readOnly && (
+                <MessageBranchSelector>
+                  <MessageBranchPrevious />
+                  <MessageBranchPage />
+                  <MessageBranchNext />
+                </MessageBranchSelector>
+              )}
               <MessageActions>
-                {onRegenerate !== undefined && (
+                {onRegenerate !== undefined && !readOnly && (
                   <MessageAction
                     label={t('regenerate')}
                     tooltip={t('regenerate')}
@@ -415,14 +426,22 @@ export function JourneyChatView<TMessage extends UIMessage = UIMessage>({
           <ConversationScrollButton />
         </Conversation>
       )}
-      {showLoadingIndicator && <MessageIndicator type="loading" />}
-      <PromptInput onSubmit={onSubmit}>
-        <PromptInputTextarea disabled={streaming} placeholder={placeholder} />
-        <PromptInputFooter>
-          <div />
-          <PromptInputSubmit status={status} onStop={onStop} />
-        </PromptInputFooter>
-      </PromptInput>
+      {showLoadingIndicator && !readOnly && <MessageIndicator type="loading" />}
+      {!readOnly && (
+        <PromptInput onSubmit={onSubmit}>
+          <PromptInputTextarea
+            disabled={streaming || disableInput}
+            placeholder={placeholder}
+          />
+          <PromptInputFooter>
+            <div />
+            <PromptInputSubmit
+              status={disableInput ? 'ready' : status}
+              onStop={onStop}
+            />
+          </PromptInputFooter>
+        </PromptInput>
+      )}
     </div>
   );
 }

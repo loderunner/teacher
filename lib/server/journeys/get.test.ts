@@ -32,8 +32,10 @@ describe('getJourney', () => {
         styleId: '456',
         memory: [],
         syllabus,
+        status: 'active',
       },
     ]);
+    mockDb.select.from.where.mockResolvedValueOnce([{ c: 0 }]);
     mockDb.select.from.where.orderBy.mockResolvedValueOnce([
       {
         id: 'ch-1',
@@ -51,6 +53,8 @@ describe('getJourney', () => {
       title: 'Test Journey',
       styleId: '456',
       memory: [],
+      hasSyllabusChat: false,
+      status: 'active',
       syllabus,
       chapters: [
         {
@@ -87,8 +91,10 @@ describe('getJourney', () => {
         styleId: '456',
         memory: ['Learner prefers examples.'],
         syllabus,
+        status: 'active',
       },
     ]);
+    mockDb.select.from.where.mockResolvedValueOnce([{ c: 0 }]);
     mockDb.select.from.where.orderBy.mockResolvedValueOnce([
       {
         id: 'ch-1',
@@ -110,6 +116,8 @@ describe('getJourney', () => {
 
     expect(journey).not.toBeNull();
     expect(journey!.memory).toEqual(['Learner prefers examples.']);
+    expect(journey!.hasSyllabusChat).toBe(false);
+    expect(journey!.status).toBe('active');
     expect(journey!.chapters).toHaveLength(2);
     expect(journey!.chapters[0]).toEqual({
       id: 'ch-1',
@@ -125,5 +133,27 @@ describe('getJourney', () => {
       status: 'active',
       summary: null,
     });
+  });
+
+  it('sets hasSyllabusChat when syllabus-scope message count is positive', async () => {
+    const syllabus = { chapters: [] };
+
+    mockDb.select.from.where.mockResolvedValueOnce([
+      {
+        id: '123',
+        title: 'J',
+        styleId: '456',
+        memory: [],
+        syllabus,
+        status: 'active',
+      },
+    ]);
+    mockDb.select.from.where.mockResolvedValueOnce([{ c: 2 }]);
+    mockDb.select.from.where.orderBy.mockResolvedValueOnce([]);
+
+    const journey = await getJourney({ userId: '789', id: '123' });
+
+    expect(journey).not.toBeNull();
+    expect(journey!.hasSyllabusChat).toBe(true);
   });
 });

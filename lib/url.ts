@@ -75,6 +75,18 @@ export function chapterPath(
 }
 
 /**
+ * Path to the persisted syllabus draft transcript ("chapter 0").
+ *
+ * @param journey - Journey id and title for the slug segment.
+ */
+export function syllabusTranscriptPath(journey: {
+  id: string;
+  title: string;
+}): string {
+  return `${journeyPath(journey.id, journey.title)}/syllabus`;
+}
+
+/**
  * Parses a chapter URL segment into its number, slug, and ID parts.
  *
  * Expected format: `<n>-<title-slug>-<10-char-nanoid>`.

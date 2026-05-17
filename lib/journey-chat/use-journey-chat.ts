@@ -9,9 +9,11 @@ import type { PromptInputMessage } from '@/components/ai-elements/prompt-input';
 import { parseLocale } from '@/i18n/locale';
 
 /** Parameters for {@link useJourneyChat}. */
-export type UseJourneyChatParams = {
+export type UseJourneyChatParams<TMessage extends UIMessage = UIMessage> = {
   /** The API route to send chat messages to. */
   api: string;
+  /** Pre-populated messages for resumed sessions. */
+  initialMessages?: TMessage[];
 };
 
 /** Message submission payload, optionally augmented with per-submit body fields. */
@@ -54,10 +56,14 @@ export type HandleEditMessageParams = {
  */
 export function useJourneyChat<TMessage extends UIMessage = UIMessage>({
   api,
-}: UseJourneyChatParams) {
+  initialMessages,
+}: UseJourneyChatParams<TMessage>) {
   const locale = parseLocale(useLocale());
   const { messages, setMessages, sendMessage, status, stop, regenerate } =
-    useChat<TMessage>({ transport: new DefaultChatTransport({ api }) });
+    useChat<TMessage>({
+      transport: new DefaultChatTransport({ api }),
+      ...(initialMessages !== undefined ? { messages: initialMessages } : {}),
+    });
 
   const streaming = status === 'streaming' || status === 'submitted';
 

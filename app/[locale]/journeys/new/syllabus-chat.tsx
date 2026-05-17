@@ -1,17 +1,15 @@
 'use client';
 
 import { ArrowRightIcon } from '@phosphor-icons/react';
-import {
-  type DeepPartial,
-  type InferUITools,
-  type ToolUIPart,
-  type UIDataTypes,
-  type UIMessage,
-} from 'ai';
+import { type UIMessage } from 'ai';
 import { useTranslations } from 'next-intl';
-import { useEffect, useRef, useState, useTransition } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 
-import { createJourneyAction } from './create-journey';
+import { activateJourneyAction } from './activate-journey';
+import {
+  type CreateDraftJourneyResult,
+  createDraftJourneyAction,
+} from './create-draft-journey';
 import { SyllabusDraftPanel } from './syllabus-draft-panel';
 import { SyllabusPartDelegate } from './syllabus-part-delegate';
 
@@ -25,81 +23,16 @@ import {
   useJourneyChat,
 } from '@/lib/journey-chat';
 import type { Style } from '@/lib/server/styles/get';
-import type { Syllabus } from '@/lib/server/syllabus/schema';
-import { type updateSyllabusDraft } from '@/lib/syllabus-chat/tool';
+import { deriveSyllabusDraftsFromMessages } from '@/lib/syllabus-chat';
 
-type SyllabusChatTools = InferUITools<{
-  updateSyllabusDraft: typeof updateSyllabusDraft;
-}>;
+/** Dedupes draft creation when React Strict Mode runs effects twice. */
+const draftBootstrapPromises = new Map<
+  string,
+  Promise<CreateDraftJourneyResult>
+>();
 
-/** Typed UIMessage for the syllabus-building chat session. */
-export type SyllabusChatUIMessage = UIMessage<
-  unknown,
-  UIDataTypes,
-  SyllabusChatTools
->;
-
-type SyllabusDraftToolPart = ToolUIPart<SyllabusChatTools>;
-
-function isSyllabusDraftToolPart(
-  part: SyllabusChatUIMessage['parts'][number],
-): part is SyllabusDraftToolPart {
-  return part.type === 'tool-updateSyllabusDraft';
-}
-
-/**
- * Walks assistant tool parts once (newest first) and returns the latest
- * complete syllabus for persistence and the latest display value for the panel.
- *
- * @param messages Chat messages from `useChat`.
- * @returns Latest complete `draft` for journey creation and latest `partialDraft`
- *   for the live panel (includes streaming tool input).
- */
-function deriveDrafts(messages: SyllabusChatUIMessage[]) {
-  let draft: Syllabus | null = null;
-  let partialDraft: DeepPartial<Syllabus> | null = null;
-  let partialResolved = false;
-
-  for (let i = messages.length - 1; i >= 0; i--) {
-    const msg = messages[i];
-    if (msg.role !== 'assistant') {
-      continue;
-    }
-    const { parts } = msg;
-    for (let j = parts.length - 1; j >= 0; j--) {
-      const part = parts[j];
-      if (!isSyllabusDraftToolPart(part)) {
-        continue;
-      }
-
-      if (!partialResolved) {
-        if (
-          part.state === 'output-available' ||
-          part.state === 'input-available'
-        ) {
-          partialDraft = part.input.draft;
-          partialResolved = true;
-        } else if (part.state === 'input-streaming') {
-          partialDraft = part.input?.draft ?? null;
-          partialResolved = true;
-        }
-      }
-
-      if (
-        draft === null &&
-        (part.state === 'output-available' || part.state === 'input-available')
-      ) {
-        draft = part.input.draft;
-      }
-
-      if (partialResolved && draft !== null) {
-        return { draft, partialDraft };
-      }
-    }
-  }
-
-  return { draft, partialDraft };
-}
+/** Ensures the first assistant message is only sent once per new journey id. */
+const initialSyllabusSubmitSent = new Set<string>();
 
 /** Props for {@link SyllabusChat}. */
 type Props = {
@@ -108,10 +41,9 @@ type Props = {
 };
 
 /**
- * Syllabus-building chat page that reads the initial message from
- * sessionStorage (written by the hero) and streams responses from
- * `/api/syllabus/chat`. Renders the draft panel and style picker in
- * the sidebar.
+ * Syllabus-building chat that reads the hero payload from sessionStorage,
+ * creates a draft journey, updates the URL bar without a navigation, then
+ * streams from `/api/syllabus/chat` with persisted messages.
  */
 export function SyllabusChat({ presets }: Props) {
   const t = useTranslations('Welcome');
@@ -119,13 +51,12 @@ export function SyllabusChat({ presets }: Props) {
 
   const defaultStyleId = presets.length > 0 ? presets[0].id : 'teacher';
 
-  // retrieveInitialDraft does NOT remove the entry — safe to call here because
-  // React StrictMode invokes lazy initializers twice, and both calls must see
-  // the same data.
   const [hasDraft] = useState(() => retrieveInitialDraft() !== null);
   const [styleId, setStyleId] = useState<string>(
     () => retrieveInitialDraft()?.styleId ?? defaultStyleId,
   );
+  const [journeyId, setJourneyId] = useState<string | null>(null);
+  const [creatingJourney, setCreatingJourney] = useState(hasDraft);
   const [pending, startTransition] = useTransition();
 
   const {
@@ -136,73 +67,118 @@ export function SyllabusChat({ presets }: Props) {
     handleSubmit,
     handleRegenerate,
     handleEditMessage,
-  } = useJourneyChat<SyllabusChatUIMessage>({ api: '/api/syllabus/chat' });
+  } = useJourneyChat<UIMessage>({ api: '/api/syllabus/chat' });
 
-  // The hydratedRef guard prevents StrictMode's double-effect from sending the
-  // first message twice. clearInitialDraft removes the entry so a page refresh
-  // does not re-submit.
-  const hydratedRef = useRef(false);
   useEffect(() => {
-    if (hydratedRef.current) {
-      return;
-    }
-    hydratedRef.current = true;
-
     const draft = retrieveInitialDraft();
-    clearInitialDraft();
-
     if (draft === null) {
       router.replace('/');
       return;
     }
 
-    handleSubmit({
-      text: draft.text,
-      files: [],
-      body: { styleId: draft.styleId },
+    const draftKey = `${draft.styleId}\n${draft.text}`;
+    let bootstrapPromise = draftBootstrapPromises.get(draftKey);
+    if (bootstrapPromise === undefined) {
+      bootstrapPromise = createDraftJourneyAction({
+        text: draft.text,
+        styleId: draft.styleId,
+      });
+      draftBootstrapPromises.set(draftKey, bootstrapPromise);
+    }
+
+    startTransition(() => {
+      void bootstrapPromise
+        .then((result) => {
+          const pathname = window.location.pathname;
+          const parts = pathname.split('/').filter((p) => p !== '');
+          const j = parts.indexOf('journeys');
+          const prefix = j > 0 ? `/${parts.slice(0, j).join('/')}` : '';
+          window.history.replaceState(null, '', `${prefix}${result.path}`);
+          clearInitialDraft();
+          draftBootstrapPromises.delete(draftKey);
+          setJourneyId(result.id);
+          setCreatingJourney(false);
+          if (initialSyllabusSubmitSent.has(result.id)) {
+            return;
+          }
+          initialSyllabusSubmitSent.add(result.id);
+          handleSubmit({
+            text: draft.text,
+            files: [],
+            body: { journeyId: result.id, styleId: draft.styleId },
+          });
+        })
+        .catch(() => {
+          draftBootstrapPromises.delete(draftKey);
+          router.replace('/');
+        });
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [router]);
 
   if (!hasDraft) {
     return null;
   }
 
-  const { draft, partialDraft } = deriveDrafts(messages);
+  const { draft, partialDraft } = deriveSyllabusDraftsFromMessages(messages);
 
   const started = messages.length > 0;
   const startable =
     draft !== null && draft.chapters.length > 0 && styleId.length > 0;
 
   const handleStartJourney = () => {
-    if (!startable) {
+    if (!startable || journeyId === null) {
       return;
     }
     const syllabus = draft;
     startTransition(async () => {
-      const result = await createJourneyAction({ messages, syllabus, styleId });
+      const result = await activateJourneyAction({
+        journeyId,
+        messages,
+        syllabus,
+        styleId,
+      });
       router.push(result.path);
     });
   };
 
+  const syllabusBody = journeyId !== null ? { journeyId, styleId } : undefined;
+
   return (
     <ChatPageShell>
       <ChatPageShell.Content>
+        {creatingJourney && messages.length === 0 ? (
+          <p className="text-muted-foreground px-1 text-sm">
+            {t('creatingJourney')}
+          </p>
+        ) : null}
         <JourneyChatView
           MessagePartDelegate={SyllabusPartDelegate}
+          disableInput={journeyId === null}
           messages={messages}
           placeholder={t('promptPlaceholder')}
           status={status}
-          onEditUserMessage={(messageId, text) =>
-            handleEditMessage({ messageId, text, body: { styleId } })
+          onEditUserMessage={
+            syllabusBody !== undefined
+              ? (messageId, text) =>
+                  handleEditMessage({ messageId, text, body: syllabusBody })
+              : undefined
           }
-          onRegenerate={(messageId) =>
-            handleRegenerate({ messageId, body: { styleId } })
+          onRegenerate={
+            syllabusBody !== undefined
+              ? (messageId) =>
+                  handleRegenerate({ messageId, body: syllabusBody })
+              : undefined
           }
           onStop={stop}
-          onSubmit={(msg) => handleSubmit({ ...msg, body: { styleId } })}
+          onSubmit={(msg) => {
+            if (syllabusBody === undefined) {
+              return;
+            }
+            void handleSubmit({ ...msg, body: syllabusBody });
+          }}
         />
-        {startable && (
+        {startable && journeyId !== null && (
           <div className="mx-auto flex w-full max-w-3xl justify-end px-1 pb-1">
             <button
               className="border-foreground bg-foreground text-background flex w-full items-center justify-center gap-2 rounded border px-4 py-2 text-sm font-medium transition-opacity disabled:opacity-40 md:w-auto md:justify-start"
