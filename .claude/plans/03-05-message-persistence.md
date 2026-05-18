@@ -38,6 +38,14 @@ the transcript.
 
 What stays deliberately out of scope:
 
+- **Delta message transport for chapter chat.** Stories 2–4 already send a
+  full validated `messages: UIMessage[]` body on each turn; Story 5 keeps
+  that wire format unchanged (no `prepareSendMessagesRequest`, no
+  `{ message, regenerateFromMessageId }` body). Narrowing the client payload
+  and teaching the route to assemble history from DB alone is the separate
+  [Delta Message Transport plan](../../docs/plans/delta-message-transport.md)
+  — for chapter chat, that plan’s §11 Step 5 ships **after** Story 5 proves
+  persistence with the default transport.
 - **Welcome (syllabus) chat persistence.** The `phase` enum on the new
   `messages` table includes `'syllabus'` for future use, but Story 5 only
   ever writes `phase='chapter'` rows. The welcome chat stays ephemeral per
@@ -109,21 +117,54 @@ list page) per `00-journey-app.md`.
   completed message. Doing the user-message save in the same request as
   the model call keeps a single ordering source of truth.
 
-- **Wire shape: keep Option A — the client sends the full message history.**
-  The Story 2 route already validates the request body's `messages: UIMessage[]`
-  via `validateUIMessages` and builds `modelMessages` from it. Story 5
-  preserves that contract: the client's local `useChat` state is the working
-  copy *during* a session; the DB is the source of truth on *page load*.
-  Persistence is purely additive — the route writes the new user message
-  (the last item in the array) and the assistant response (from `onFinish`),
-  but never re-persists prior messages. Idempotency on `id` makes a stray
-  re-save of an already-stored row a no-op.
+- **Wire shape: unchanged — full `messages` array per Stories 2–4.** The
+  client keeps using `DefaultChatTransport`’s default body: validated
+  `messages: UIMessage[]` plus `locale` (and any other fields the route
+  already accepts). The server still builds `modelMessages` from that array
+  via `convertToModelMessages` — the same shape `useChat` hydrates from
+  `initialMessages` after a reload. Story 5 does **not** add
+  `prepareSendMessagesRequest` or switch the chapter route to the delta
+  request schema; that work belongs solely to the
+  [Delta Message Transport plan](../../docs/plans/delta-message-transport.md).
 
-  Option B (server loads history; client sends new user message only via
-  `experimental_prepareRequestBody`) was considered. Rejected for Story 5:
-  introduces a divergence path if client and DB disagree, and the wire-size
-  savings are immaterial for the chapter-chat volumes we target. The Story 2
-  shape stays exactly the same.
+- **Persistence trigger: reconcile DB tail, then save terminal user turn.**
+  After `validateUIMessages`, before `streamText`, the route ensures the
+  persisted chapter transcript matches the client-supplied history **for
+  purposes of durability**:
+  1. When the validated array implies a truncated tail (edited user message
+     or regeneration that removed the last assistant turn), call
+     `deleteMessagesFrom` so superseded rows are removed — same semantics as
+     the companion delta plan §5 (the primitive is shared; only the HTTP
+     wire format differs).
+  2. When the last validated message is a `user` message, call
+     `saveChatMessage` for it (idempotent on `id`). Skip when the array is
+     empty (assistant-first turn — nothing new to persist before the model
+     runs).
+
+  Idempotency remains `ON CONFLICT (id) DO NOTHING` on `saveChatMessage`.
+
+- **`triggerResponse` / assistant-first turn.** `ChapterChat` calls
+  `triggerResponse()` on mount, which calls `sendMessage(undefined)`. The AI
+  SDK issues a request whose validated `messages` array is empty (same as
+  Stories 2–4). No user row is saved before `streamText`; `onFinish` still
+  persists the assistant reply. After Story 5, a mid-chapter refresh reloads
+  `initialMessages` from the DB so the client no longer sends an empty array
+  on remount — the first request in a resumed session carries the restored
+  history instead.
+
+- **Synthetic user message from `applySyllabusChangeAction`.** `ChapterPage`
+  injects a synthetic `{ role: 'user', parts: [{ type: 'text', text: '...' }] }`
+  message into `useChat` state via `setMessages` after a syllabus proposal is
+  applied (Story 4). That message must also be written to the DB or the next
+  turn after a refresh would miss the "I applied the suggested syllabus
+  change" context. Resolution: `applySyllabusChangeAction` generates the
+  message ID server-side (via `nanoid`), saves the synthetic message to the DB
+  with `saveChatMessage` (using `getLocale()` for the translated text), and
+  returns the `id` to the client. `handleSyllabusApplied` in `ChapterPage`
+  receives the `id` and uses it as the `id` field on the injected `setMessages`
+  entry so that client state and DB are in sync. If the save fails the action
+  returns without the id and the client falls back to `crypto.randomUUID()` —
+  the context gap reappears but does not break the UI.
 
 - **Loading history on the chapter page.** The chapter page (server
   component, Story 1) gains a new server-side fetch:
@@ -151,6 +192,16 @@ list page) per `00-journey-app.md`.
     Idempotent via `.onConflictDoNothing({ target: messages.id })`. The
     ownership gate is a single `select` of the journey by `(id, userId)`
     inside the same call; on miss, the function returns without writing.
+
+- **New entity function `deleteMessagesFrom`.** Required so edits and
+  regenerations stay consistent with the DB while the wire format still
+  carries a full `messages` array. Lives in `lib/server/messages/delete.ts`.
+  Deletes all messages
+  in a chapter scope with `created_at >=` the `created_at` of the row whose
+  `id` matches `fromMessageId`. Safe when the id does not exist (PostgreSQL
+  `>= NULL` is falsy; zero rows deleted). Full spec in the companion Delta
+  Message Transport plan §5 (same SQL when chapter delta ships later). Added
+  to the `lib/server/messages/` barrel.
 
 - **Phase is hard-coded at all Story 5 call sites.** The route handler and
   every action that saves a message passes `phase: 'chapter'`. The enum
@@ -410,50 +461,64 @@ The owner gate uses the same shape as `completeChapter`'s gate in Story 3.
 The function intentionally returns `void` even on no-op — callers should
 not branch on success vs. silent skip.
 
-### 4. `app/api/journeys/[id]/chapters/[n]/chat/route.ts` — wire the user-save and the `onFinish` save
+### 3b. `lib/server/messages/delete.ts` — new entity function
 
-Three narrow edits on top of Stories 2–4.
+Full specification in the companion Delta Message Transport plan §5. Implement
+exactly as described there. Story 5 needs this primitive for DB tail
+truncation on edit/regenerate even though the HTTP body remains a full
+`messages` array (delta **transport** is deferred). Export `deleteMessagesFrom`
+and `DeleteMessagesFromParams` from the `lib/server/messages/index.ts` barrel.
 
-(a) New imports:
+The `chapterId` parameter is always non-null in Story 5 (chapter scope only);
+the function signature uses `string` (not `string | null`) at Story 5 call
+sites, but the underlying SQL handles nullable scoping for future use.
+
+### 4. `app/api/journeys/[id]/chapters/[n]/chat/route.ts` — persist around existing full-body flow
+
+Keep `RequestBody` as `{ messages: UIMessage[]; locale: Locale }` and retain
+`validateUIMessages`. Add imports for persistence helpers:
 
 ```ts
+import { deleteMessagesFrom } from '@/lib/server/messages/delete';
 import { saveChatMessage } from '@/lib/server/messages/save';
 ```
 
-(b) After the `validateUIMessages` block (which already runs after `auth`,
-journey resolve, chapter resolve, style resolve), save the **last** message
-— that's the new user turn the client just posted.
+After validation and before `convertToModelMessages(messages)`:
 
-```ts
-const lastMessage = messages[messages.length - 1];
-if (lastMessage !== undefined && lastMessage.role === 'user') {
-  await saveChatMessage({
-    userId,
-    journeyId: journey.id,
-    chapterId: chapter.id,
-    phase: 'chapter',
-    message: lastMessage,
-  });
-}
-```
+1. **Reconcile the DB tail** so persisted rows match the client-supplied
+   transcript for edits/regenerations (same outcomes as the delta-plan §4
+   server algorithm, but inferred from the full `messages` array rather than
+   from `message` / `regenerateFromMessageId` fields). Concretely: when the
+   last validated message is `user`, call `deleteMessagesFrom` from that
+   message’s `id` (truncates nothing for a brand-new id; truncates the fork
+   for an edit). When the client omitted a trailing assistant message that
+   still exists in the DB (regeneration), call `deleteMessagesFrom` from the
+   regenerated assistant’s `id` before saving anything else. Order these
+   branches so a save failure never leaves the DB ahead of the model call in
+   an inconsistent way; a failed `saveChatMessage` for the terminal user turn
+   returns 500 before `streamText`.
 
-This runs *before* `streamText`, so if the save throws (DB outage, etc.)
-the route returns 500 and no model call is charged. Idempotency means a
-retry of the same request silently no-ops the second insert.
+2. **Save the terminal `user` message** when present (idempotent on `id`).
+   Skip when `messages.length === 0` (assistant-first mount on a fresh
+   chapter).
 
-(c) Pass an `onFinish` handler to `result.toUIMessageStreamResponse`:
+Build `modelMessages` from the **validated client `messages`** via
+`convertToModelMessages` — unchanged from Stories 2–4. The `'Begin.'` cue stays
+tied to `history.length === 0` after conversion (empty client array on first
+visit).
+
+Pass an `onFinish` handler to `result.toUIMessageStreamResponse` — same as
+today, extended with the `tool-proposeSyllabusChange` strip and
+`saveChatMessage` for the assistant:
 
 ```ts
 return result.toUIMessageStreamResponse({
-  originalMessages: messages,
   onFinish: async ({ responseMessage }) => {
-    // Strip proposeSyllabusChange parts so unresolved proposals never
-    // reload. They are one-shot in-session interactions.
     const persistedParts = responseMessage.parts.filter(
       (p) => p.type !== 'tool-proposeSyllabusChange',
     );
     if (persistedParts.length === 0) {
-      return; // model only fired proposeSyllabusChange — nothing left to save
+      return;
     }
     try {
       await saveChatMessage({
@@ -470,16 +535,8 @@ return result.toUIMessageStreamResponse({
 });
 ```
 
-`originalMessages` is the canonical AI SDK opt-in for "persistence mode" —
-it tells the SDK to assign a stable id to the response message and exposes
-the final UI shape (including all tool parts) to the `onFinish` callback.
-Verified against `node_modules/ai/dist/index.d.ts` —
-`UIMessageStreamOnFinishCallback` gets
-`{ messages, isContinuation, isAborted, responseMessage, finishReason }`.
-
-The `try/catch` localises the durability gap documented in Decisions: a
-save failure here logs at `error` level and is otherwise swallowed —
-re-throwing would corrupt the already-flushed response stream. No retries.
+The `onFinish` callback still fires after the stream is flushed; the save
+failure path is unchanged from the narrative above.
 
 ### 5. `app/[locale]/journeys/[journeySlug]/[chapterSlug]/page.tsx` — load `initialMessages`
 
@@ -514,11 +571,13 @@ return (
 and passes it straight through to `<ChapterChat ... initialMessages={...} />`.
 No layout changes.
 
-### 6. `app/[locale]/journeys/[journeySlug]/[chapterSlug]/_components/chapter-chat.tsx` — accept and forward `initialMessages`
+### 6. `app/[locale]/journeys/[journeySlug]/[chapterSlug]/chapter-page.tsx` — accept `initialMessages`, pass synthetic message id
 
-Three edits on top of Stories 2–4:
+Four edits on top of Stories 2–4. The component already uses `useJourneyChat`;
+Story 5 only forwards `initialMessages` — **no** `prepareSendMessagesRequest`
+(that ships with chapter delta transport later).
 
-(a) Extend `Props`:
+(a) Extend `Props` and forward `initialMessages` into `useJourneyChat`:
 
 ```ts
 import type { UIMessage } from 'ai';
@@ -528,46 +587,117 @@ type Props = {
   chapter: JourneyChapter;
   initialMessages: UIMessage[];
 };
-```
 
-(b) Forward into `useChat` via the `messages` field. The AI SDK v6
-`ChatInit.messages?: UI_MESSAGE[]` field is the documented hydration prop:
-
-```ts
-const { messages, sendMessage, status } = useChat({
-  messages: initialMessages,
-  transport: new DefaultChatTransport({
-    api: `/api/journeys/${journey.id}/chapters/${chapter.idx + 1}/chat`,
-  }),
+const { messages, setMessages, status, … } = useJourneyChat({
+  api: `/api/journeys/${journey.id}/chapters/${chapter.id}/chat`,
+  initialMessages,
 });
 ```
 
-(c) Drop the `messages` argument from the `completeChapterAction` call
-inside `handleComplete`:
+(b) Drop the `messages` argument from `completeChapterAction`:
 
 ```ts
-const handleComplete = () => {
-  startCompleting(async () => {
-    const result = await completeChapterAction({
-      journeyId: journey.id,
-      chapterIdx: chapter.idx,
-    });
-    if (result.nextChapterPath !== null) {
-      router.push(result.nextChapterPath);
-    } else {
-      router.refresh();
-    }
-  });
-};
+const result = await completeChapterAction({
+  journeyId: journey.id,
+  chapterIdx: chapter.idx,
+});
 ```
 
-The Story 4 `renderPart` callback, the `tool-markChapterComplete` branch,
-the `tool-proposeSyllabusChange` branch, and the dismissal state are all
-**unchanged**. Reloaded tool parts re-render because they come back from
-the DB inside `initialMessages`; dismissal state is intentionally
-session-local and resets to an empty `Set` on every mount.
+(c) Update `handleSyllabusApplied` to use the server-generated message id
+returned from `applySyllabusChangeAction` (see File 6b below). If the action
+does not return an id (save failed), fall back to `crypto.randomUUID()`:
 
-### 7. `app/[locale]/journeys/[journeySlug]/[chapterSlug]/_components/complete-chapter.ts` — load transcript server-side
+```ts
+const handleSyllabusApplied = useCallback(
+  (toolCallId: string, syntheticMessageId: string | undefined) => {
+    setAppliedToolCallIds((prev) => new Set(prev).add(toolCallId));
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: syntheticMessageId ?? crypto.randomUUID(),
+        role: 'user',
+        metadata: { type: 'action' },
+        parts: [{ type: 'text', text: tChat('proposalAppliedMessage') }],
+      },
+    ]);
+  },
+  [setMessages, tChat],
+);
+```
+
+(d) `SyllabusChangeCard` forwards the `syntheticMessageId` from
+`applySyllabusChangeAction`'s return value up to `onApplied`. The
+`applySyllabusChangeAction` result type gains an optional
+`syntheticMessageId?: string` field. Existing `onApplied` call sites pass it
+through.
+
+The `renderPart` callback, the `tool-markChapterComplete` branch, the
+`tool-proposeSyllabusChange` branch, and the dismissal state are all
+**unchanged**.
+
+### 6b. `app/[locale]/journeys/[journeySlug]/[chapterSlug]/apply-syllabus-change.ts` — persist synthetic message
+
+`applySyllabusChangeAction` gains one new responsibility: after a successful
+`applySyllabusChange`, save the synthetic "I applied the suggested syllabus
+change." user message to the DB and return its id.
+
+```ts
+import { nanoid } from 'nanoid';
+import { getLocale } from 'next-intl/server';
+import { getTranslations } from 'next-intl/server';
+
+// … after applySyllabusChange succeeds …
+
+const locale = await getLocale();
+const t = await getTranslations({ locale, namespace: 'ChapterChat' });
+const syntheticMessageId = nanoid();
+
+try {
+  await saveChatMessage({
+    userId,
+    journeyId,
+    chapterId,
+    phase: 'chapter',
+    message: {
+      id: syntheticMessageId,
+      role: 'user',
+      parts: [{ type: 'text', text: t('proposalAppliedMessage') }],
+    },
+  });
+} catch {
+  // Non-fatal — the context gap is preferable to failing the entire action.
+  return { nextPath, syntheticMessageId: undefined };
+}
+
+return { nextPath, syntheticMessageId };
+```
+
+Update the `ApplySyllabusChangeResult` type to include
+`syntheticMessageId?: string`.
+
+### 6c. `lib/journey-chat/use-journey-chat.ts` — add `initialMessages` only
+
+Forward `initialMessages?: UIMessage[]` into `useChat`’s `messages` init option.
+Do **not** add `prepareSendMessagesRequest` here in Story 5 — the default
+`DefaultChatTransport` body (`messages` array) must keep working until the
+delta plan’s chapter-chat step replaces it.
+
+```ts
+export type UseJourneyChatParams = {
+  api: string;
+  initialMessages?: UIMessage[];
+};
+
+// … inside useJourneyChat …
+useChat<TMessage>({
+  messages: initialMessages,
+  transport: new DefaultChatTransport({ api }),
+});
+```
+
+Update the barrel export.
+
+### 7. `app/[locale]/journeys/[journeySlug]/[chapterSlug]/complete-chapter.ts` — load transcript server-side
 
 Two changes to Story 3's server action.
 
@@ -607,7 +737,7 @@ function-level JSDoc; this is now a fully server-resolved flow.
 
 ### 8. Documentation note on `dismissedProposals`
 
-In `chapter-chat.tsx`, add a one-line JSDoc above the `dismissedProposals`
+In `chapter-page.tsx`, add a one-line JSDoc above the `dismissedProposals`
 state to clarify its post-Story-5 scope:
 
 ```ts
@@ -639,43 +769,39 @@ Never hand-edit `_journal.json` or the snapshot.
 
 ## Critical files reference
 
-- **Entity-layer scoping idiom**: `lib/server/journeys/setStyle.ts` for the
-  one-shot `(id, userId)` UPDATE shape; `lib/server/chapters/complete.ts`
+- **Entity-layer scoping idiom**: `lib/server/journeys/updateMemory.ts` for
+  the one-shot `(id, userId)` UPDATE shape; `lib/server/chapters/complete.ts`
   (Story 3) for the parent-table ownership gate that `listChapterMessages`
   and `saveChatMessage` reuse.
-- **DB clients**: `lib/server/db/index.ts` exports `db` (HTTP) for both
-  entity functions. `dbTx` is not used in Story 5 — neither save needs a
-  transaction.
+- **DB clients**: `lib/server/db/index.ts` exports `db` (HTTP) for all
+  new entity functions. `dbTx` is not used in Story 5 — none of the saves
+  need a transaction.
 - **Drizzle table-definition style**: `lib/server/db/schema.ts` — `pgEnum`,
   composite indexes via `(t) => [...]`, FK `references` with
   `{ onDelete: 'cascade' }`. The new `messages` table follows the same
   conventions.
-- **Streaming route pattern**: `app/api/syllabus/chat/route.ts` — auth,
-  Zod body validation, `validateUIMessages`, `streamText`,
-  `toUIMessageStreamResponse()`. The chapter route (Stories 2–4) is the
-  near-clone Story 5 modifies; the new edits sit around the existing
-  `streamText` call without touching it.
+- **Streaming route pattern**: `app/api/journeys/[journeyId]/chapters/[chapterId]/chat/route.ts`
+  (Stories 2–4) — Story 5 adds pre-stream and `onFinish` persistence while
+  keeping the full `messages` request body and `validateUIMessages`; the
+  `streamText` / `convertToModelMessages` path is unchanged.
 - **AI SDK `onFinish` shape**: `node_modules/ai/dist/index.d.ts` —
   `UIMessageStreamOnFinishCallback` with
   `{ messages, isContinuation, isAborted, responseMessage, finishReason }`.
-  Story 5 only reads `responseMessage` (the complete assistant UIMessage
-  including all tool parts).
+  Story 5 only reads `responseMessage`.
 - **AI SDK `useChat` hydration**: `node_modules/ai/dist/index.d.ts` —
-  `ChatInit.messages?: UI_MESSAGE[]` is the documented v6 prop for
-  initial messages. `welcome-chat.tsx` does not pass it today, leaving a
-  clean slate for the chapter chat.
-- **Chapter-page wiring**: Story 1's
-  `app/[locale]/journeys/[journeySlug]/[chapterSlug]/page.tsx` and its
-  `_components/chapter-page.tsx` view — Story 5 adds one server fetch and
-  one new prop without touching the layout.
-- **Chapter-chat client island**: Stories 2–4's
-  `_components/chapter-chat.tsx` — Story 5 changes the `useChat` options
-  and the `completeChapterAction` payload only; the `renderPart` callback
-  (`text` + `tool-markChapterComplete` + `tool-proposeSyllabusChange`)
-  works unchanged on reloaded messages.
-- **Server-action pattern**: `_components/complete-chapter.ts` (Story 3) —
-  the only action Story 5 touches; the cleanup removes the `messages`
-  field from the input.
+  `ChatInit.messages?: UI_MESSAGE[]` is the v6 prop for initial messages.
+  Forwarded through `useJourneyChat` as `initialMessages`.
+- **Chapter-page wiring**: `app/[locale]/journeys/[journeySlug]/[chapterSlug]/page.tsx`
+  and `chapter-page.tsx` — Story 5 adds one server fetch and one new prop.
+- **`useJourneyChat` hook**: `lib/journey-chat/use-journey-chat.ts` — Story 5
+  adds `initialMessages` only. `prepareSendMessagesRequest` for chapter chat
+  is documented in the companion
+  [Delta Message Transport plan](../../docs/plans/delta-message-transport.md)
+  (§11 Step 5 — after persistence).
+- **Server-action pattern**: `complete-chapter.ts` (Story 3) — Story 5 removes
+  `messages` from the input and reads from DB instead.
+- **`applySyllabusChangeAction`**: `apply-syllabus-change.ts` (Story 4) —
+  Story 5 adds synthetic-message persistence and returns `syntheticMessageId`.
 
 ---
 
@@ -737,12 +863,11 @@ Manual walkthrough in `pnpm dev`, both locales:
    normal); the dismissed card simply doesn't reappear.
 
 7. **Idempotent saves.** With browser devtools, replay the same
-   `POST /api/journeys/<id>/chapters/1/chat` request twice in a row with
-   the same `messages` array. Inspect `messages` table in
-   `drizzle-kit studio`: only one row for the user `id` exists (the
-   second save no-ops via `ON CONFLICT (id) DO NOTHING`). The assistant
-   message id from the second response also collides on the (already
-   stored) original assistant row — one row, not two.
+   `POST /api/journeys/<id>/chapters/1/chat` request twice in a row with an
+   identical full `messages` body (same terminal user `id`). The second
+   `saveChatMessage` for that user row is a no-op via `ON CONFLICT DO NOTHING`.
+   Inspect `messages` in `drizzle-kit studio`: only one row for that user `id`
+   exists.
 
 8. **Cross-user isolation.** As user A, post a chapter message. Sign in
    as user B with a separate journey, then craft a `listChapterMessages`
