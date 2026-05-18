@@ -16,9 +16,11 @@ import { messages } from '@/lib/server/db/schema';
  * a truncated in-memory history (regenerate / edit) without leaving orphan DB
  * rows that {@link getMessages} would surface on reload.
  *
- * A future wire format (for example server-side deltas) can still converge on
- * this function by reducing to a full ordered `UIMessage[]` for the scope
- * before calling it.
+ * **Delta transport:** `docs/plans/delta-message-transport.md` (see branch
+ * `cursor/plan-delta-transport-4b90`) replaces the full-array wire with
+ * `deleteMessagesFrom` plus additive {@link saveMessages} per turn. Until that
+ * protocol ships, routes that accept the full client `messages[]` should use
+ * this function so the database stays aligned with the truncated snapshot.
  *
  * @param params - Journey scope and the authoritative message list for that scope.
  */
