@@ -1,5 +1,11 @@
 # Persist Syllabus Draft Phase — Implementation Plan
 
+> **Companion plan**: [Delta Message Transport](./delta-message-transport.md) refines the API
+> transport once this plan is in place, replacing full-history requests with per-turn deltas and
+> removing the need for clients to send the full message array. Sections in this plan that are
+> affected by that companion plan are annotated with **→ see Delta plan**.
+
+
 ## 1. Context & Current Behaviour
 
 ### Syllabus chat flow today
@@ -64,18 +70,21 @@
 │         ↓                                                     │
 │  router.replace('/journeys/<slug>-<id>')                      │
 │         ↓ (same React tree, URL bar updates)                  │
-│  auto-submit first message to /api/syllabus/chat?             │
-│       body: { journeyId, styleId, locale, messages }          │
+│  auto-submit first message to /api/syllabus/chat              │
+│       body: { journeyId, styleId, locale, message: <new msg> }│
+│       (transport sends only the delta — see Delta plan)       │
 │         ↓                                                     │
 │  API route:                                                    │
-│    – saves incoming user message(s) to messages table         │
-│    – streams response                                         │
+│    – (edit/regenerate) deletes superseded DB messages         │
+│    – saves incoming user message to messages table            │
+│    – reads full history from DB → streams response            │
 │    – onFinish: saves assistant message(s) to messages table   │
 │    – onFinish: saves latest draft to journeys.syllabus        │
 └───────────────────────────────┬──────────────────────────────┘
                                 │ user clicks "Start journey"
 ┌───────────────────────────────▼──────────────────────────────┐
-│  activateJourneyAction({ journeyId, messages, syllabus, … })  │
+│  activateJourneyAction({ journeyId, syllabus, styleId })       │
+│    – reads messages from DB for bootstrapJourney              │
 │    – bootstrapJourney → final title + memory                  │
 │    – UPDATE journeys SET status='active', title, memory, …   │
 │    – INSERT chapters rows                                     │
@@ -267,7 +276,7 @@ an existing row via `UPDATE` rather than `INSERT`.
 - Add `status: 'drafting' | 'active'` to the `Journey` type and to the `SELECT` in `getJourney`.
 - No behavioral change; existing callers ignore the new field until they need it.
 
-### 5.4 `lib/server/messages/` — new module
+### 5.4 `lib/server/messages/` — new module  *(→ see Delta plan §5 for `deleteMessagesFrom`)*
 
 **`lib/server/messages/save.ts`**
 
@@ -313,7 +322,11 @@ export async function getMessages(
 
 The implementation fetches rows ordered by `created_at` and reconstructs `UIMessage` objects.
 
-**`lib/server/messages/index.ts`** — barrel re-exporting both functions and their param types.
+**`lib/server/messages/delete.ts`** — see the Delta Message Transport plan (§5) for the full
+spec. The function `deleteMessagesFrom` truncates a conversation from a given message ID
+onwards. It must be added to this module before the delta transport is enabled.
+
+**`lib/server/messages/index.ts`** — barrel re-exporting all functions and their param types.
 
 ### 5.5 `lib/server/journeys/update-draft.ts` — new module
 
@@ -385,49 +398,52 @@ the factory instead.
 
 ---
 
-## 7. API Routes
+## 7. API Routes  *(→ see Delta plan §7 for the full delta contract)*
 
 ### 7.1 `POST /api/syllabus/chat` — update
 
-**Request body changes**:
-- Add required `journeyId: string` field.
-  The client always provides this from the moment the draft journey is created.
-- `styleId` remains required.
+**Request body** (initial persistence shape — superseded by the Delta plan once that is
+deployed):
 
-**Server-side changes**:
-
-1. Validate that the journey exists and belongs to the caller (`getJourney`); return 403 if not.
-2. Verify `journey.status === 'drafting'`; return 409 if already active (chat is over).
-3. Instantiate `createUpdateSyllabusDraftTool({ journeyId })` instead of the static singleton.
-4. **Save incoming messages** (the user turn that triggered this request) via `saveMessages`
-   before streaming starts. Only save new messages — use upsert-by-id so re-submissions are safe.
-5. Pass `onFinish` to `streamText`:
-   ```ts
-   onFinish: async ({ response }) => {
-     await saveMessages({
-       journeyId,
-       chapterId: null,
-       messages: response.messages,
-     });
-   }
-   ```
-6. The tool's `execute` already saves the draft syllabus — no additional `onFinish` logic needed
-   for that.
-
-**Updated `RequestBody` type**:
 ```ts
 export type RequestBody = {
-  messages: UIMessage[];
+  /** The single new or edited user message. Absent for regenerations. */
+  message?: UIMessage;
+  /** ID of the assistant message to replace. Present for regenerations only. */
+  regenerateFromMessageId?: string;
   journeyId: string;
   styleId: string;
   locale: Locale;
 };
 ```
 
+Exactly one of `message` or `regenerateFromMessageId` must be present; the route returns 400
+otherwise.
+
+**Server-side changes**:
+
+1. Validate that the journey exists and belongs to the caller (`getJourney`); return 403 if not.
+2. Verify `journey.status === 'drafting'`; return 409 if already active.
+3. Instantiate `createUpdateSyllabusDraftTool({ journeyId })` instead of the static singleton.
+4. Apply the delta algorithm (from the Delta plan §4):
+   - For regenerations: call `deleteMessagesFrom` then load history from DB.
+   - For new/edited messages: call `deleteMessagesFrom` (no-op for new), save the incoming
+     message via `saveMessages`, then load history from DB.
+5. Convert DB history to model messages and call `streamText`.
+6. Pass `onFinish` to `streamText` to save the assistant response:
+   ```ts
+   onFinish: async ({ response }) => {
+     await saveMessages({ journeyId, chapterId: null, messages: response.messages });
+   }
+   ```
+7. The tool's `execute` already saves the draft syllabus — no additional `onFinish` logic needed
+   for that.
+
 ### 7.2 `POST /api/journeys/[journeyId]/chapters/[chapterId]/chat` — note only
 
-Message persistence for chapter chat is out of scope for this feature (it is referenced in the
-existing codebase as "Story 5"). No changes to the chapter chat route are required here.
+Message persistence for chapter chat is out of scope for this plan. No changes to the chapter
+chat route are required here. The Delta plan §8 describes what will be needed when chapter
+message persistence is added.
 
 ---
 
@@ -481,7 +497,7 @@ The existing `createJourneyAction` in `create-journey.ts` is **replaced** by
 | Aspect | Old (`createJourneyAction`) | New (`activateJourneyAction`) |
 |--------|----------------------------|-------------------------------|
 | DB operation | Inserts new journey + chapters | Updates existing draft journey + inserts chapters |
-| Input | `messages`, `syllabus`, `styleId` | `journeyId`, `messages`, `syllabus`, `styleId` |
+| Input | `messages`, `syllabus`, `styleId` | `journeyId`, `syllabus`, `styleId` — messages read from DB |
 | Output | `id`, `path` | `path` (path may change if title slug changes) |
 
 ```ts
@@ -489,8 +505,9 @@ The existing `createJourneyAction` in `create-journey.ts` is **replaced** by
 
 export type ActivateJourneyInput = {
   journeyId: string;
-  messages: UIMessage[];
+  /** Final confirmed syllabus draft. */
   syllabus: Syllabus;
+  /** Final teaching style at the moment of activation. */
   styleId: string;
 };
 
@@ -500,8 +517,9 @@ export type ActivateJourneyResult = {
 };
 
 /**
- * Finalises a draft journey: runs bootstrapJourney to derive the proper title
- * and learner memory, then activates the journey and creates its chapters.
+ * Finalises a draft journey: reads the persisted chat transcript from the
+ * database, runs bootstrapJourney to derive the proper title and learner
+ * memory, then activates the journey and creates its chapters.
  */
 export async function activateJourneyAction(
   input: ActivateJourneyInput,
@@ -512,12 +530,14 @@ Implementation:
 - Auth + `ensureUser`.
 - Parse and validate `syllabus`.
 - `getJourney({ userId, id: input.journeyId })` — throw if not found or not drafting.
+- `getMessages({ journeyId: input.journeyId, chapterId: null })` → `messages`.
 - `bootstrapJourney({ draft: syllabus, messages, locale })` → `{ title, memory }`.
 - `activateJourney({ userId, journeyId, title, memory, syllabus })`.
 - Return `{ path: journeyPath(journeyId, title) }`.
 
-> **Migration note for callers**: `SyllabusChat` currently calls `createJourneyAction`. It must
-> be updated to call `activateJourneyAction` with the `journeyId` it already holds.
+> **Migration note for callers**: `SyllabusChat` currently calls `createJourneyAction` with the
+> full `messages` array. It must be updated to call `activateJourneyAction` with only
+> `journeyId`, `syllabus`, and `styleId`.
 
 ---
 
@@ -559,9 +579,12 @@ URL changes but the App Router treats it as a soft navigation to a different URL
 **Phase B — Chat with journeyId**
 
 All `handleSubmit`, `handleRegenerate`, and `handleEditMessage` calls include
-`body: { journeyId, styleId }` so the API route has the context to save messages.
+`body: { journeyId, styleId }` so the API route has the context to identify the conversation
+scope and save messages. The `prepareSendMessagesRequest` callback in `useJourneyChat` (§11)
+intercepts each outgoing request and builds the correct delta body from these fields.
 
-The "Start journey" button calls `activateJourneyAction` instead of `createJourneyAction`:
+The "Start journey" button calls `activateJourneyAction` instead of `createJourneyAction`.
+The `messages` array is **no longer passed** — the server reads them from the database:
 
 ```tsx
 const handleStartJourney = () => {
@@ -569,7 +592,6 @@ const handleStartJourney = () => {
   startTransition(async () => {
     const result = await activateJourneyAction({
       journeyId,
-      messages,
       syllabus: draft,
       styleId,
     });
@@ -683,10 +705,11 @@ and applies here without extra work.
 
 ---
 
-## 11. `lib/journey-chat/` — `useJourneyChat` update
+## 11. `lib/journey-chat/` — `useJourneyChat` update  *(→ see Delta plan §6)*
 
-`useJourneyChat` wraps `useChat` from `@ai-sdk/react`. Add `initialMessages` to its parameter
-type so server components can pre-populate the chat with persisted history:
+`useJourneyChat` wraps `useChat` from `@ai-sdk/react`. Two additions are needed:
+
+**`initialMessages`** — pre-populates the chat with persisted history on resume:
 
 ```ts
 export type UseJourneyChatParams = {
@@ -696,7 +719,24 @@ export type UseJourneyChatParams = {
 };
 ```
 
-Forward `initialMessages` to `useChat`. Update the barrel export in `lib/journey-chat/index.ts`.
+Forward `initialMessages` to `useChat`.
+
+**`prepareSendMessagesRequest`** — sends only the delta on each turn instead of the full
+history (see the Delta plan §6 for the full callback implementation):
+
+```ts
+transport: new DefaultChatTransport({
+  api,
+  prepareSendMessagesRequest: ({ messages, trigger, messageId, body }) => {
+    if (trigger === 'regenerate-message') {
+      return { body: { ...body, regenerateFromMessageId: messageId } };
+    }
+    return { body: { ...body, message: messages[messages.length - 1] } };
+  },
+}),
+```
+
+Update the barrel export in `lib/journey-chat/index.ts`.
 
 ---
 
@@ -751,7 +791,7 @@ via `vi.mock('@/lib/server/db')`.
 
 | File | Tests |
 |------|-------|
-| `app/api/syllabus/chat/route.test.ts` | Validate that `journeyId` is now required; 403 when journey not owned by user; 409 when journey already active; messages saved via `saveMessages` before and after stream. |
+| `app/api/syllabus/chat/route.test.ts` | `journeyId` required (400 if absent); 403 when journey not owned by user; 409 when journey already active; 400 when both `message` and `regenerateFromMessageId` absent; new message: `saveMessages` called with user message, then response messages saved in `onFinish`; edit: `deleteMessagesFrom` called before `saveMessages`; regenerate: `deleteMessagesFrom` called, no `saveMessages` for user turn. |
 
 ### 13.4 Server action — unit tests
 
@@ -783,9 +823,10 @@ Implement the feature in this sequence. Each step is independently testable and 
 2. `lib/server/journeys/create.ts` — add `createDraftJourney`.
 3. `lib/server/journeys/activate.ts` — new module with `activateJourney`.
 4. `lib/server/journeys/update-draft.ts` — new module with `updateDraftSyllabus`.
-5. `lib/server/messages/save.ts` and `get.ts` — new module with barrel.
+5. `lib/server/messages/save.ts`, `get.ts`, and `delete.ts` — new module with barrel.
 
-Write unit tests alongside each new function.
+Write unit tests alongside each new function. The `deleteMessagesFrom` function (in `delete.ts`)
+is required by the delta API contract; build it here alongside the rest of the messages module.
 
 ### Step 3 — Syllabus-chat feature module
 
@@ -798,19 +839,22 @@ Write unit tests alongside each new function.
 
 - Add `app/[locale]/journeys/new/create-draft-journey.ts` (`createDraftJourneyAction`).
 - Rename / replace `app/[locale]/journeys/new/create-journey.ts` with `activate-journey.ts`
-  (`activateJourneyAction`).
+  (`activateJourneyAction`); remove `messages` from input, read from DB instead.
 
 ### Step 5 — API route update
 
 - Update `app/api/syllabus/chat/route.ts`:
-  - Require `journeyId` in request body.
-  - Validate journey ownership and status.
-  - Add `saveMessages` calls (before stream and in `onFinish`).
+  - Change `RequestBody` from `messages: UIMessage[]` to `message?: UIMessage` +
+    `regenerateFromMessageId?: string`.
+  - Require `journeyId`; validate ownership and status.
+  - Implement the delta server algorithm: `deleteMessagesFrom`, `saveMessages`, `getMessages`,
+    `convertToModelMessages`, stream, save response in `onFinish`.
   - Use `createUpdateSyllabusDraftTool` factory.
 
 ### Step 6 — `useJourneyChat` update
 
-- Add `initialMessages` to `UseJourneyChatParams` in `lib/journey-chat/use-journey-chat.ts`.
+- Add `initialMessages` to `UseJourneyChatParams`.
+- Add `prepareSendMessagesRequest` to `DefaultChatTransport` (see Delta plan §6).
 - Update barrel export in `lib/journey-chat/index.ts`.
 
 ### Step 7 — `SyllabusChat` component refactor
@@ -856,13 +900,10 @@ Manually verify the following user stories in a staging environment:
 
 ## 15. Out of Scope
 
-- **Chapter chat message persistence** (referenced as "Story 5" in existing code comments).
-  The `messages` table schema is designed to support this — `chapterId IS NOT NULL` rows are
-  ready for it — but the chapter chat route is not changed in this plan.
-- **Message editing after reload**: The current `handleEditMessage` / `handleRegenerate` UX
-  works on in-memory message IDs. After a page reload the client receives persisted IDs from
-  the DB. Regeneration with those IDs should work correctly via `useChat`'s `regenerate()`
-  because the IDs are stable, but this edge case should be tested before shipping.
+- **Chapter chat message persistence**: The `messages` table schema is designed to support this
+  — `chapterId IS NOT NULL` rows are ready — but the chapter chat route is not changed in this
+  plan. The Delta plan §8 describes the additional work needed when chapter persistence is added,
+  including the synthetic-message edge case.
 - **Draft journey list / dashboard**: Showing the user a list of their in-progress drafts is
   useful but is a separate UX feature. The `status` column makes it trivially queryable.
 - **Stale draft cleanup**: Drafts that are never activated will accumulate. A background job or
