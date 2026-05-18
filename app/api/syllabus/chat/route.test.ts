@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { POST } from './route';
 
 import { getJourney } from '@/lib/server/journeys/get';
-import { saveMessages } from '@/lib/server/messages';
+import { syncMessages } from '@/lib/server/messages';
 import { ensureUser } from '@/lib/server/users/ensure';
 
 vi.mock('@clerk/nextjs/server', () => ({
@@ -17,7 +17,7 @@ vi.mock('@/lib/server/journeys/get', () => ({
 }));
 
 vi.mock('@/lib/server/messages', () => ({
-  saveMessages: vi.fn(),
+  syncMessages: vi.fn(),
 }));
 
 vi.mock('@/lib/server/styles/get', () => ({
@@ -55,7 +55,7 @@ vi.mock('ai', async () => {
 const mockAuth = vi.mocked(auth);
 const mockGetJourney = vi.mocked(getJourney);
 const mockEnsureUser = vi.mocked(ensureUser);
-const mockSaveMessages = vi.mocked(saveMessages);
+const mockSyncMessages = vi.mocked(syncMessages);
 const mockStreamText = vi.mocked(streamText);
 
 const validBody = {
@@ -86,7 +86,7 @@ describe('POST /api/syllabus/chat', () => {
       syllabus: { chapters: [] },
       chapters: [],
     });
-    mockSaveMessages.mockResolvedValue(undefined);
+    mockSyncMessages.mockResolvedValue(undefined);
   });
 
   it('returns 401 when unauthenticated', async () => {
@@ -132,7 +132,7 @@ describe('POST /api/syllabus/chat', () => {
     );
 
     expect(res.status).toBe(403);
-    expect(mockSaveMessages).not.toHaveBeenCalled();
+    expect(mockSyncMessages).not.toHaveBeenCalled();
   });
 
   it('returns 409 when the journey is already active', async () => {
@@ -175,7 +175,7 @@ describe('POST /api/syllabus/chat', () => {
       }),
     );
 
-    expect(mockSaveMessages).toHaveBeenCalled();
+    expect(mockSyncMessages).toHaveBeenCalled();
     expect(mockStreamText).toHaveBeenCalled();
   });
 });
