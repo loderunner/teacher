@@ -12,7 +12,7 @@ import { z } from 'zod';
 
 import type { Locale } from '@/i18n/locale';
 import { getJourney } from '@/lib/server/journeys/get';
-import { saveMessages } from '@/lib/server/messages';
+import { syncMessages } from '@/lib/server/messages';
 import { getStyle } from '@/lib/server/styles/get';
 import { ensureUser } from '@/lib/server/users/ensure';
 import {
@@ -92,7 +92,7 @@ export async function POST(req: Request): Promise<Response> {
     return new Response('Invalid style', { status: 400 });
   }
 
-  await saveMessages({ journeyId, chapterId: null, messages });
+  await syncMessages({ journeyId, chapterId: null, messages });
 
   const tools = {
     updateSyllabusDraft: createUpdateSyllabusDraftTool({ journeyId }),
@@ -132,7 +132,7 @@ export async function POST(req: Request): Promise<Response> {
   return result.toUIMessageStreamResponse({
     originalMessages: messages,
     onFinish: async ({ messages: updated }) => {
-      await saveMessages({ journeyId, chapterId: null, messages: updated });
+      await syncMessages({ journeyId, chapterId: null, messages: updated });
     },
   });
 }
