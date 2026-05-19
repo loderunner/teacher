@@ -121,3 +121,7 @@ it to mobile.
 
 Account creation and onboarding collects personal info to tailor LLM responses
 to the user.
+
+## neon RLS and OAuth
+
+setup Neon Oauth, and row-level security so that an authenticated user cannot access a journey or any related row (chapter or message)
