@@ -124,7 +124,8 @@ to the user.
 
 ## neon RLS and OAuth
 
-setup Neon Oauth, and row-level security so that an authenticated user cannot access a journey or any related row (chapter or message)
+setup Neon Oauth, and row-level security so that an authenticated user cannot
+access a journey or any related row (chapter or message)
 
 ## Use local model for development
 
