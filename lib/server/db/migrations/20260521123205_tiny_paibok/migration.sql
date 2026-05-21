@@ -5,7 +5,6 @@ CREATE TABLE "messages" (
 	"chapter_id" text,
 	"role" text NOT NULL,
 	"parts" jsonb NOT NULL,
-	"metadata" jsonb,
 	"created_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint

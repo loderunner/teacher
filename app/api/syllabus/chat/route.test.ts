@@ -33,11 +33,10 @@ vi.mock('@/lib/server/users/ensure', () => ({
 
 vi.mock('@/lib/syllabus-chat', () => ({
   composeSyllabusSystemPrompt: vi.fn(() => 'system prompt'),
-  createUpdateSyllabusDraftTool: vi.fn(() => ({
+  updateSyllabusDraftTool: {
     description: 'tool',
     inputSchema: {},
-    execute: vi.fn(),
-  })),
+  },
 }));
 
 vi.mock('ai', async () => {

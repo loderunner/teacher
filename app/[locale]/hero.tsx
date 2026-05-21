@@ -4,6 +4,8 @@ import { CompassIcon } from '@phosphor-icons/react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 
+import { createDraftJourneyAction } from './create-draft-journey';
+
 import {
   PromptInput,
   PromptInputFooter,
@@ -13,7 +15,6 @@ import {
 } from '@/components/ai-elements/prompt-input';
 import { StylePicker } from '@/components/style-picker';
 import { useRouter } from '@/i18n/navigation';
-import { storeInitialDraft } from '@/lib/journey-chat';
 import type { Style } from '@/lib/server/styles/get';
 
 /** Props for {@link Hero}. */
@@ -24,8 +25,8 @@ type Props = {
 
 /**
  * Landing hero: title, tagline, compass, style picker, and prompt input.
- * On submit, serializes `{ text, styleId }` to sessionStorage and navigates
- * to the syllabus chat page.
+ * Submitting creates a draft journey server-side and navigates to its page,
+ * where the syllabus chat resumes from the database.
  */
 export function Hero({ presets }: Props) {
   const t = useTranslations('Welcome');
@@ -33,19 +34,15 @@ export function Hero({ presets }: Props) {
 
   const defaultStyleId = presets.length > 0 ? presets[0].id : 'teacher';
   const [styleId, setStyleId] = useState(defaultStyleId);
-
   const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = ({ text }: PromptInputMessage): Promise<void> => {
+  const handleSubmit = async ({ text }: PromptInputMessage): Promise<void> => {
     if (text.trim() === '') {
-      return Promise.resolve();
+      return;
     }
     setSubmitting(true);
-    storeInitialDraft({ text, styleId });
-    router.push('/journeys/new');
-    // Never resolves — keeps the text in the input during navigation.
-    // The component unmounts when navigation completes, so there is no leak.
-    return new Promise(() => {});
+    const result = await createDraftJourneyAction({ text, styleId });
+    router.push(result.path);
   };
 
   return (

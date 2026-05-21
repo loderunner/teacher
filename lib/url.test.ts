@@ -5,7 +5,6 @@ import {
   journeyPath,
   parseChapterSlug,
   parseJourneySlug,
-  syllabusTranscriptPath,
 } from './url';
 
 describe('journeyPath', () => {
@@ -48,14 +47,6 @@ describe('journeyPath', () => {
     expect(journeyPath('abc1234567', '---hello---')).toBe(
       '/journeys/hello-abc1234567',
     );
-  });
-});
-
-describe('syllabusTranscriptPath', () => {
-  it('appends /syllabus to the journey path', () => {
-    expect(
-      syllabusTranscriptPath({ id: 'abc1234567', title: 'Learn Python' }),
-    ).toBe('/journeys/learn-python-abc1234567/syllabus');
   });
 });
 

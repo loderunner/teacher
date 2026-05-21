@@ -3,11 +3,11 @@
 import { ArrowRightIcon } from '@phosphor-icons/react';
 import { type UIMessage } from 'ai';
 import { useTranslations } from 'next-intl';
-import { useState, useTransition } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 
-import { activateJourneyAction } from '../new/activate-journey';
-import { SyllabusDraftPanel } from '../new/syllabus-draft-panel';
-import { SyllabusPartDelegate } from '../new/syllabus-part-delegate';
+import { activateJourneyAction } from './activate-journey';
+import { SyllabusDraftPanel } from './syllabus-draft-panel';
+import { SyllabusPartDelegate } from './syllabus-part-delegate';
 
 import { ChatPageShell } from '@/components/chat-page-shell';
 import { StylePicker } from '@/components/style-picker';
@@ -17,23 +17,24 @@ import type { Journey } from '@/lib/server/journeys/get';
 import type { Style } from '@/lib/server/styles/get';
 import { deriveSyllabusDraftsFromMessages } from '@/lib/syllabus-chat';
 
+/** Props for {@link SyllabusChat}. */
 type Props = {
+  /** Draft journey row being edited. */
   journey: Journey;
+  /** Messages already persisted for this draft (one user turn for brand-new drafts). */
   initialMessages: UIMessage[];
+  /** Teaching style presets for the sidebar picker. */
   presets: Style[];
 };
 
 /**
- * Resumes syllabus drafting for an existing journey row loaded from the database.
+ * Syllabus-building chat for a draft journey. Renders the persisted
+ * transcript, streams new turns, and exposes "Start journey" once the model
+ * has produced a complete syllabus.
  */
-export function JourneySyllabusChat({
-  journey,
-  initialMessages,
-  presets,
-}: Props) {
+export function SyllabusChat({ journey, initialMessages, presets }: Props) {
   const t = useTranslations('Welcome');
   const router = useRouter();
-  const journeyId = journey.id;
   const [styleId, setStyleId] = useState(journey.styleId);
   const [pending, startTransition] = useTransition();
 
@@ -45,18 +46,37 @@ export function JourneySyllabusChat({
     handleSubmit,
     handleRegenerate,
     handleEditMessage,
+    triggerResponse,
   } = useJourneyChat<UIMessage>({
     api: '/api/syllabus/chat',
     initialMessages,
   });
 
+  const body = { journeyId: journey.id, styleId };
+
+  // When the draft was just created from the hero, the only persisted message
+  // is the user's first prompt — kick off the assistant response on mount.
+  const triggeredRef = useRef(false);
+  useEffect(() => {
+    if (triggeredRef.current) {
+      return;
+    }
+    if (initialMessages.length === 0) {
+      return;
+    }
+    const last = initialMessages[initialMessages.length - 1];
+    if (last.role !== 'user') {
+      return;
+    }
+    triggeredRef.current = true;
+    triggerResponse(body);
+    // Only the initial state matters; later changes are handled by submit/regenerate.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const { draft, partialDraft } = deriveSyllabusDraftsFromMessages(messages);
-
   const started = messages.length > 0;
-  const startable =
-    draft !== null && draft.chapters.length > 0 && styleId.length > 0;
-
-  const syllabusBody = { journeyId, styleId };
+  const startable = draft !== null && draft.chapters.length > 0;
 
   const handleStartJourney = () => {
     if (!startable) {
@@ -65,10 +85,9 @@ export function JourneySyllabusChat({
     const syllabus = draft;
     startTransition(async () => {
       const result = await activateJourneyAction({
-        journeyId,
+        journeyId: journey.id,
         messages,
         syllabus,
-        styleId,
       });
       router.push(result.path);
     });
@@ -83,13 +102,11 @@ export function JourneySyllabusChat({
           placeholder={t('promptPlaceholder')}
           status={status}
           onEditUserMessage={(messageId, text) =>
-            handleEditMessage({ messageId, text, body: syllabusBody })
+            handleEditMessage({ messageId, text, body })
           }
-          onRegenerate={(messageId) =>
-            handleRegenerate({ messageId, body: syllabusBody })
-          }
+          onRegenerate={(messageId) => handleRegenerate({ messageId, body })}
           onStop={stop}
-          onSubmit={(msg) => void handleSubmit({ ...msg, body: syllabusBody })}
+          onSubmit={(msg) => handleSubmit({ ...msg, body })}
         />
         {startable && (
           <div className="mx-auto flex w-full max-w-3xl justify-end px-1 pb-1">

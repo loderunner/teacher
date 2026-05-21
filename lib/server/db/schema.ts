@@ -1,3 +1,4 @@
+import type { UIMessage } from 'ai';
 import {
   index,
   integer,
@@ -9,6 +10,8 @@ import {
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
 import { nanoid } from 'nanoid';
+
+import type { Syllabus } from '@/lib/server/syllabus/schema';
 
 /** Database table for registered users, keyed by their Clerk user ID. */
 export const users = pgTable('users', {
@@ -34,7 +37,7 @@ export const journeys = pgTable(
       .references(() => users.id, { onDelete: 'cascade' }),
     title: text('title').notNull(),
     styleId: text('style_id').notNull(),
-    syllabus: jsonb('syllabus').notNull(),
+    syllabus: jsonb('syllabus').$type<Syllabus>().notNull(),
     memory: jsonb('memory').$type<string[]>().notNull().default([]),
     status: journeyStatusEnum('status').notNull().default('active'),
     currentChapterIndex: integer('current_chapter_index').notNull().default(0),
@@ -88,8 +91,7 @@ export const messages = pgTable(
       onDelete: 'cascade',
     }),
     role: text('role').notNull(),
-    parts: jsonb('parts').notNull(),
-    metadata: jsonb('metadata'),
+    parts: jsonb('parts').$type<UIMessage['parts']>().notNull(),
     createdAt: timestamp('created_at').notNull().defaultNow(),
   },
   (t) => [index('messages_journey_chapter_idx').on(t.journeyId, t.chapterId)],

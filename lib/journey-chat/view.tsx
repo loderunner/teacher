@@ -98,8 +98,6 @@ export type JourneyChatViewProps<TMessage extends UIMessage = UIMessage> = {
    * static transcript pages.
    */
   readOnly?: boolean;
-  /** Disables the prompt while inputs such as `journeyId` are not ready yet. */
-  disableInput?: boolean;
   /** Called when the user submits a message (not invoked when {@link readOnly}). */
   onSubmit: (message: PromptInputMessage) => void;
   /** Called when the user clicks the stop button during streaming. */
@@ -196,7 +194,6 @@ export function JourneyChatView<TMessage extends UIMessage = UIMessage>({
   status,
   placeholder,
   readOnly = false,
-  disableInput = false,
   onSubmit,
   onStop,
   onRegenerate,
@@ -429,16 +426,10 @@ export function JourneyChatView<TMessage extends UIMessage = UIMessage>({
       {showLoadingIndicator && !readOnly && <MessageIndicator type="loading" />}
       {!readOnly && (
         <PromptInput onSubmit={onSubmit}>
-          <PromptInputTextarea
-            disabled={streaming || disableInput}
-            placeholder={placeholder}
-          />
+          <PromptInputTextarea disabled={streaming} placeholder={placeholder} />
           <PromptInputFooter>
             <div />
-            <PromptInputSubmit
-              status={disableInput ? 'ready' : status}
-              onStop={onStop}
-            />
+            <PromptInputSubmit status={status} onStop={onStop} />
           </PromptInputFooter>
         </PromptInput>
       )}

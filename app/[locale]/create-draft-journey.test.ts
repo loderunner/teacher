@@ -3,24 +3,21 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createDraftJourneyAction } from './create-draft-journey';
 
-vi.mock('@clerk/nextjs/server', () => ({
-  auth: vi.fn(),
-}));
-
+vi.mock('@clerk/nextjs/server', () => ({ auth: vi.fn() }));
 vi.mock('@/lib/server/journeys/create', () => ({
   createDraftJourney: vi.fn(),
 }));
-
-vi.mock('@/lib/server/users/ensure', () => ({
-  ensureUser: vi.fn(),
-}));
+vi.mock('@/lib/server/messages', () => ({ syncMessages: vi.fn() }));
+vi.mock('@/lib/server/users/ensure', () => ({ ensureUser: vi.fn() }));
 
 import { createDraftJourney } from '@/lib/server/journeys/create';
+import { syncMessages } from '@/lib/server/messages';
 import { ensureUser } from '@/lib/server/users/ensure';
 
 const mockAuth = vi.mocked(auth);
 const mockCreateDraftJourney = vi.mocked(createDraftJourney);
 const mockEnsureUser = vi.mocked(ensureUser);
+const mockSyncMessages = vi.mocked(syncMessages);
 
 describe('createDraftJourneyAction', () => {
   beforeEach(() => {
@@ -31,6 +28,7 @@ describe('createDraftJourneyAction', () => {
       id: 'jid10chars',
       title: 'Learn Rust',
     });
+    mockSyncMessages.mockResolvedValue(undefined);
   });
 
   it('throws when unauthenticated', async () => {
@@ -41,7 +39,7 @@ describe('createDraftJourneyAction', () => {
     ).rejects.toThrow('Unauthorized');
   });
 
-  it('creates a draft journey and returns the journey path', async () => {
+  it('creates the draft journey and persists the first user message', async () => {
     const result = await createDraftJourneyAction({
       text: 'Learn Rust',
       styleId: 'teacher',
@@ -52,6 +50,17 @@ describe('createDraftJourneyAction', () => {
       title: 'Learn Rust',
       styleId: 'teacher',
     });
+
+    expect(mockSyncMessages).toHaveBeenCalledOnce();
+    const args = mockSyncMessages.mock.calls[0][0];
+    expect(args.journeyId).toBe('jid10chars');
+    expect(args.chapterId).toBeNull();
+    expect(args.messages).toHaveLength(1);
+    expect(args.messages[0].role).toBe('user');
+    expect(args.messages[0].parts).toEqual([
+      { type: 'text', text: 'Learn Rust' },
+    ]);
+
     expect(result.path).toBe('/journeys/learn-rust-jid10chars');
     expect(result.id).toBe('jid10chars');
   });

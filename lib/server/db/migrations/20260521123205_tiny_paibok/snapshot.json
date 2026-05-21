@@ -1,7 +1,7 @@
 {
   "version": "8",
   "dialect": "postgres",
-  "id": "c5662ca8-c636-44e1-b0f1-c08414a1edf3",
+  "id": "1b833af0-f15d-4eca-b64c-1458ea747097",
   "prevIds": [
     "117355af-ef8f-4d2f-8052-749e0c8af8fb"
   ],
@@ -331,19 +331,6 @@
       "generated": null,
       "identity": null,
       "name": "parts",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "messages"
-    },
-    {
-      "type": "jsonb",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "metadata",
       "entityType": "columns",
       "schema": "public",
       "table": "messages"

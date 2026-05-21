@@ -3,29 +3,14 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { activateJourneyAction } from './activate-journey';
 
-vi.mock('@clerk/nextjs/server', () => ({
-  auth: vi.fn(),
-}));
-
+vi.mock('@clerk/nextjs/server', () => ({ auth: vi.fn() }));
 vi.mock('next-intl/server', () => ({
   getLocale: vi.fn(() => Promise.resolve('en')),
 }));
-
-vi.mock('@/lib/server/journeys/activate', () => ({
-  activateJourney: vi.fn(),
-}));
-
-vi.mock('@/lib/server/journeys/get', () => ({
-  getJourney: vi.fn(),
-}));
-
-vi.mock('@/lib/server/users/ensure', () => ({
-  ensureUser: vi.fn(),
-}));
-
-vi.mock('@/lib/syllabus-chat', () => ({
-  bootstrapJourney: vi.fn(),
-}));
+vi.mock('@/lib/server/journeys/activate', () => ({ activateJourney: vi.fn() }));
+vi.mock('@/lib/server/journeys/get', () => ({ getJourney: vi.fn() }));
+vi.mock('@/lib/server/users/ensure', () => ({ ensureUser: vi.fn() }));
+vi.mock('@/lib/syllabus-chat', () => ({ bootstrapJourney: vi.fn() }));
 
 import { activateJourney } from '@/lib/server/journeys/activate';
 import { getJourney } from '@/lib/server/journeys/get';
@@ -37,6 +22,8 @@ const mockGetJourney = vi.mocked(getJourney);
 const mockBootstrap = vi.mocked(bootstrapJourney);
 const mockActivate = vi.mocked(activateJourney);
 const mockEnsureUser = vi.mocked(ensureUser);
+
+const validSyllabus = { chapters: [{ title: 'One' }] };
 
 describe('activateJourneyAction', () => {
   beforeEach(() => {
@@ -50,7 +37,7 @@ describe('activateJourneyAction', () => {
       memory: '',
       hasSyllabusChat: true,
       status: 'drafting',
-      syllabus: { chapters: [{ title: 'One' }] },
+      syllabus: { chapters: [] },
       chapters: [],
     });
     mockBootstrap.mockResolvedValue({ title: 'Final', memory: 'Mem' });
@@ -64,19 +51,40 @@ describe('activateJourneyAction', () => {
       activateJourneyAction({
         journeyId: 'j1',
         messages: [],
-        syllabus: { chapters: [{ title: 'One' }] },
-        styleId: 'teacher',
+        syllabus: validSyllabus,
       }),
     ).rejects.toThrow('Unauthorized');
   });
 
+  it('throws and skips bootstrap when the journey is not drafting', async () => {
+    mockGetJourney.mockResolvedValueOnce({
+      id: 'j1',
+      title: 'Done',
+      styleId: 'teacher',
+      memory: '',
+      hasSyllabusChat: false,
+      status: 'active',
+      syllabus: validSyllabus,
+      chapters: [],
+    });
+
+    await expect(
+      activateJourneyAction({
+        journeyId: 'j1',
+        messages: [],
+        syllabus: validSyllabus,
+      }),
+    ).rejects.toThrow('not in drafting status');
+
+    expect(mockBootstrap).not.toHaveBeenCalled();
+    expect(mockActivate).not.toHaveBeenCalled();
+  });
+
   it('bootstraps and activates the draft journey', async () => {
-    const syllabus = { chapters: [{ title: 'One' }] };
     const result = await activateJourneyAction({
       journeyId: 'j1',
       messages: [],
-      syllabus,
-      styleId: 'teacher',
+      syllabus: validSyllabus,
     });
 
     expect(mockBootstrap).toHaveBeenCalledOnce();
@@ -85,7 +93,7 @@ describe('activateJourneyAction', () => {
       journeyId: 'j1',
       title: 'Final',
       memory: 'Mem',
-      syllabus,
+      syllabus: validSyllabus,
     });
     expect(result.path).toBe('/journeys/final-j1');
   });

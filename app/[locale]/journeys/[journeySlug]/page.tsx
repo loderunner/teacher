@@ -1,7 +1,7 @@
 import { auth } from '@clerk/nextjs/server';
 import { notFound } from 'next/navigation';
 
-import { JourneySyllabusChat } from './journey-syllabus-chat';
+import { SyllabusChat } from './syllabus-chat';
 
 import { permanentRedirect, redirect } from '@/i18n/navigation';
 import { getJourney } from '@/lib/server/journeys/get';
@@ -40,7 +40,7 @@ export default async function Page({
       chapterId: null,
     });
     return (
-      <JourneySyllabusChat
+      <SyllabusChat
         initialMessages={initialMessages}
         journey={journey}
         presets={listPresets()}

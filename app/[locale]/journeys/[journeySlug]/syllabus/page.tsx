@@ -2,7 +2,7 @@ import { auth } from '@clerk/nextjs/server';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 
-import { SyllabusPartDelegate } from '../../new/syllabus-part-delegate';
+import { SyllabusPartDelegate } from '../syllabus-part-delegate';
 
 import { JourneyChatView } from '@/lib/journey-chat';
 import { getJourney } from '@/lib/server/journeys/get';

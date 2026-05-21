@@ -17,7 +17,6 @@ export type ActivateJourneyInput = {
   journeyId: string;
   messages: UIMessage[];
   syllabus: Syllabus;
-  styleId: string;
 };
 
 /** Result returned after a draft journey is activated. */
@@ -28,9 +27,10 @@ export type ActivateJourneyResult = {
 
 /**
  * Finalises a draft journey: derives title and memory, then activates the row
- * and inserts chapter records.
+ * and inserts chapter records. The journey row's stored `styleId` is the
+ * source of truth — picker changes during drafting do not propagate.
  *
- * @param input - Journey id, transcript, syllabus, and style.
+ * @param input - Journey id, transcript, and syllabus.
  * @returns URL path to the active journey root.
  * @throws Error when unauthenticated, journey is missing, or not drafting.
  */
@@ -43,18 +43,14 @@ export async function activateJourneyAction(
   }
 
   await ensureUser(userId);
-  const locale = parseLocale(await getLocale());
-
-  const syllabus = syllabusSchema.parse(input.syllabus);
 
   const existing = await getJourney({ userId, id: input.journeyId });
   if (existing === null || existing.status !== 'drafting') {
     throw new Error('Journey not found or not in drafting status');
   }
 
-  if (existing.styleId !== input.styleId) {
-    throw new Error('Style mismatch for journey');
-  }
+  const syllabus = syllabusSchema.parse(input.syllabus);
+  const locale = parseLocale(await getLocale());
 
   const { title, memory } = await bootstrapJourney({
     draft: syllabus,

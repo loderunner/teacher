@@ -1,5 +1,7 @@
 import type { UIMessage } from 'ai';
-import { and, asc, eq, isNull } from 'drizzle-orm';
+import { asc } from 'drizzle-orm';
+
+import { messageScope } from './scope';
 
 import { db } from '@/lib/server/db';
 import { messages } from '@/lib/server/db/schema';
@@ -30,34 +32,15 @@ export async function getMessages({
       id: messages.id,
       role: messages.role,
       parts: messages.parts,
-      metadata: messages.metadata,
     })
     .from(messages)
-    .where(
-      chapterId === null
-        ? and(eq(messages.journeyId, journeyId), isNull(messages.chapterId))
-        : and(
-            eq(messages.journeyId, journeyId),
-            eq(messages.chapterId, chapterId),
-          ),
-    )
+    .where(messageScope(journeyId, chapterId))
     .orderBy(asc(messages.createdAt));
 
   return rows.map((row) => {
     if (!isChatRole(row.role)) {
       throw new Error(`Unsupported message role in storage: ${row.role}`);
     }
-    const base: UIMessage = {
-      id: row.id,
-      role: row.role,
-      parts: row.parts as UIMessage['parts'],
-    };
-    if (row.metadata !== null && row.metadata !== undefined) {
-      return {
-        ...base,
-        metadata: row.metadata,
-      };
-    }
-    return base;
+    return { id: row.id, role: row.role, parts: row.parts };
   });
 }

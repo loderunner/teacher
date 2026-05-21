@@ -1,10 +1,3 @@
-export type { InitialDraftPayload } from './initial-draft';
-export {
-  clearInitialDraft,
-  retrieveInitialDraft,
-  storeInitialDraft,
-} from './initial-draft';
-
 export type {
   HandleSubmitParams,
   UseJourneyChatParams,

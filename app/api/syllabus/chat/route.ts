@@ -18,7 +18,7 @@ import { getStyle } from '@/lib/server/styles/get';
 import { ensureUser } from '@/lib/server/users/ensure';
 import {
   composeSyllabusSystemPrompt,
-  createUpdateSyllabusDraftTool,
+  updateSyllabusDraftTool,
 } from '@/lib/syllabus-chat';
 
 export const maxDuration = 60;
@@ -95,10 +95,6 @@ export async function POST(req: Request): Promise<Response> {
 
   await syncMessages({ journeyId, chapterId: null, messages });
 
-  const tools = {
-    updateSyllabusDraft: createUpdateSyllabusDraftTool({ journeyId }),
-  };
-
   const system: SystemModelMessage = {
     role: 'system',
     content: composeSyllabusSystemPrompt({ style, locale }),
@@ -119,7 +115,7 @@ export async function POST(req: Request): Promise<Response> {
     model: getModel(),
     system,
     messages: modelMessages,
-    tools,
+    tools: { updateSyllabusDraft: updateSyllabusDraftTool },
     stopWhen: stepCountIs(5),
     providerOptions: {
       anthropic: {
