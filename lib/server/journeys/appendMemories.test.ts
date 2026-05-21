@@ -1,7 +1,7 @@
 import { chainMocked } from 'chain-mock';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { updateJourneyMemory } from './updateMemory';
+import { appendJourneyMemories } from './appendMemories';
 
 import { db } from '@/lib/server/db';
 
@@ -9,54 +9,45 @@ vi.mock('@/lib/server/db');
 
 const mockDb = chainMocked(db);
 
-describe('updateJourneyMemory', () => {
+describe('appendJourneyMemories', () => {
   beforeEach(() => {
     mockDb.mockReset();
   });
 
   it('calls db.update with the correct chain and resolves without error', async () => {
     await expect(
-      updateJourneyMemory({
+      appendJourneyMemories({
         userId: 'user-1',
         journeyId: 'journey-1',
-        memory: 'Learner is a beginner at Python.',
+        entries: ['You prefer short examples.'],
       }),
     ).resolves.toBeUndefined();
   });
 
-  it('accepts all three required params and completes without throwing', async () => {
+  it('accepts multiple entries and completes without throwing', async () => {
     await expect(
-      updateJourneyMemory({
+      appendJourneyMemories({
         userId: 'u-abc',
         journeyId: 'j-xyz',
-        memory: 'Some memory content.',
+        entries: [
+          'You know JavaScript.',
+          'You want to learn Python for data analysis.',
+        ],
       }),
     ).resolves.not.toThrow();
   });
 
-  it('passes the memory value to db.update.set', async () => {
-    await updateJourneyMemory({
-      userId: 'user-2',
-      journeyId: 'journey-2',
-      memory: 'Advanced learner.',
-    });
-
-    expect(mockDb.update.set).toHaveBeenCalledWith({
-      memory: 'Advanced learner.',
-    });
-  });
-
   it('scopes the update with both journeyId and userId in the where clause', async () => {
-    await updateJourneyMemory({
+    await appendJourneyMemories({
       userId: 'owner-A',
       journeyId: 'journey-A',
-      memory: 'Memory A.',
+      entries: ['Entry A.'],
     });
 
-    await updateJourneyMemory({
+    await appendJourneyMemories({
       userId: 'owner-B',
       journeyId: 'journey-A',
-      memory: 'Memory B.',
+      entries: ['Entry B.'],
     });
 
     expect(mockDb.update.set.where).toHaveBeenCalledTimes(2);

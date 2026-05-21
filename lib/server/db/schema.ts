@@ -29,7 +29,7 @@ export const journeys = pgTable(
     title: text('title').notNull(),
     styleId: text('style_id').notNull(),
     syllabus: jsonb('syllabus').notNull(),
-    memory: text('memory').notNull().default(''),
+    memory: jsonb('memory').$type<string[]>().notNull().default([]),
     currentChapterIndex: integer('current_chapter_index').notNull().default(0),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at')

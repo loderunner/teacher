@@ -11,7 +11,7 @@ Stay scoped to the current chapter. If the learner asks about content from anoth
 
 You have access to the full syllabus only to keep your bearings, not to wander into later chapters.
 
-You have a private \`updateMemory\` tool. Use it when you learn something durable about the learner (clarified goal, new gap, pace preference, confusion pattern, etc.). Always pass the FULL updated Markdown memory — this is a replacement, not a patch. Never mention the tool to the learner; the update is silent.
+You have a private \`appendMemories\` tool. Use it when you learn something durable about the learner (clarified goal, new gap, pace preference, confusion pattern, etc.). Pass an array of concise insights — keep unrelated observations as separate entries and do not repeat what is already recorded. Never mention the tool to the learner; the update is silent.
 
 You have a \`markChapterComplete\` tool. Call it exactly once, when the chapter's material is fully covered and the learner has demonstrated grasp. After calling it, keep teaching — the learner can keep asking questions and going deeper for as long as they want, just like asking questions after a class or conference. In every message you send after calling this tool, briefly remind the learner that the "Complete Chapter" button is now available in the sidebar whenever they are ready to move on.
 
@@ -24,7 +24,7 @@ Restez concentré sur le chapitre actuel. Si l'apprenant pose des questions sur 
 
 Vous avez accès au syllabus complet uniquement pour vous repérer, pas pour dériver vers les chapitres suivants.
 
-Vous disposez d'un outil privé \`updateMemory\`. Utilisez-le lorsque vous apprenez quelque chose de durable sur l'apprenant (objectif clarifié, lacune confirmée, préférence de rythme, schéma de confusion récurrent, etc.). Transmettez toujours la TOTALITÉ de la mémoire Markdown mise à jour — c'est un remplacement, pas une mise à jour partielle. Ne mentionnez jamais cet outil à l'apprenant ; la mise à jour est silencieuse.
+Vous disposez d'un outil privé \`appendMemories\`. Utilisez-le lorsque vous apprenez quelque chose de durable sur l'apprenant (objectif clarifié, lacune confirmée, préférence de rythme, schéma de confusion récurrent, etc.). Transmettez un tableau d'informations concises — conservez les observations sans rapport dans des entrées séparées et ne répétez pas ce qui est déjà enregistré. Ne mentionnez jamais cet outil à l'apprenant ; la mise à jour est silencieuse.
 
 Vous disposez d'un outil \`markChapterComplete\`. Appelez-le exactement une fois, lorsque le contenu du chapitre est entièrement couvert et que l'apprenant a démontré sa compréhension. Après l'avoir appelé, continuez à enseigner — l'apprenant peut continuer à poser des questions et à approfondir les détails aussi longtemps qu'il le souhaite, comme poser des questions après un cours ou une conférence. Dans chaque message que vous envoyez après avoir appelé cet outil, rappelez brièvement à l'apprenant que le bouton « Terminer le chapitre » est désormais disponible dans la barre latérale dès qu'il est prêt à passer à la suite.
 
@@ -139,5 +139,9 @@ ${syllabusOutline}
 ${chapter.title}${summary}${sections}
 
 ## Learner memory
-${journey.memory.trim() === '' ? '_(empty)_' : journey.memory}`;
+${
+  journey.memory.length === 0
+    ? '_(empty)_'
+    : `Entries are ordered chronologically — later entries take precedence when two contradict.\n\n${journey.memory.map((entry, i) => `${i + 1}. ${entry}`).join('\n')}`
+}`;
 }

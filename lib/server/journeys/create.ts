@@ -12,8 +12,8 @@ export type CreateJourneyParams = {
   styleId: string;
   /** Structured syllabus generated during the chat phase. */
   syllabus: Syllabus;
-  /** Markdown summary of learner context captured from the bootstrap conversation. */
-  memory: string;
+  /** Ordered list of learner memory entries captured from the bootstrap conversation. */
+  memory: string[];
 };
 
 /** Minimal journey data returned after creation. */

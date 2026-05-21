@@ -10,17 +10,17 @@ const bootstrapInstructions: Record<Locale, string> = {
 
 Given the chat transcript and syllabus draft below, output:
 - title: A short, specific title for the journey (3–10 words). Reflect the actual topic and scope agreed upon — do not invent content that was not discussed.
-- memory: A Markdown string summarising what you know about the learner from the conversation. Include: their stated goals, prior knowledge, gaps, pace preferences, and any other relevant context. Write in the second person ("You want to…", "You already know…"). Omit fields where nothing meaningful was said.`,
+- memory: An array of concise learner insights drawn from the conversation. Each entry is one sentence written in the second person ("You want to…", "You already know…"). Include: stated goals, prior knowledge, gaps, pace preferences, and any other relevant context. Omit entries where nothing meaningful was said. Return an empty array if nothing is known.`,
   fr: `Vous générez les métadonnées pour initialiser un nouveau parcours d'apprentissage.
 
 À partir de la transcription du dialogue et du brouillon du syllabus ci-dessous, produisez :
 - title : Un titre court et précis pour le parcours (3 à 10 mots). Reflétez le sujet et la portée réellement convenus — n'inventez pas de contenu qui n'a pas été discuté.
-- memory : Une chaîne Markdown résumant ce que vous savez de l'apprenant à partir de la conversation. Incluez : ses objectifs déclarés, ses connaissances préalables, ses lacunes, ses préférences de rythme et tout autre contexte pertinent. Écrivez à la deuxième personne (« Vous souhaitez… », « Vous savez déjà… »). Omettez les informations dont il n'a pas été question.`,
+- memory : Un tableau d'informations concises sur l'apprenant tirées de la conversation. Chaque entrée est une phrase rédigée à la deuxième personne (« Vous souhaitez… », « Vous savez déjà… »). Incluez : objectifs déclarés, connaissances préalables, lacunes, préférences de rythme et tout autre contexte pertinent. Omettez les entrées pour lesquelles rien de significatif n'a été dit. Renvoyez un tableau vide si rien n'est connu.`,
 };
 
 const bootstrapSchema = z.object({
   title: z.string().min(3).max(80),
-  memory: z.string(),
+  memory: z.array(z.string()),
 });
 
 /** Input for bootstrapping a new journey from a completed syllabus chat. */
@@ -37,8 +37,8 @@ export type BootstrapJourneyInput = {
 export type BootstrapResult = {
   /** Short, specific title for the journey (3–10 words). */
   title: string;
-  /** Markdown summary of learner context written in the second person. */
-  memory: string;
+  /** Ordered list of learner insights written in the second person. */
+  memory: string[];
 };
 
 /**

@@ -19,7 +19,7 @@ describe('bootstrapJourney', () => {
 
   it('returns the title and memory from the AI output', async () => {
     mockGenerateText.mockImplementationOnce(async () => ({
-      output: { title: 'Test Title', memory: 'Test memory' },
+      output: { title: 'Test Title', memory: ['Test memory'] },
     }));
 
     const messages: UIMessage[] = [
@@ -29,12 +29,12 @@ describe('bootstrapJourney', () => {
 
     const result = await bootstrapJourney({ draft, messages, locale: 'en' });
 
-    expect(result).toEqual({ title: 'Test Title', memory: 'Test memory' });
+    expect(result).toEqual({ title: 'Test Title', memory: ['Test memory'] });
   });
 
   it('builds the transcript as "role: text" lines joined by newlines', async () => {
     mockGenerateText.mockImplementationOnce(async () => ({
-      output: { title: 'T', memory: 'M' },
+      output: { title: 'T', memory: ['M'] },
     }));
 
     const messages: UIMessage[] = [
@@ -54,7 +54,7 @@ describe('bootstrapJourney', () => {
 
   it('passes the correct model to generateText', async () => {
     mockGenerateText.mockImplementationOnce(async () => ({
-      output: { title: 'T', memory: 'M' },
+      output: { title: 'T', memory: ['M'] },
     }));
 
     const messages: UIMessage[] = [
@@ -71,7 +71,7 @@ describe('bootstrapJourney', () => {
 
   it('includes the locale-specific bootstrap instructions in the prompt', async () => {
     mockGenerateText.mockImplementationOnce(async () => ({
-      output: { title: 'T', memory: 'M' },
+      output: { title: 'T', memory: ['M'] },
     }));
 
     const messages: UIMessage[] = [
@@ -87,7 +87,7 @@ describe('bootstrapJourney', () => {
 
   it('includes the serialized syllabus draft as JSON in the prompt', async () => {
     mockGenerateText.mockImplementationOnce(async () => ({
-      output: { title: 'T', memory: 'M' },
+      output: { title: 'T', memory: ['M'] },
     }));
 
     const messages: UIMessage[] = [
