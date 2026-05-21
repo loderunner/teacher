@@ -2,6 +2,7 @@ import { Output, type UIMessage, generateText } from 'ai';
 import { z } from 'zod';
 
 import type { Locale } from '@/i18n/locale';
+import { getModel } from '@/lib/ai/model';
 import type { Syllabus } from '@/lib/server/syllabus/schema';
 
 const bootstrapInstructions: Record<Locale, string> = {
@@ -63,7 +64,7 @@ export async function bootstrapJourney({
     .join('\n');
 
   const { output } = await generateText({
-    model: 'anthropic/claude-sonnet-4-6',
+    model: getModel(),
     prompt: `${bootstrapInstructions[locale]}\n\nChat transcript:\n${transcript}\n\nSyllabus draft:\n${JSON.stringify(draft, null, 2)}`,
     output: Output.object({ schema: bootstrapSchema }),
   });

@@ -1,6 +1,7 @@
 import { type UIMessage, generateText } from 'ai';
 
 import type { Locale } from '@/i18n/locale';
+import { getModel } from '@/lib/ai/model';
 import { composeChapterSummaryPrompt } from '@/lib/chapter-chat/prompts';
 import type { JourneyChapter } from '@/lib/server/journeys/get';
 import type { Style } from '@/lib/server/styles/get';
@@ -37,13 +38,11 @@ export async function generateChapterSummary({
   });
 
   const { text } = await generateText({
-    model: 'anthropic/claude-sonnet-4-6',
+    model: getModel(),
     prompt,
     providerOptions: {
-      anthropic: {
-        thinking: { type: 'adaptive' },
-        effort: 'low',
-      },
+      anthropic: { thinking: { type: 'adaptive' }, effort: 'low' },
+      ollama: { think: true },
     },
   });
 

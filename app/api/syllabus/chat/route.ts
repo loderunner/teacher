@@ -11,6 +11,7 @@ import {
 import { z } from 'zod';
 
 import type { Locale } from '@/i18n/locale';
+import { getModel } from '@/lib/ai/model';
 import { getStyle } from '@/lib/server/styles/get';
 import { ensureUser } from '@/lib/server/users/ensure';
 import { composeSyllabusSystemPrompt } from '@/lib/syllabus-chat/prompts';
@@ -39,9 +40,7 @@ const requestBodySchema: z.ZodType<RequestBody> = z.object({
 
 const tools = { updateSyllabusDraft };
 
-const ephemeralCache = {
-  anthropic: { cacheControl: { type: 'ephemeral' } },
-};
+const ephemeralCache = { anthropic: { cacheControl: { type: 'ephemeral' } } };
 
 export async function POST(req: Request): Promise<Response> {
   const { userId } = await auth();
@@ -91,7 +90,7 @@ export async function POST(req: Request): Promise<Response> {
     messages.filter((message) => message.role === 'user').length === 1;
 
   const result = streamText({
-    model: 'anthropic/claude-sonnet-4-6',
+    model: getModel(),
     system,
     messages: modelMessages,
     tools,
@@ -101,6 +100,7 @@ export async function POST(req: Request): Promise<Response> {
         thinking: { type: 'adaptive' },
         ...(initialUserMessage ? { effort: 'max' } : {}),
       },
+      ollama: { think: true },
     },
     experimental_transform: smoothStream({ delayInMs: null }),
   });

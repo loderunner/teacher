@@ -10,6 +10,7 @@ import {
 import { z } from 'zod';
 
 import type { Locale } from '@/i18n/locale';
+import { getModel } from '@/lib/ai/model';
 import { composeChapterSystemPrompt } from '@/lib/chapter-chat/prompts';
 import {
   createMarkChapterCompleteTool,
@@ -38,9 +39,7 @@ const requestBodySchema: z.ZodType<RequestBody> = z.object({
   locale: z.union([z.literal('en'), z.literal('fr')]),
 });
 
-const ephemeralCache = {
-  anthropic: { cacheControl: { type: 'ephemeral' } },
-};
+const ephemeralCache = { anthropic: { cacheControl: { type: 'ephemeral' } } };
 
 type RouteContext = {
   params: Promise<{ journeyId: string; chapterId: string }>;
@@ -106,9 +105,9 @@ export async function POST(
 
   const history = await convertToModelMessages(messages);
 
-  // Anthropic requires at least one message. When the client sends an empty
-  // history (assistant-first turn), inject a silent start cue so the model
-  // responds from the system prompt alone.
+  // Most LLM APIs require at least one user message. When the client sends an
+  // empty history (assistant-first turn), inject a silent start cue so the
+  // model responds from the system prompt alone.
   const startCue = { role: 'user' as const, content: 'Begin.' };
   const modelMessages =
     history.length === 0
@@ -120,15 +119,13 @@ export async function POST(
         );
 
   const result = streamText({
-    model: 'anthropic/claude-sonnet-4-6',
+    model: getModel(),
     system,
     messages: modelMessages,
     tools,
     providerOptions: {
-      anthropic: {
-        thinking: { type: 'adaptive' },
-        effort: 'low',
-      },
+      anthropic: { thinking: { type: 'adaptive' }, effort: 'low' },
+      ollama: { think: true },
     },
     experimental_transform: smoothStream(),
   });
