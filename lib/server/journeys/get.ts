@@ -26,8 +26,8 @@ export type Journey = {
   title: string;
   /** ID of the teaching style preset applied to this journey. */
   styleId: string;
-  /** Markdown learner memory for the journey. */
-  memory: string;
+  /** Ordered list of learner memory entries for the journey. */
+  memory: string[];
   /** Structured syllabus for the journey. */
   syllabus: Syllabus;
   /** Ordered list of chapters. */

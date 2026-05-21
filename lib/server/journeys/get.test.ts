@@ -30,7 +30,7 @@ describe('getJourney', () => {
         id: '123',
         title: 'Test Journey',
         styleId: '456',
-        memory: '',
+        memory: [],
         syllabus,
       },
     ]);
@@ -50,7 +50,7 @@ describe('getJourney', () => {
       id: '123',
       title: 'Test Journey',
       styleId: '456',
-      memory: '',
+      memory: [],
       syllabus,
       chapters: [
         {
@@ -85,7 +85,7 @@ describe('getJourney', () => {
         id: '123',
         title: 'Multi-Chapter Journey',
         styleId: '456',
-        memory: 'Learner prefers examples.',
+        memory: ['Learner prefers examples.'],
         syllabus,
       },
     ]);
@@ -109,7 +109,7 @@ describe('getJourney', () => {
     const journey = await getJourney({ userId: '789', id: '123' });
 
     expect(journey).not.toBeNull();
-    expect(journey!.memory).toBe('Learner prefers examples.');
+    expect(journey!.memory).toEqual(['Learner prefers examples.']);
     expect(journey!.chapters).toHaveLength(2);
     expect(journey!.chapters[0]).toEqual({
       id: 'ch-1',

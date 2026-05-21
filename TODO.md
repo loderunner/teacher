@@ -75,12 +75,6 @@ journey and syllabus.
 
 We should restructure this to make more sense. What do you propose?
 
-## Change memory from single string to string array
-
-The memory is currently a single markdown string. We should instead have a list
-of memories, and only append to memories. The prompt should mention that if two
-memories contradict, the more recent memory should be used.
-
 ## Abuse guardrails
 
 We should guard against the user abusing the LLM to generate inappropriate

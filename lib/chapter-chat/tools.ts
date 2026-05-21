@@ -1,7 +1,7 @@
 import { tool } from 'ai';
 import { z } from 'zod';
 
-import { updateJourneyMemory } from '@/lib/server/journeys/updateMemory';
+import { appendJourneyMemories } from '@/lib/server/journeys/appendMemories';
 import { syllabusSchema } from '@/lib/server/syllabus/schema';
 
 /**
@@ -54,37 +54,41 @@ Rules:
   });
 }
 
-/** Parameters for building the chapter-chat `updateMemory` tool. */
-export type CreateUpdateMemoryToolParams = {
+/** Parameters for building the chapter-chat `appendMemories` tool. */
+export type CreateAppendMemoriesToolParams = {
   /** Clerk user ID of the owner of the journey. */
   userId: string;
-  /** Journey whose memory may be replaced. */
+  /** Journey whose memory list receives the new entries. */
   journeyId: string;
 };
 
 /**
- * Builds an AI SDK tool that lets the model replace the learner memory of
- * the current journey. The journey and owner are captured at construction
- * time so the model can only mutate the journey it is currently teaching.
+ * Builds an AI SDK tool that lets the model append one or more learner memory
+ * entries to the current journey. The journey and owner are captured at
+ * construction time so the model can only mutate the journey it is currently
+ * teaching.
  *
  * @param params - Owner ID and journey ID for the active chat.
- * @returns A request-scoped `updateMemory` tool.
+ * @returns A request-scoped `appendMemories` tool.
  */
-export function createUpdateMemoryTool({
+export function createAppendMemoriesTool({
   userId,
   journeyId,
-}: CreateUpdateMemoryToolParams) {
+}: CreateAppendMemoriesToolParams) {
   return tool({
-    description: `Replace the entire learner memory for this journey with a new Markdown string.
+    description: `Append one or more memory entries for this learner journey.
 
 Rules:
-- Always pass the FULL updated memory — this is a replacement, not a patch.
-- Use the second person ("You want to…", "You already know…").
+- Each entry is a single concise insight in the second person ("You want to…", "You already know…").
+- Keep unrelated insights as separate entries so they can be read independently.
+- Do not repeat what is already recorded in the existing memory list.
 - Only call this tool when you have learned something durable about the learner: a clarified goal, a confirmed gap, a pace preference, a recurring confusion. Skip ephemeral signals.
 - Never mention this tool or the memory update to the learner. The update is silent.`,
-    inputSchema: z.object({ memory: z.string().min(1).max(8000) }),
-    execute: async ({ memory }) => {
-      await updateJourneyMemory({ userId, journeyId, memory });
+    inputSchema: z.object({
+      entries: z.array(z.string().min(1).max(500)).min(1).max(10),
+    }),
+    execute: async ({ entries }) => {
+      await appendJourneyMemories({ userId, journeyId, entries });
       return { ok: true };
     },
   });

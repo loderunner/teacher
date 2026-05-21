@@ -46,7 +46,7 @@ describe('createJourney', () => {
           { title: 'Chapter Two', summary: 'Second chapter.' },
         ],
       },
-      memory: 'Learner is a beginner.',
+      memory: ['Learner is a beginner.'],
     });
 
     expect(transactionImpl).toHaveBeenCalledOnce();
@@ -78,7 +78,7 @@ describe('createJourney', () => {
       title: 'Empty Journey',
       styleId: 'style-1',
       syllabus: { chapters: [] },
-      memory: 'No chapters yet.',
+      memory: ['No chapters yet.'],
     });
 
     expect(transactionImpl).toHaveBeenCalledOnce();
@@ -125,7 +125,7 @@ describe('createJourney', () => {
       syllabus: {
         chapters: [{ title: 'First' }, { title: 'Second' }, { title: 'Third' }],
       },
-      memory: 'Three chapters.',
+      memory: ['Three chapters.'],
     });
 
     expect(capturedChapterValues).toHaveLength(3);
