@@ -142,3 +142,8 @@ correctly for React 19 and React compiler.
 
 Lots of things have changed since the developer documentation was last updated.
 We should update it to reflect the current state of the project.
+
+## Support Math expressions in Streamdown
+
+Add support for MathJax or MathML or KaTeX or whatever it is that turns
+expressions like $x^2 + y^2 = z^2$ in markdown into beautiful math.

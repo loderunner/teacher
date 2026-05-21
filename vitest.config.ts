@@ -1,9 +1,10 @@
 import path from 'path';
 
-import nextEnv from '@next/env';
 import { configDefaults, defineConfig } from 'vitest/config';
 
-nextEnv.loadEnvConfig(process.cwd());
+import { loadEnv } from './env';
+
+loadEnv();
 
 export default defineConfig({
   test: {

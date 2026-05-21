@@ -51,7 +51,6 @@
     "zod": "4.4.3"
   },
   "devDependencies": {
-    "@next/env": "16.2.6",
     "@tailwindcss/postcss": "4.2.4",
     "@types/node": "24.12.2",
     "@types/pg": "8.20.0",
