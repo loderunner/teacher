@@ -4,7 +4,7 @@ import { BrainIcon, CaretDownIcon } from '@phosphor-icons/react';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import { cjk } from '@streamdown/cjk';
 import { code } from '@streamdown/code';
-import { math } from '@streamdown/math';
+import { createMathPlugin } from '@streamdown/math';
 import { mermaid } from '@streamdown/mermaid';
 import {
   type ComponentProps,
@@ -194,6 +194,7 @@ export type ReasoningContentProps = ComponentProps<
   children: string;
 };
 
+const math = createMathPlugin({ singleDollarTextMath: true });
 const streamdownPlugins = { cjk, code, math, mermaid };
 
 /** Scrollable panel that renders the model's reasoning text as markdown. */

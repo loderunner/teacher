@@ -7,6 +7,7 @@ import { getLocale } from 'next-intl/server';
 
 import { ThemeProvider } from '@/components/theme/provider';
 
+import 'katex/dist/katex.min.css';
 import './globals.css';
 
 const poppins = Poppins({

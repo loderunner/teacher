@@ -3,7 +3,7 @@
 import { CaretLeftIcon, CaretRightIcon } from '@phosphor-icons/react';
 import { cjk } from '@streamdown/cjk';
 import { code } from '@streamdown/code';
-import { math } from '@streamdown/math';
+import { createMathPlugin } from '@streamdown/math';
 import { mermaid } from '@streamdown/mermaid';
 import type { UIMessage } from 'ai';
 import {
@@ -350,6 +350,7 @@ export const MessageBranchPage = ({
 /** Props for the {@link MessageResponse} streaming renderer. */
 export type MessageResponseProps = ComponentProps<typeof Streamdown>;
 
+const math = createMathPlugin({ singleDollarTextMath: true });
 const streamdownPlugins = { cjk, code, math, mermaid };
 
 /**

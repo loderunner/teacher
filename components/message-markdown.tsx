@@ -1,7 +1,10 @@
 'use client';
 
 import { code } from '@streamdown/code';
+import { createMathPlugin } from '@streamdown/math';
 import { Streamdown } from 'streamdown';
+
+const math = createMathPlugin({ singleDollarTextMath: true });
 
 type Props = {
   children: string;
@@ -17,7 +20,10 @@ type Props = {
  */
 export function MessageMarkdown({ children, streaming = false }: Props) {
   return (
-    <Streamdown caret={streaming ? 'block' : undefined} plugins={{ code }}>
+    <Streamdown
+      caret={streaming ? 'block' : undefined}
+      plugins={{ code, math }}
+    >
       {children}
     </Streamdown>
   );
