@@ -2,10 +2,6 @@
 
 import { BrainIcon, CaretDownIcon } from '@phosphor-icons/react';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
-import { cjk } from '@streamdown/cjk';
-import { code } from '@streamdown/code';
-import { createMathPlugin } from '@streamdown/math';
-import { mermaid } from '@streamdown/mermaid';
 import {
   type ComponentProps,
   type ReactNode,
@@ -26,6 +22,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import { streamdownPlugins } from '@/lib/streamdown';
 import { cn } from '@/lib/tailwind';
 
 interface ReasoningContextValue {
@@ -193,9 +190,6 @@ export type ReasoningContentProps = ComponentProps<
   /** The reasoning text to display. */
   children: string;
 };
-
-const math = createMathPlugin({ singleDollarTextMath: true });
-const streamdownPlugins = { cjk, code, math, mermaid };
 
 /** Scrollable panel that renders the model's reasoning text as markdown. */
 const ReasoningContentInner = ({

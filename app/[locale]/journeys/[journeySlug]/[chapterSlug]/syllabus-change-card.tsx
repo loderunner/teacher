@@ -1,6 +1,5 @@
 'use client';
 
-import { createMathPlugin } from '@streamdown/math';
 import { useTranslations } from 'next-intl';
 import { useState, useTransition } from 'react';
 import { Streamdown } from 'streamdown';
@@ -12,8 +11,7 @@ import { Button } from '@/components/ui/button';
 import { useRouter } from '@/i18n/navigation';
 import type { Journey } from '@/lib/server/journeys/get';
 import type { Syllabus } from '@/lib/server/syllabus/schema';
-
-const math = createMathPlugin({ singleDollarTextMath: true });
+import { streamdownPlugins } from '@/lib/streamdown';
 
 /** Props for {@link SyllabusChangeCard}. */
 export type SyllabusChangeCardProps = {
@@ -97,7 +95,7 @@ export function SyllabusChangeCard({
       <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
         {t('proposalReasonHeader')}
       </p>
-      <Streamdown plugins={{ math }}>{proposal.reason}</Streamdown>
+      <Streamdown plugins={streamdownPlugins}>{proposal.reason}</Streamdown>
       <ul className="flex flex-col gap-1 text-sm">
         {diff.added.length > 0 && (
           <li>{t('proposalAdded', { titles: diff.added.join(', ') })}</li>
