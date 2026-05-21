@@ -137,3 +137,8 @@ point to a remote model (the same as production).
 
 We should review the usage of useMemo and useCallback to ensure we're using them
 correctly for React 19 and React compiler.
+
+## Update developer documentation
+
+Lots of things have changed since the developer documentation was last updated.
+We should update it to reflect the current state of the project.
