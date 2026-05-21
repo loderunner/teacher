@@ -98,8 +98,11 @@ export type JourneyChatViewProps<TMessage extends UIMessage = UIMessage> = {
    * static transcript pages.
    */
   readOnly?: boolean;
-  /** Called when the user submits a message (not invoked when {@link readOnly}). */
-  onSubmit: (message: PromptInputMessage) => void;
+  /**
+   * Called when the user submits a message (not invoked when {@link readOnly}).
+   * Optional when `readOnly` is true.
+   */
+  onSubmit?: (message: PromptInputMessage) => void;
   /** Called when the user clicks the stop button during streaming. */
   onStop?: () => void;
   /** Called when the user requests regeneration of an assistant message. */
@@ -194,7 +197,7 @@ export function JourneyChatView<TMessage extends UIMessage = UIMessage>({
   status,
   placeholder,
   readOnly = false,
-  onSubmit,
+  onSubmit = () => {},
   onStop,
   onRegenerate,
   onEditUserMessage,

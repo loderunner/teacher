@@ -18,4 +18,5 @@ Rules:
 - Use concise chapter titles (noun phrases, ≤ 120 chars). Add a short summary only when it adds clarity.
 - Order chapters from foundational to advanced.`,
   inputSchema: z.object({ draft: syllabusSchema }),
+  execute: async () => 'ok',
 });

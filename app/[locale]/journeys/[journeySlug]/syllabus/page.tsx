@@ -52,7 +52,6 @@ export default async function Page({
         placeholder=""
         readOnly
         status="ready"
-        onSubmit={() => {}}
       />
     </div>
   );
