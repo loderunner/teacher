@@ -1,10 +1,6 @@
 'use client';
 
 import { CaretLeftIcon, CaretRightIcon } from '@phosphor-icons/react';
-import { cjk } from '@streamdown/cjk';
-import { code } from '@streamdown/code';
-import { math } from '@streamdown/math';
-import { mermaid } from '@streamdown/mermaid';
 import type { UIMessage } from 'ai';
 import {
   type ComponentProps,
@@ -30,6 +26,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { streamdownPlugins } from '@/lib/streamdown';
 import { cn } from '@/lib/tailwind';
 
 /** Props for the {@link Message} wrapper. */
@@ -349,8 +346,6 @@ export const MessageBranchPage = ({
 
 /** Props for the {@link MessageResponse} streaming renderer. */
 export type MessageResponseProps = ComponentProps<typeof Streamdown>;
-
-const streamdownPlugins = { cjk, code, math, mermaid };
 
 /**
  * Memoized Streamdown renderer for assistant message content.

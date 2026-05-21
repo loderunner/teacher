@@ -1,7 +1,8 @@
 'use client';
 
-import { code } from '@streamdown/code';
 import { Streamdown } from 'streamdown';
+
+import { streamdownPlugins } from '@/lib/streamdown';
 
 type Props = {
   children: string;
@@ -17,7 +18,10 @@ type Props = {
  */
 export function MessageMarkdown({ children, streaming = false }: Props) {
   return (
-    <Streamdown caret={streaming ? 'block' : undefined} plugins={{ code }}>
+    <Streamdown
+      caret={streaming ? 'block' : undefined}
+      plugins={streamdownPlugins}
+    >
       {children}
     </Streamdown>
   );
