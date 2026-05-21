@@ -39,7 +39,7 @@ a "Chapter 0".
 When the model updates the syllabus draft, it should show a "diff" of the
 previous draft and the new draft in a collapsed section within the "Updated
 syllabus" message, similar to the Reasoning collapsible. Not a strict code diff,
-but still a terse added/removed/changed list of edits.
+but still a list of edits.
 
 We should also be able to have the same view when the model proposes changes to
 the syllabus through the `proposeSyllabusChange` tool.
@@ -125,3 +125,14 @@ to the user.
 ## neon RLS and OAuth
 
 setup Neon Oauth, and row-level security so that an authenticated user cannot access a journey or any related row (chapter or message)
+
+## Use local model for development
+
+Can I set this up so that it uses a local model for development by default? I'm
+running Ollama locally. The developer should still be able to switch a config to
+point to a remote model (the same as production).
+
+## Review usage of useMemo and useCallback
+
+We should review the usage of useMemo and useCallback to ensure we're using them
+correctly for React 19 and React compiler.
