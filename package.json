@@ -14,9 +14,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
-    "db:migrate:deploy": "([ \"$VERCEL_ENV\" != production ] && [ \"$VERCEL_ENV\" != preview ]) || pnpm db:migrate",
-    "db:studio": "drizzle-kit studio"
+    "db:migrate": "drizzle-kit migrate"
   },
   "dependencies": {
     "@ai-sdk/react": "3.0.177",
