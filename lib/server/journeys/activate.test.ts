@@ -55,7 +55,7 @@ describe('activateJourney', () => {
       userId: 'user-1',
       journeyId: 'j1',
       title: 'Final Title',
-      memory: 'M',
+      memory: ['M'],
       syllabus: {
         chapters: [{ title: 'A' }, { title: 'B' }],
       },
@@ -85,7 +85,7 @@ describe('activateJourney', () => {
         userId: 'user-1',
         journeyId: 'missing',
         title: 'T',
-        memory: '',
+        memory: [],
         syllabus: { chapters: [] },
       }),
     ).rejects.toThrow(

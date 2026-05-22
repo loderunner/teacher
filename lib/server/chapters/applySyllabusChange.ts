@@ -2,6 +2,7 @@ import { and, eq, inArray } from 'drizzle-orm';
 
 import { dbTx } from '@/lib/server/db';
 import { chapters, journeys } from '@/lib/server/db/schema';
+import { type JourneyChapterStatus } from '@/lib/server/journeys/get';
 import type { Syllabus } from '@/lib/server/syllabus/schema';
 
 /** Parameters for applying a syllabus-change proposal. */
@@ -90,7 +91,7 @@ export async function applySyllabusChange({
       | {
           kind: 'preserve';
           existingId: string;
-          existingStatus: 'locked' | 'active' | 'done';
+          existingStatus: JourneyChapterStatus;
           newIdx: number;
           newTitle: string;
         }

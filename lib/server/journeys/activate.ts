@@ -13,7 +13,7 @@ export type ActivateJourneyParams = {
   /** Final title from {@link bootstrapJourney}. */
   title: string;
   /** Learner context memory from {@link bootstrapJourney}. */
-  memory: string;
+  memory: string[];
   /** Final syllabus to persist and create chapters from. */
   syllabus: Syllabus;
 };

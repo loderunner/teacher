@@ -1,8 +1,10 @@
-import { and, count, eq, isNull } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 
 import { db } from '@/lib/server/db';
-import { chapters, journeys, messages } from '@/lib/server/db/schema';
+import { chapters, journeys } from '@/lib/server/db/schema';
 import { type Syllabus, syllabusSchema } from '@/lib/server/syllabus/schema';
+
+export type JourneyChapterStatus = 'locked' | 'active' | 'done';
 
 /** A chapter as returned from the database for display. */
 export type JourneyChapter = {
@@ -13,7 +15,7 @@ export type JourneyChapter = {
   /** Chapter title. */
   title: string;
   /** Progression state of the chapter. */
-  status: 'locked' | 'active' | 'done';
+  status: JourneyChapterStatus;
   /** Optional one-paragraph summary written after completion. */
   summary: string | null;
 };
@@ -28,8 +30,6 @@ export type Journey = {
   styleId: string;
   /** Ordered list of learner memory entries for the journey. */
   memory: string[];
-  /** Whether any syllabus-scope (`chapter_id` null) messages exist. */
-  hasSyllabusChat: boolean;
   /** Drafting journeys have no chapters until activation. */
   status: 'drafting' | 'active';
   /** Structured syllabus for the journey. */
@@ -70,11 +70,6 @@ export async function getJourney({
   const row = rows[0];
   const syllabus = syllabusSchema.parse(row.syllabus);
 
-  const [syllabusMsgCount] = await db
-    .select({ c: count() })
-    .from(messages)
-    .where(and(eq(messages.journeyId, id), isNull(messages.chapterId)));
-
   const chapterRows = await db
     .select({
       id: chapters.id,
@@ -92,7 +87,6 @@ export async function getJourney({
     title: row.title,
     styleId: row.styleId,
     memory: row.memory,
-    hasSyllabusChat: Number(syllabusMsgCount.c) > 0,
     status: row.status,
     syllabus,
     chapters: chapterRows,
