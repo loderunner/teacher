@@ -1,7 +1,8 @@
 import { ClerkLoaded, ClerkLoading, Show, UserButton } from '@clerk/nextjs';
 
-import { LocalePicker } from '@/components/locale/picker';
-import { ThemeToggle } from '@/components/theme/toggle';
+import { LocalePicker } from './locale-picker';
+import { ThemeToggle } from './theme-toggle';
+
 import { Link } from '@/i18n/navigation';
 
 export default function TopBar() {

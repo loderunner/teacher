@@ -5,7 +5,9 @@ import { notFound } from 'next/navigation';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, getTranslations } from 'next-intl/server';
 
-import TopBar from '@/components/top-bar';
+import { ThemeProvider } from './theme-provider';
+import TopBar from './top-bar';
+
 import { hasLocale } from '@/i18n/locale';
 import { routing } from '@/i18n/routing';
 
@@ -45,11 +47,13 @@ export default async function LocaleLayout({
   const localization = locale === 'fr' ? frFR : undefined;
 
   return (
-    <ClerkProvider localization={localization}>
-      <NextIntlClientProvider messages={messages}>
-        <TopBar />
-        {children}
-      </NextIntlClientProvider>
-    </ClerkProvider>
+    <ThemeProvider>
+      <ClerkProvider localization={localization}>
+        <NextIntlClientProvider messages={messages}>
+          <TopBar />
+          {children}
+        </NextIntlClientProvider>
+      </ClerkProvider>
+    </ThemeProvider>
   );
 }
