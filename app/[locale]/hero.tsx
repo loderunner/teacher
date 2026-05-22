@@ -13,7 +13,7 @@ import {
   PromptInputSubmit,
   PromptInputTextarea,
 } from '@/components/ai-elements/prompt-input';
-import { StylePicker } from '@/components/style-picker';
+import { StylePicker } from '@/components/journey';
 import { useRouter } from '@/i18n/navigation';
 import type { Style } from '@/lib/server/styles/get';
 
@@ -69,7 +69,7 @@ export function Hero({ presets }: Props) {
           </PromptInputFooter>
         </PromptInput>
 
-        <div className="mt-3 flex justify-end sm:justify-start">
+        <div className="mt-3">
           <StylePicker
             presets={presets}
             value={styleId}

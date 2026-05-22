@@ -38,12 +38,38 @@ type ContentProps = {
   children: React.ReactNode;
 };
 
+type HeaderProps = {
+  /** Page title area — typically an eyebrow label and a {@link Title}. */
+  children: React.ReactNode;
+};
+
+type FooterProps = {
+  /** CTA area below the chat — typically a {@link Button}. */
+  children: React.ReactNode;
+};
+
 type SidebarProps = {
   /** Sidebar controls: panels, pickers, CTAs. */
   children: React.ReactNode;
 };
 
-function Root({ children }: RootProps) {
+/**
+ * Outer two-column shell. Compose with {@link Content} and {@link Sidebar}
+ * as direct children.
+ *
+ * @example
+ * import { ChatPageShell } from '@/components/chat-page';
+ *
+ * <ChatPageShell.Root>
+ *   <ChatPageShell.Content>
+ *     <ChatPageShell.Header>…</ChatPageShell.Header>
+ *     <JourneyChatView … />
+ *     <ChatPageShell.Footer>…</ChatPageShell.Footer>
+ *   </ChatPageShell.Content>
+ *   <ChatPageShell.Sidebar>…</ChatPageShell.Sidebar>
+ * </ChatPageShell.Root>
+ */
+export function Root({ children }: RootProps) {
   const [open, setOpen] = useState(false);
   const [hasSidebar, setHasSidebar] = useState(false);
   const t = useTranslations('Chapter');
@@ -61,7 +87,7 @@ function Root({ children }: RootProps) {
           <button
             aria-label={t('syllabusHeader')}
             className={cn(
-              'border-foreground bg-background fixed top-[4.5rem] right-4 z-30 rounded-full border p-2.5 shadow-md transition-opacity md:hidden',
+              'border-foreground bg-background fixed top-18 right-4 z-30 rounded-full border p-2.5 shadow-md transition-opacity md:hidden',
               open && 'pointer-events-none opacity-0',
             )}
             type="button"
@@ -83,7 +109,7 @@ function Root({ children }: RootProps) {
 }
 
 /** Left chat column. Handles overflow so the conversation scrolls independently of the sidebar. */
-function Content({ children }: ContentProps) {
+export function Content({ children }: ContentProps) {
   return (
     <section className="flex flex-1 flex-col overflow-hidden">
       {children}
@@ -91,8 +117,26 @@ function Content({ children }: ContentProps) {
   );
 }
 
+/** Page header rendered above the chat — position label, title, etc. */
+export function Header({ children }: HeaderProps) {
+  return (
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-1 pb-4">
+      {children}
+    </div>
+  );
+}
+
+/** Page footer rendered below the chat — primary CTA button. */
+export function Footer({ children }: FooterProps) {
+  return (
+    <div className="mx-auto flex w-full max-w-3xl justify-end px-1 pb-1">
+      {children}
+    </div>
+  );
+}
+
 /** Right sidebar column — fixed width on desktop, slide-in drawer on mobile. */
-function Sidebar({ children }: SidebarProps) {
+export function Sidebar({ children }: SidebarProps) {
   const { open, close, setHasSidebar } = useContext(SidebarContext);
   const t = useTranslations('Chapter');
 
@@ -133,21 +177,3 @@ function Sidebar({ children }: SidebarProps) {
     </aside>
   );
 }
-
-/**
- * Two-column shell shared by the welcome page and every chapter page.
- *
- * Compose {@link ChatPageShell.Content} and {@link ChatPageShell.Sidebar}
- * as direct children. Order in JSX determines visual left-to-right order —
- * place `Content` before `Sidebar` for the standard layout.
- *
- * On mobile viewports the sidebar is hidden by default and accessible via a
- * floating toggle button. On `md` and above it renders as a fixed-width column.
- *
- * @example
- * <ChatPageShell>
- *   <ChatPageShell.Content>…</ChatPageShell.Content>
- *   <ChatPageShell.Sidebar>…</ChatPageShell.Sidebar>
- * </ChatPageShell>
- */
-export const ChatPageShell = Object.assign(Root, { Content, Sidebar });

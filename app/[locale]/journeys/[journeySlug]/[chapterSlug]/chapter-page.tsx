@@ -12,11 +12,10 @@ import {
 import { z } from 'zod';
 
 import { completeChapterAction } from './complete-chapter';
-import { StyleLabel } from './style-label';
 import { SyllabusChangeCard } from './syllabus-change-card';
-import { SyllabusPanel } from './syllabus-panel';
 
-import { ChatPageShell } from '@/components/chat-page-shell';
+import { Button, ChatPageShell, Title } from '@/components/chat-page';
+import { StyleLabel, SyllabusPanel } from '@/components/journey';
 import { usePathname, useRouter } from '@/i18n/navigation';
 import { JourneyChatView, useJourneyChat } from '@/lib/journey-chat';
 import type { MessagePartDelegateProps } from '@/lib/journey-chat/view';
@@ -148,19 +147,17 @@ export function ChapterPage({ journey, chapter }: Props) {
   }, [journey.id, chapter.idx, router, tChat, messages]);
 
   return (
-    <ChatPageShell>
+    <ChatPageShell.Root>
       <ChatPageShell.Content>
-        <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 pb-4">
-          <div className="flex flex-col gap-1">
-            <p className="text-muted-foreground text-sm">
-              {t('position', {
-                n: chapter.idx + 1,
-                total: journey.chapters.length,
-              })}
-            </p>
-            <h1 className="text-3xl font-bold">{chapter.title}</h1>
-          </div>
-        </div>
+        <ChatPageShell.Header>
+          <p className="text-muted-foreground text-sm">
+            {t('position', {
+              n: chapter.idx + 1,
+              total: journey.chapters.length,
+            })}
+          </p>
+          <Title>{chapter.title}</Title>
+        </ChatPageShell.Header>
         <JourneyChatView
           MessagePartDelegate={ChapterPartDelegate}
           messages={messages}
@@ -174,25 +171,28 @@ export function ChapterPage({ journey, chapter }: Props) {
           onSubmit={handleSubmit}
         />
         {chapterComplete && (
-          <div className="mx-auto flex w-full max-w-3xl flex-col justify-end px-1 pb-1">
+          <>
             {completeError !== null && (
-              <p className="text-destructive mb-2 text-sm">{completeError}</p>
+              <p className="text-destructive mx-auto w-full max-w-3xl px-1 text-sm">
+                {completeError}
+              </p>
             )}
-            <button
-              className="border-foreground bg-foreground text-background w-full rounded border px-4 py-2 text-sm font-medium transition-opacity disabled:opacity-40 md:w-auto md:self-end"
-              disabled={completing}
-              type="button"
-              onClick={handleComplete}
-            >
-              {completeLabel}
-            </button>
-          </div>
+            <ChatPageShell.Footer>
+              <Button disabled={completing} onClick={handleComplete}>
+                {completeLabel}
+              </Button>
+            </ChatPageShell.Footer>
+          </>
         )}
       </ChatPageShell.Content>
       <ChatPageShell.Sidebar>
-        <SyllabusPanel currentIdx={chapter.idx} journey={journey} />
+        <SyllabusPanel
+          current={{ type: 'chapter', idx: chapter.idx }}
+          journey={journey}
+          mode="activated"
+        />
         <StyleLabel styleId={journey.styleId} />
       </ChatPageShell.Sidebar>
-    </ChatPageShell>
+    </ChatPageShell.Root>
   );
 }

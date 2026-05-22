@@ -8,9 +8,6 @@
   "Welcome": {
     "title": "Commencer un Parcours",
     "tagline": "Que voulez-vous apprendre ?",
-    "draftHeader": "Votre programme",
-    "emptyDraft": "Discutez pour commencer à esquisser votre programme.",
-    "emptyChapterSections": "Aucune section pour le moment.",
     "startJourney": "Commencer le parcours",
     "startJourneyDisabledHint": "Ajoutez au moins un chapitre et choisissez un style pour commencer.",
     "promptPlaceholder": "Décrivez ce que vous souhaitez apprendre…",
@@ -32,6 +29,8 @@
     "syllabusHeader": "Programme",
     "syllabusChat": "Chat du programme",
     "syllabusChapterLabel": "Comment nous avons construit cela",
+    "emptyDraft": "Discutez pour commencer à esquisser votre programme.",
+    "emptyChapterSections": "Aucune section pour le moment.",
     "locked": "Ce chapitre est verrouillé. Complétez le chapitre actif pour le déverrouiller.",
     "goToActiveChapter": "Aller au chapitre actif"
   },

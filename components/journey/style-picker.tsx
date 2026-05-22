@@ -5,14 +5,19 @@ import { useTranslations } from 'next-intl';
 import type { Style } from '@/lib/server/styles/get';
 import { cn } from '@/lib/tailwind';
 
+/** Props for {@link StylePicker}. */
 type Props = {
+  /** Available style presets to display as options. */
   presets: Style[];
+  /** ID of the currently selected preset. */
   value: string;
+  /** Called with the new preset ID when the user selects a different style. */
   onChange: (id: string) => void;
 };
 
 /**
- * Renders a row of toggle buttons for selecting a teaching style preset.
+ * Compact row for selecting a teaching style preset — a muted label above a
+ * group of toggle buttons. Used on the welcome page and in the journey sidebar.
  *
  * @param presets - Available style presets to display as options.
  * @param value - ID of the currently selected preset.

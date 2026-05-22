@@ -40,6 +40,27 @@ function AccordionItem({ className, ...props }: AccordionPrimitive.Item.Props) {
 }
 
 /**
+ * Semantic heading wrapper for an {@link AccordionItem}. Use this when you
+ * want an item row that shares the accordion's heading structure (and thus its
+ * base typography) without a collapsible trigger — for example, a plain
+ * navigation link that should sit visually alongside accordion items.
+ *
+ * @param props Forwarded to the underlying Base UI Accordion header.
+ */
+function AccordionHeader({
+  className,
+  ...props
+}: AccordionPrimitive.Header.Props) {
+  return (
+    <AccordionPrimitive.Header
+      className={cn('flex', className)}
+      data-slot="accordion-header"
+      {...props}
+    />
+  );
+}
+
+/**
  * Clickable header that toggles its sibling {@link AccordionContent}.
  * Renders chevron icons that reflect the open/closed state.
  *
@@ -102,4 +123,10 @@ function AccordionContent({
   );
 }
 
-export { Accordion, AccordionContent, AccordionItem, AccordionTrigger };
+export {
+  Accordion,
+  AccordionContent,
+  AccordionHeader,
+  AccordionItem,
+  AccordionTrigger,
+};

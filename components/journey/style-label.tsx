@@ -8,7 +8,7 @@ type Props = {
   styleId: string;
 };
 
-/** Read-only display of the journey's teaching style. */
+/** Read-only compact display of the journey's teaching style. */
 export function StyleLabel({ styleId }: Props) {
   const t = useTranslations('StylePicker');
   const style = getStyle(styleId);
