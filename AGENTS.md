@@ -246,6 +246,49 @@ function createUser(params: CreateUserParams): CreateUserResult {
 }
 ```
 
+## Component composition
+
+When a component accepts content that ends up in the DOM, accept it as
+**children** (or as a named-slot subcomponent), not as a string prop. String
+props that render into DOM elements are a leaky interface — the parent ends up
+reaching across the primitive to customize a grandchild's text, icon, or class.
+
+```tsx
+// incorrect — leaky string props
+<Button label="Start journey" icon={ArrowRightIcon} onClick={…} />
+<Header title="Limits and continuity" />
+
+// correct — children-based composition
+<Button onClick={…}>
+  <ArrowRightIcon size={15} weight="bold" />
+  {t('startJourney')}
+</Button>
+
+<ChatPageShell.Header>
+  <Title>{chapter.title}</Title>
+</ChatPageShell.Header>
+```
+
+When composition gets complex enough to warrant explicit slots, use the
+**named-slot subcomponent pattern**:
+
+```tsx
+<Shell>
+  <Shell.Header>…</Shell.Header>
+  <Shell.Sidebar>…</Shell.Sidebar>
+  <Shell.Content>…</Shell.Content>
+</Shell>
+```
+
+Slots are exposed as static properties on the parent (e.g.
+`Shell.Header = function ShellHeader(…)`), and the parent inspects its children
+— or simply renders the subcomponents in fixed positions — to lay them out.
+
+Data-driven props are still fine where the content is intrinsically structured
+(e.g. a list of chapters, a table of rows). Rendering each item via `children`
+would push every caller into hand-rolling the same item markup, which is the
+duplication this rule exists to prevent.
+
 ## Type narrowing
 
 Do not cast with `as`. Use type predicates (`value is Foo`) or type assertion
