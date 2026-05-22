@@ -1,4 +1,9 @@
 {
+  "Journeys": {
+    "title": "Your Journeys",
+    "empty": "No journeys yet.",
+    "newJourney": "New journey"
+  },
   "Home": {
     "comingSoon": "Welcome — coming soon"
   },

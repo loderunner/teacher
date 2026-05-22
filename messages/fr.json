@@ -1,4 +1,9 @@
 {
+  "Journeys": {
+    "title": "Vos Parcours",
+    "empty": "Aucun parcours pour le moment.",
+    "newJourney": "Nouveau parcours"
+  },
   "Home": {
     "comingSoon": "Bienvenue — bientôt disponible"
   },
