@@ -2,13 +2,6 @@ import { type DeepPartial, type UIMessage } from 'ai';
 
 import { type Syllabus, syllabusSchema } from '@/lib/server/syllabus/schema';
 
-function readDraft(input: unknown): unknown {
-  if (input === null || typeof input !== 'object' || !('draft' in input)) {
-    return undefined;
-  }
-  return input.draft;
-}
-
 /**
  * Derives the latest complete syllabus and the latest partial draft from
  * `updateSyllabusDraft` tool parts in UI messages.
@@ -28,26 +21,29 @@ export function deriveSyllabusDraftsFromMessages(messages: UIMessage[]): {
   let partialDraft: DeepPartial<Syllabus> | null = null;
   let partialSeen = false;
 
+  // Iterate backwards through the messages to find the most recent draft.
   for (let i = messages.length - 1; i >= 0; i--) {
     const msg = messages[i];
     if (msg.role !== 'assistant') {
       continue;
     }
+    // Iterate backwards through the tool parts to find the most recent draft.
     for (let j = msg.parts.length - 1; j >= 0; j--) {
       const part = msg.parts[j];
       if (part.type !== 'tool-updateSyllabusDraft') {
         continue;
       }
 
-      const rawDraft = readDraft(part.input);
-
+      // If we haven't seen a partial draft yet, try to parse the raw draft as a
+      // partial draft.
       if (!partialSeen) {
-        const parsed = syllabusSchema.partial().safeParse(rawDraft);
+        const parsed = syllabusSchema.partial().safeParse(part.input);
         partialDraft = parsed.success ? parsed.data : null;
         partialSeen = true;
       }
 
-      const full = syllabusSchema.safeParse(rawDraft);
+      // Try toarse the raw draft as a full draft.
+      const full = syllabusSchema.safeParse(part.input);
       if (full.success) {
         draft = full.data;
         return { draft, partialDraft };

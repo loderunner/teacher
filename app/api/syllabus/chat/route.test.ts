@@ -79,8 +79,8 @@ describe('POST /api/syllabus/chat', () => {
       id: 'journey1',
       title: 'Draft',
       styleId: 'teacher',
-      memory: '',
-      hasSyllabusChat: false,
+      memory: [],
+
       status: 'drafting',
       syllabus: { chapters: [] },
       chapters: [],
@@ -139,8 +139,8 @@ describe('POST /api/syllabus/chat', () => {
       id: 'journey1',
       title: 'Active',
       styleId: 'teacher',
-      memory: '',
-      hasSyllabusChat: true,
+      memory: [],
+
       status: 'active',
       syllabus: { chapters: [{ title: 'One' }] },
       chapters: [

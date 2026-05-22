@@ -3,6 +3,7 @@ import {
   type SystemModelMessage,
   type UIMessage,
   convertToModelMessages,
+  generateId,
   smoothStream,
   stepCountIs,
   streamText,
@@ -69,7 +70,8 @@ export async function POST(req: Request): Promise<Response> {
     messages = await validateUIMessages({
       messages: parsed.messages,
     });
-  } catch {
+  } catch (error) {
+    console.error(error);
     return new Response('Bad Request', { status: 400 });
   }
 
@@ -129,6 +131,7 @@ export async function POST(req: Request): Promise<Response> {
 
   return result.toUIMessageStreamResponse({
     originalMessages: messages,
+    generateMessageId: generateId,
     onFinish: async ({ messages: updated }) => {
       await syncMessages({ journeyId, chapterId: null, messages: updated });
     },

@@ -1,5 +1,4 @@
 import { tool } from 'ai';
-import { z } from 'zod';
 
 import { syllabusSchema } from '@/lib/server/syllabus/schema';
 
@@ -17,6 +16,6 @@ Rules:
 - Call this tool immediately whenever the outline changes; do not narrate changes in prose instead.
 - Use concise chapter titles (noun phrases, ≤ 120 chars). Add a short summary only when it adds clarity.
 - Order chapters from foundational to advanced.`,
-  inputSchema: z.object({ draft: syllabusSchema }),
+  inputSchema: syllabusSchema,
   execute: async () => 'ok',
 });
