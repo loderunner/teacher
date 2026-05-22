@@ -6,11 +6,10 @@ import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState, useTransition } from 'react';
 
 import { activateJourneyAction } from './activate-journey';
-import { SyllabusDraftPanel } from './syllabus-draft-panel';
 import { SyllabusPartDelegate } from './syllabus-part-delegate';
 
-import { ChatPageShell } from '@/components/chat-page-shell';
-import { StylePicker } from '@/components/style-picker';
+import { Button, ChatPageShell } from '@/components/chat-page';
+import { StylePicker, SyllabusPanel } from '@/components/journey';
 import { useRouter } from '@/i18n/navigation';
 import { JourneyChatView, useJourneyChat } from '@/lib/journey-chat';
 import type { Journey } from '@/lib/server/journeys/get';
@@ -94,7 +93,7 @@ export function SyllabusChat({ journey, initialMessages, presets }: Props) {
   };
 
   return (
-    <ChatPageShell>
+    <ChatPageShell.Root>
       <ChatPageShell.Content>
         <JourneyChatView
           MessagePartDelegate={SyllabusPartDelegate}
@@ -109,23 +108,21 @@ export function SyllabusChat({ journey, initialMessages, presets }: Props) {
           onSubmit={(msg) => handleSubmit({ ...msg, body })}
         />
         {startable && (
-          <div className="mx-auto flex w-full max-w-3xl justify-end px-1 pb-1">
-            <button
-              className="border-foreground bg-foreground text-background flex w-full items-center justify-center gap-2 rounded border px-4 py-2 text-sm font-medium transition-opacity disabled:opacity-40 md:w-auto md:justify-start"
+          <ChatPageShell.Footer>
+            <Button
               disabled={pending || streaming}
-              type="button"
               onClick={handleStartJourney}
             >
               <ArrowRightIcon size={15} weight="bold" />
               {t('startJourney')}
-            </button>
-          </div>
+            </Button>
+          </ChatPageShell.Footer>
         )}
       </ChatPageShell.Content>
 
       {started && (
         <ChatPageShell.Sidebar>
-          <SyllabusDraftPanel draft={partialDraft} />
+          <SyllabusPanel draft={partialDraft} mode="draft" />
           <StylePicker
             presets={presets}
             value={styleId}
@@ -133,6 +130,6 @@ export function SyllabusChat({ journey, initialMessages, presets }: Props) {
           />
         </ChatPageShell.Sidebar>
       )}
-    </ChatPageShell>
+    </ChatPageShell.Root>
   );
 }

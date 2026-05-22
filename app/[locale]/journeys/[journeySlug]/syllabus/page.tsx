@@ -1,14 +1,15 @@
 import { auth } from '@clerk/nextjs/server';
 import { notFound } from 'next/navigation';
-import { getTranslations } from 'next-intl/server';
 
-import { SyllabusPartDelegate } from '../syllabus-part-delegate';
+import { SyllabusChat } from './syllabus-chat';
+import { SyllabusView } from './syllabus-view';
 
-import { JourneyChatView } from '@/lib/journey-chat';
+import { permanentRedirect } from '@/i18n/navigation';
 import { getJourney } from '@/lib/server/journeys/get';
 import { getMessages } from '@/lib/server/messages';
+import { listPresets } from '@/lib/server/styles/get';
 import { ensureUser } from '@/lib/server/users/ensure';
-import { parseJourneySlug } from '@/lib/url';
+import { journeyPath, parseJourneySlug } from '@/lib/url';
 
 export default async function Page({
   params,
@@ -29,8 +30,9 @@ export default async function Page({
     notFound();
   }
 
-  if (journey.status !== 'active') {
-    notFound();
+  const canonicalJourney = journeyPath(journey.id, journey.title);
+  if (`/journeys/${journeySlug}` !== canonicalJourney) {
+    permanentRedirect({ href: `${canonicalJourney}/syllabus`, locale });
   }
 
   const messages = await getMessages({
@@ -38,21 +40,15 @@ export default async function Page({
     chapterId: null,
   });
 
-  const t = await getTranslations({ locale, namespace: 'SyllabusPage' });
-
-  return (
-    <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-8">
-      <header className="flex flex-col gap-2">
-        <h1 className="font-heading text-2xl font-bold">{t('header')}</h1>
-        <p className="text-muted-foreground text-sm">{t('description')}</p>
-      </header>
-      <JourneyChatView
-        MessagePartDelegate={SyllabusPartDelegate}
-        messages={messages}
-        placeholder=""
-        readOnly
-        status="ready"
+  if (journey.status === 'drafting') {
+    return (
+      <SyllabusChat
+        initialMessages={messages}
+        journey={journey}
+        presets={listPresets()}
       />
-    </div>
-  );
+    );
+  }
+
+  return <SyllabusView journey={journey} locale={locale} messages={messages} />;
 }

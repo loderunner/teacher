@@ -34,13 +34,13 @@ describe('activateJourneyAction', () => {
       id: 'j1',
       title: 'Draft',
       styleId: 'teacher',
-      memory: '',
-      hasSyllabusChat: true,
+      memory: [],
+
       status: 'drafting',
       syllabus: { chapters: [] },
       chapters: [],
     });
-    mockBootstrap.mockResolvedValue({ title: 'Final', memory: 'Mem' });
+    mockBootstrap.mockResolvedValue({ title: 'Final', memory: ['Mem'] });
     mockActivate.mockResolvedValue({ id: 'j1', title: 'Final' });
   });
 
@@ -61,8 +61,8 @@ describe('activateJourneyAction', () => {
       id: 'j1',
       title: 'Done',
       styleId: 'teacher',
-      memory: '',
-      hasSyllabusChat: false,
+      memory: [],
+
       status: 'active',
       syllabus: validSyllabus,
       chapters: [],
@@ -92,7 +92,7 @@ describe('activateJourneyAction', () => {
       userId: 'user-1',
       journeyId: 'j1',
       title: 'Final',
-      memory: 'Mem',
+      memory: ['Mem'],
       syllabus: validSyllabus,
     });
     expect(result.path).toBe('/journeys/final-j1');

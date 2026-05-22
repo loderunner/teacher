@@ -1,12 +1,8 @@
 import { auth } from '@clerk/nextjs/server';
 import { notFound } from 'next/navigation';
 
-import { SyllabusChat } from './syllabus-chat';
-
 import { permanentRedirect, redirect } from '@/i18n/navigation';
 import { getJourney } from '@/lib/server/journeys/get';
-import { getMessages } from '@/lib/server/messages';
-import { listPresets } from '@/lib/server/styles/get';
 import { ensureUser } from '@/lib/server/users/ensure';
 import { chapterPath, journeyPath, parseJourneySlug } from '@/lib/url';
 
@@ -29,23 +25,14 @@ export default async function Page({
     notFound();
   }
 
-  if (journey.status === 'drafting') {
-    const canonicalJourney = journeyPath(journey.id, journey.title);
-    if (`/journeys/${journeySlug}` !== canonicalJourney) {
-      permanentRedirect({ href: canonicalJourney, locale });
-    }
+  const canonicalJourney = journeyPath(journey.id, journey.title);
+  if (`/journeys/${journeySlug}` !== canonicalJourney) {
+    permanentRedirect({ href: canonicalJourney, locale });
+  }
 
-    const initialMessages = await getMessages({
-      journeyId: journey.id,
-      chapterId: null,
-    });
-    return (
-      <SyllabusChat
-        initialMessages={initialMessages}
-        journey={journey}
-        presets={listPresets()}
-      />
-    );
+  if (journey.status === 'drafting') {
+    const syllabusHref = `${canonicalJourney}/syllabus`;
+    redirect({ href: syllabusHref, locale });
   }
 
   if (journey.chapters.length === 0) {
@@ -57,12 +44,6 @@ export default async function Page({
     [...journey.chapters].reverse().find((c) => c.status === 'done') ??
     journey.chapters[0];
 
-  const canonicalJourney = journeyPath(journey.id, journey.title);
-  const targetPath = chapterPath(journey, target);
-
-  if (`/journeys/${journeySlug}` !== canonicalJourney) {
-    permanentRedirect({ href: targetPath, locale });
-  }
-
-  redirect({ href: targetPath, locale });
+  const chapterHref = chapterPath(journey, target);
+  redirect({ href: chapterHref, locale });
 }
