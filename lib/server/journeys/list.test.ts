@@ -14,40 +14,17 @@ describe('listJourneys', () => {
     mockDb.mockReset();
   });
 
-  it('returns summaries ordered by updatedAt for the given user', async () => {
-    const now = new Date('2025-01-02T00:00:00Z');
-    const earlier = new Date('2025-01-01T00:00:00Z');
-
+  it('returns summaries for the given user', async () => {
     mockDb.select.from.where.orderBy.mockResolvedValueOnce([
-      {
-        id: 'j1',
-        title: 'Rust basics',
-        currentChapterIndex: 2,
-        updatedAt: now,
-      },
-      {
-        id: 'j2',
-        title: 'TypeScript',
-        currentChapterIndex: 0,
-        updatedAt: earlier,
-      },
+      { id: 'j1', title: 'Rust basics' },
+      { id: 'j2', title: 'TypeScript' },
     ]);
 
     const result = await listJourneys({ userId: 'user-1' });
 
     expect(result).toEqual([
-      {
-        id: 'j1',
-        title: 'Rust basics',
-        currentChapterIndex: 2,
-        updatedAt: now,
-      },
-      {
-        id: 'j2',
-        title: 'TypeScript',
-        currentChapterIndex: 0,
-        updatedAt: earlier,
-      },
+      { id: 'j1', title: 'Rust basics' },
+      { id: 'j2', title: 'TypeScript' },
     ]);
   });
 

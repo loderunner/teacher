@@ -9,10 +9,6 @@ export type JourneySummary = {
   id: string;
   /** Display title of the journey. */
   title: string;
-  /** Zero-based index of the chapter the learner is currently on. */
-  currentChapterIndex: number;
-  /** Timestamp of the last update to the journey. */
-  updatedAt: Date;
 };
 
 /** Parameters for listing journeys. */
@@ -34,8 +30,6 @@ export async function listJourneys({
     .select({
       id: journeys.id,
       title: journeys.title,
-      currentChapterIndex: journeys.currentChapterIndex,
-      updatedAt: journeys.updatedAt,
     })
     .from(journeys)
     .where(eq(journeys.userId, userId))
