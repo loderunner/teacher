@@ -73,5 +73,11 @@
     "typescript": "5.9.3",
     "vercel": "53.2.0",
     "vitest": "4.1.5"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": ">=11.3.0"
+    }
   }
 }
