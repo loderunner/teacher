@@ -130,7 +130,7 @@ describe('POST /api/syllabus/chat', () => {
       }),
     );
 
-    expect(res.status).toBe(403);
+    expect(res.status).toBe(404);
     expect(mockSyncMessages).not.toHaveBeenCalled();
   });
 

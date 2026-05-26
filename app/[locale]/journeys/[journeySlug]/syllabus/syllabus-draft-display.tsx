@@ -1,20 +1,15 @@
 'use client';
 
 import { CheckIcon } from '@phosphor-icons/react';
-import type { UIMessage } from 'ai';
+import type { DynamicToolUIPart } from 'ai';
 import { useTranslations } from 'next-intl';
 
-import type { MessagePartDelegateProps } from '@/lib/journey-chat/view';
+import { useToolPartContext } from '@/lib/journey-chat';
 
 /** Renders `tool-updateSyllabusDraft` parts inline in the conversation. */
-export function SyllabusPartDelegate({
-  part,
-}: MessagePartDelegateProps<UIMessage>) {
+export function SyllabusDraftDisplay() {
   const t = useTranslations('Welcome');
-
-  if (part.type !== 'tool-updateSyllabusDraft') {
-    return null;
-  }
+  const part = useToolPartContext<DynamicToolUIPart>();
 
   if (part.state !== 'output-available') {
     return (

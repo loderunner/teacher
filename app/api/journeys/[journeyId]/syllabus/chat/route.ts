@@ -16,6 +16,7 @@ import { getModel } from '@/lib/ai/model';
 import { getJourney } from '@/lib/server/journeys/get';
 import { syncMessages } from '@/lib/server/messages';
 import { getStyle } from '@/lib/server/styles/get';
+import { PRESETS } from '@/lib/server/styles/presets';
 import { ensureUser } from '@/lib/server/users/ensure';
 import {
   composeSyllabusSystemPrompt,
@@ -33,8 +34,6 @@ export type RequestBody = {
   messages: UIMessage[];
   /** Owning draft journey for persistence and authorization. */
   journeyId: string;
-  /** Teaching style preset ID used to build the system prompt. */
-  styleId: string;
   /** Locale for selecting the correct system prompt language. */
   locale: Locale;
 };
@@ -42,7 +41,6 @@ export type RequestBody = {
 const requestBodySchema: z.ZodType<RequestBody> = z.object({
   messages: z.array(z.custom<UIMessage>()),
   journeyId: z.string().min(1),
-  styleId: z.string().min(1),
   locale: z.union([z.literal('en'), z.literal('fr')]),
 });
 
@@ -63,15 +61,14 @@ export async function POST(req: Request): Promise<Response> {
     return new Response('Bad Request', { status: 400 });
   }
 
-  const { styleId, locale, journeyId } = parsed;
+  const { locale, journeyId } = parsed;
 
   let messages: UIMessage[];
   try {
     messages = await validateUIMessages({
       messages: parsed.messages,
     });
-  } catch (error) {
-    console.error(error);
+  } catch {
     return new Response('Bad Request', { status: 400 });
   }
 
@@ -79,21 +76,14 @@ export async function POST(req: Request): Promise<Response> {
 
   const journey = await getJourney({ userId, id: journeyId });
   if (journey === null) {
-    return new Response('Forbidden', { status: 403 });
+    return new Response('Not Found', { status: 404 });
   }
 
   if (journey.status !== 'drafting') {
     return new Response('Conflict', { status: 409 });
   }
 
-  if (journey.styleId !== styleId) {
-    return new Response('Invalid style', { status: 400 });
-  }
-
-  const style = getStyle(styleId);
-  if (style === null) {
-    return new Response('Invalid style', { status: 400 });
-  }
+  const style = getStyle(journey.styleId) ?? PRESETS[0];
 
   await syncMessages({ journeyId, chapterId: null, messages });
 

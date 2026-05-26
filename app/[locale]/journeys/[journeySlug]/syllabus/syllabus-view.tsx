@@ -1,12 +1,17 @@
 import type { UIMessage } from 'ai';
 import { getTranslations } from 'next-intl/server';
+import type { ComponentType } from 'react';
 
-import { SyllabusPartDelegate } from './syllabus-part-delegate';
+import { SyllabusDraftDisplay } from './syllabus-draft-display';
 
 import { ChatPageShell, Title } from '@/components/chat-page';
 import { StyleLabel, SyllabusPanel } from '@/components/journey';
 import { JourneyChatView } from '@/lib/journey-chat';
 import type { Journey } from '@/lib/server/journeys/get';
+
+const SYLLABUS_TOOLS: Record<string, ComponentType> = {
+  'tool-updateSyllabusDraft': SyllabusDraftDisplay,
+};
 
 /** Props for {@link SyllabusView}. */
 type Props = {
@@ -32,11 +37,11 @@ export async function SyllabusView({ journey, messages, locale }: Props) {
           <Title>{t('header')}</Title>
         </ChatPageShell.Header>
         <JourneyChatView
-          MessagePartDelegate={SyllabusPartDelegate}
           messages={messages}
           placeholder=""
           readOnly
           status="ready"
+          tools={SYLLABUS_TOOLS}
         />
       </ChatPageShell.Content>
       <ChatPageShell.Sidebar>

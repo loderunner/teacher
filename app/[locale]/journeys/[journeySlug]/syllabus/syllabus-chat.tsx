@@ -3,10 +3,17 @@
 import { ArrowRightIcon } from '@phosphor-icons/react';
 import { type UIMessage } from 'ai';
 import { useTranslations } from 'next-intl';
-import { useEffect, useRef, useState, useTransition } from 'react';
+import {
+  type ComponentType,
+  useEffect,
+  useRef,
+  useState,
+  useTransition,
+} from 'react';
 
 import { activateJourneyAction } from './activate-journey';
-import { SyllabusPartDelegate } from './syllabus-part-delegate';
+import { deriveSyllabusDraftsFromMessages } from './derive-syllabus-draft';
+import { SyllabusDraftDisplay } from './syllabus-draft-display';
 
 import { Button, ChatPageShell } from '@/components/chat-page';
 import { StylePicker, SyllabusPanel } from '@/components/journey';
@@ -14,7 +21,10 @@ import { useRouter } from '@/i18n/navigation';
 import { JourneyChatView, useJourneyChat } from '@/lib/journey-chat';
 import type { Journey } from '@/lib/server/journeys/get';
 import type { Style } from '@/lib/server/styles/get';
-import { deriveSyllabusDraftsFromMessages } from '@/lib/syllabus-chat';
+
+const SYLLABUS_TOOLS: Record<string, ComponentType> = {
+  'tool-updateSyllabusDraft': SyllabusDraftDisplay,
+};
 
 /** Props for {@link SyllabusChat}. */
 type Props = {
@@ -47,11 +57,11 @@ export function SyllabusChat({ journey, initialMessages, presets }: Props) {
     handleEditMessage,
     triggerResponse,
   } = useJourneyChat<UIMessage>({
-    api: '/api/syllabus/chat',
+    api: `/api/journeys/${journey.id}/syllabus/chat`,
     initialMessages,
   });
 
-  const body = { journeyId: journey.id, styleId };
+  const body = { journeyId: journey.id };
 
   // When the draft was just created from the hero, the only persisted message
   // is the user's first prompt — kick off the assistant response on mount.
@@ -96,10 +106,10 @@ export function SyllabusChat({ journey, initialMessages, presets }: Props) {
     <ChatPageShell.Root>
       <ChatPageShell.Content>
         <JourneyChatView
-          MessagePartDelegate={SyllabusPartDelegate}
           messages={messages}
           placeholder={t('promptPlaceholder')}
           status={status}
+          tools={SYLLABUS_TOOLS}
           onEditUserMessage={(messageId, text) =>
             handleEditMessage({ messageId, text, body })
           }
