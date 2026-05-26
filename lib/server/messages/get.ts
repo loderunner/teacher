@@ -1,7 +1,5 @@
 import type { UIMessage } from 'ai';
-import { asc } from 'drizzle-orm';
-
-import { messageScope } from './scope';
+import { and, asc, eq, isNull } from 'drizzle-orm';
 
 import { db } from '@/lib/server/db';
 import { messages } from '@/lib/server/db/schema';
@@ -27,6 +25,14 @@ export async function getMessages({
   journeyId,
   chapterId,
 }: GetMessagesParams): Promise<UIMessage[]> {
+  const scope =
+    chapterId === null
+      ? and(eq(messages.journeyId, journeyId), isNull(messages.chapterId))
+      : and(
+          eq(messages.journeyId, journeyId),
+          eq(messages.chapterId, chapterId),
+        );
+
   const rows = await db
     .select({
       id: messages.id,
@@ -34,13 +40,14 @@ export async function getMessages({
       parts: messages.parts,
     })
     .from(messages)
-    .where(messageScope(journeyId, chapterId))
+    .where(scope)
     .orderBy(asc(messages.createdAt));
 
-  return rows.map((row) => {
-    if (!isChatRole(row.role)) {
-      throw new Error(`Unsupported message role in storage: ${row.role}`);
-    }
-    return { id: row.id, role: row.role, parts: row.parts };
-  });
+  return rows
+    .filter((row): row is (typeof rows)[number] & { role: UIMessage['role'] } =>
+      isChatRole(row.role),
+    )
+    .map((row) => {
+      return { id: row.id, role: row.role, parts: row.parts };
+    });
 }

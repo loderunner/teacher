@@ -1,7 +1,5 @@
 import type { UIMessage } from 'ai';
-import { and, notInArray, sql } from 'drizzle-orm';
-
-import { messageScope } from './scope';
+import { and, eq, isNull, notInArray, sql } from 'drizzle-orm';
 
 import { dbTx } from '@/lib/server/db';
 import { messages } from '@/lib/server/db/schema';
@@ -31,7 +29,13 @@ export async function syncMessages({
   chapterId,
   messages: uiMessages,
 }: SyncMessagesParams): Promise<void> {
-  const scope = messageScope(journeyId, chapterId);
+  const scope =
+    chapterId === null
+      ? and(eq(messages.journeyId, journeyId), isNull(messages.chapterId))
+      : and(
+          eq(messages.journeyId, journeyId),
+          eq(messages.chapterId, chapterId),
+        );
 
   await dbTx.transaction(async (tx) => {
     if (uiMessages.length === 0) {
@@ -59,8 +63,6 @@ export async function syncMessages({
       .onConflictDoUpdate({
         target: messages.id,
         set: {
-          journeyId: sql`excluded.journey_id`,
-          chapterId: sql`excluded.chapter_id`,
           role: sql`excluded.role`,
           parts: sql`excluded.parts`,
         },

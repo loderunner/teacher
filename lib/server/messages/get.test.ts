@@ -43,6 +43,6 @@ describe('getMessages', () => {
 
     await expect(
       getMessages({ journeyId: 'j1', chapterId: null }),
-    ).rejects.toThrow('Unsupported message role in storage: tool');
+    ).resolves.toEqual([]);
   });
 });
