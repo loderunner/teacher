@@ -2,30 +2,27 @@
 
 import { useTranslations } from 'next-intl';
 import {
+  type ComponentType,
   useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState,
   useTransition,
 } from 'react';
-import { z } from 'zod';
 
 import { completeChapterAction } from './complete-chapter';
 import { SyllabusChangeCard } from './syllabus-change-card';
+import { SyllabusChangeContext } from './syllabus-change-context';
 
 import { Button, ChatPageShell, Title } from '@/components/chat-page';
 import { StyleLabel, SyllabusPanel } from '@/components/journey';
 import { usePathname, useRouter } from '@/i18n/navigation';
 import { JourneyChatView, useJourneyChat } from '@/lib/journey-chat';
-import type { MessagePartDelegateProps } from '@/lib/journey-chat/view';
 import type { Journey, JourneyChapter } from '@/lib/server/journeys/get';
-import { syllabusSchema } from '@/lib/server/syllabus/schema';
 
-const proposalInputSchema = z.object({
-  reason: z.string(),
-  newSyllabus: syllabusSchema,
-});
+const CHAPTER_TOOLS: Record<string, ComponentType> = {
+  'tool-proposeSyllabusChange': SyllabusChangeCard,
+};
 
 type Props = {
   journey: Journey;
@@ -69,38 +66,6 @@ export function ChapterPage({ journey, chapter }: Props) {
       ]);
     },
     [setMessages, tChat],
-  );
-
-  // Stable component reference — recreated only when journey, pathname, or
-  // appliedToolCallIds changes. SyllabusChangeCard local state (applying,
-  // dismissed) is preserved across streaming re-renders; the applied state
-  // lives here so it survives journey-prop updates after router.refresh().
-  const ChapterPartDelegate = useMemo(
-    () =>
-      function ChapterPartDelegateComponent({
-        part,
-      }: MessagePartDelegateProps) {
-        if (part.type !== 'tool-proposeSyllabusChange') {
-          return null;
-        }
-        const toolCallId = 'toolCallId' in part ? part.toolCallId : '';
-        const raw = 'input' in part ? part.input : undefined;
-        const parsed = proposalInputSchema.safeParse(raw);
-        if (!parsed.success) {
-          return null;
-        }
-        return (
-          <SyllabusChangeCard
-            applied={appliedToolCallIds.has(toolCallId)}
-            currentPath={pathname}
-            journey={journey}
-            proposal={parsed.data}
-            toolCallId={toolCallId}
-            onApplied={() => handleSyllabusApplied(toolCallId)}
-          />
-        );
-      },
-    [journey, pathname, appliedToolCallIds, handleSyllabusApplied],
   );
 
   const startedRef = useRef(false);
@@ -158,18 +123,28 @@ export function ChapterPage({ journey, chapter }: Props) {
           </p>
           <Title>{chapter.title}</Title>
         </ChatPageShell.Header>
-        <JourneyChatView
-          MessagePartDelegate={ChapterPartDelegate}
-          messages={messages}
-          placeholder={tChat('promptPlaceholder')}
-          status={status}
-          onEditUserMessage={(messageId, text) =>
-            handleEditMessage({ messageId, text })
-          }
-          onRegenerate={(messageId) => handleRegenerate({ messageId })}
-          onStop={stop}
-          onSubmit={handleSubmit}
-        />
+
+        <SyllabusChangeContext.Provider
+          value={{
+            journey,
+            currentPath: pathname,
+            appliedToolCallIds,
+            onApplied: handleSyllabusApplied,
+          }}
+        >
+          <JourneyChatView
+            messages={messages}
+            placeholder={tChat('promptPlaceholder')}
+            status={status}
+            tools={CHAPTER_TOOLS}
+            onEditUserMessage={(messageId, text) =>
+              handleEditMessage({ messageId, text })
+            }
+            onRegenerate={(messageId) => handleRegenerate({ messageId })}
+            onStop={stop}
+            onSubmit={handleSubmit}
+          />
+        </SyllabusChangeContext.Provider>
         {chapterComplete && (
           <>
             {completeError !== null && (
