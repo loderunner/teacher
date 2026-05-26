@@ -3,6 +3,7 @@
 import { NotebookIcon, XIcon } from '@phosphor-icons/react';
 import { useTranslations } from 'next-intl';
 import {
+  type ReactNode,
   createContext,
   useCallback,
   useContext,
@@ -30,27 +31,27 @@ const SidebarContext = createContext<SidebarContextValue>({
 
 type RootProps = {
   /** Left chat column and right sidebar as children. */
-  children: React.ReactNode;
+  children: ReactNode;
 };
 
 type ContentProps = {
   /** Chat region content. */
-  children: React.ReactNode;
+  children: ReactNode;
 };
 
 type HeaderProps = {
   /** Page title area — typically an eyebrow label and a {@link Title}. */
-  children: React.ReactNode;
+  children: ReactNode;
 };
 
 type FooterProps = {
   /** CTA area below the chat — typically a {@link Button}. */
-  children: React.ReactNode;
+  children: ReactNode;
 };
 
 type SidebarProps = {
   /** Sidebar controls: panels, pickers, CTAs. */
-  children: React.ReactNode;
+  children: ReactNode;
 };
 
 /**

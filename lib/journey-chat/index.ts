@@ -4,5 +4,5 @@ export type {
 } from './use-journey-chat';
 export { useJourneyChat } from './use-journey-chat';
 
-export type { JourneyChatViewProps, MessagePartDelegateProps } from './view';
-export { JourneyChatView } from './view';
+export type { JourneyChatViewProps } from './view';
+export { JourneyChatView, useToolPartContext } from './view';

@@ -9,17 +9,19 @@ import {
 } from '@phosphor-icons/react';
 import {
   type ChatStatus,
-  type DataUIPart,
   type DynamicToolUIPart,
-  type ToolUIPart,
-  type UIDataTypes,
   type UIMessage,
-  type UITools,
   isReasoningUIPart,
   isTextUIPart,
 } from 'ai';
 import { useTranslations } from 'next-intl';
-import { type ComponentType, type ReactNode, useState } from 'react';
+import {
+  type ComponentType,
+  type ReactNode,
+  createContext,
+  useContext,
+  useState,
+} from 'react';
 
 import {
   Conversation,
@@ -56,39 +58,41 @@ import {
 } from '@/components/ai-elements/reasoning';
 import { Shimmer } from '@/components/ai-elements/shimmer';
 
-// Not exported from `ai` — defined locally from the same source types.
-type InferUIMessageData<T extends UIMessage> =
-  T extends UIMessage<unknown, infer DATA_TYPES, UITools>
-    ? DATA_TYPES
-    : UIDataTypes;
+// Internal context holding the current tool part being rendered by JourneyChatView.
+const ToolPartContext = createContext<unknown>(null);
 
-type InferUIMessageTools<T extends UIMessage> =
-  T extends UIMessage<unknown, UIDataTypes, infer TOOLS> ? TOOLS : UITools;
-
-/**
- * Props passed to a feature-supplied `MessagePartDelegate` component.
- *
- * @template TMessage The typed `UIMessage` variant for the current feature.
- */
-export type MessagePartDelegateProps<TMessage extends UIMessage = UIMessage> = {
-  /**
-   * The message part to render. Will be a tool call, dynamic tool call,
-   * or a data part — text and reasoning are handled by the view itself.
-   */
-  part:
-    | ToolUIPart<InferUIMessageTools<TMessage>>
-    | DynamicToolUIPart
-    | DataUIPart<InferUIMessageData<TMessage>>;
-};
+function assertPartContext<T>(value: unknown): asserts value is T {
+  if (value === null || value === undefined) {
+    throw new Error(
+      'useToolPartContext must be called inside a JourneyChatView tool component',
+    );
+  }
+}
 
 /**
- * Props for the {@link JourneyChatView} generic chat presentation component.
+ * Returns the part currently being rendered by JourneyChatView.
+ * Must be called inside a component registered in the `tools` prop.
  *
- * @template TMessage The typed `UIMessage` variant for the current feature.
+ * @template T The expected part type, defaults to {@link DynamicToolUIPart}.
+ *
+ * @example
+ * function MyToolCard() {
+ *   const part = useToolPartContext<DynamicToolUIPart>();
+ *   return <div>{part.toolCallId}</div>;
+ * }
  */
-export type JourneyChatViewProps<TMessage extends UIMessage = UIMessage> = {
+export function useToolPartContext<T extends object = DynamicToolUIPart>(): T {
+  const value = useContext(ToolPartContext);
+  assertPartContext<T>(value);
+  return value;
+}
+
+/**
+ * Props for the {@link JourneyChatView} chat presentation component.
+ */
+export type JourneyChatViewProps = {
   /** Messages to display in the conversation. */
-  messages: TMessage[];
+  messages: UIMessage[];
   /** Current chat streaming status. */
   status: ChatStatus;
   /** Placeholder text for the prompt input (ignored when {@link readOnly} is true). */
@@ -110,10 +114,10 @@ export type JourneyChatViewProps<TMessage extends UIMessage = UIMessage> = {
   /** Called when the user edits and resubmits a user message. */
   onEditUserMessage?: (messageId: string, text: string) => void;
   /**
-   * Optional component for rendering tool call and data parts.
-   * Text and reasoning parts are always handled by the view itself.
+   * Registry mapping tool part types to display components.
+   * Each component reads its part data via {@link useToolPartContext}.
    */
-  MessagePartDelegate?: ComponentType<MessagePartDelegateProps<TMessage>>;
+  tools?: Record<string, ComponentType>;
 };
 
 // Maps assistant message IDs to their previous text versions (before each regeneration).
@@ -174,13 +178,11 @@ const UserMessageEditor = ({
 );
 
 /**
- * Generic chat view that handles text, reasoning, and step-start parts
- * and delegates tool calls and data parts to a feature-supplied component.
- *
- * @template TMessage The typed `UIMessage` variant for the current feature.
+ * Chat view that handles text, reasoning, and step-start parts and dispatches
+ * tool and data parts to feature-supplied display components via a registry.
  *
  * @example
- * // Without a delegate
+ * // Without tools
  * <JourneyChatView
  *   messages={messages}
  *   status={status}
@@ -189,10 +191,10 @@ const UserMessageEditor = ({
  * />
  *
  * @example
- * // With a delegate
- * <JourneyChatView ... MessagePartDelegate={SyllabusPartDelegate} />
+ * // With a tool registry
+ * <JourneyChatView ... tools={{ 'tool-myTool': MyToolDisplay }} />
  */
-export function JourneyChatView<TMessage extends UIMessage = UIMessage>({
+export function JourneyChatView({
   messages,
   status,
   placeholder,
@@ -201,8 +203,8 @@ export function JourneyChatView<TMessage extends UIMessage = UIMessage>({
   onStop,
   onRegenerate,
   onEditUserMessage,
-  MessagePartDelegate,
-}: JourneyChatViewProps<TMessage>) {
+  tools,
+}: JourneyChatViewProps) {
   const t = useTranslations('JourneyChat');
   const streaming = status === 'streaming' || status === 'submitted';
 
@@ -261,10 +263,6 @@ export function JourneyChatView<TMessage extends UIMessage = UIMessage>({
       messages.length > 0 &&
       messages[messages.length - 1].role === 'assistant' &&
       messages[messages.length - 1].parts.length === 0);
-
-  // Capture before the map so the closure type is `ComponentType | undefined`
-  // and TypeScript can narrow it correctly inside the callback.
-  const Delegate = MessagePartDelegate;
 
   const messageItems = messages.map((msg) => {
     const isLast = msg === lastMessage;
@@ -352,12 +350,13 @@ export function JourneyChatView<TMessage extends UIMessage = UIMessage>({
           </MessageResponse>
         );
       }
-      if (Delegate !== undefined) {
-        const delegatePart = part as
-          | ToolUIPart<InferUIMessageTools<TMessage>>
-          | DynamicToolUIPart
-          | DataUIPart<InferUIMessageData<TMessage>>;
-        return <Delegate key={i} part={delegatePart} />;
+      const ToolComponent = tools?.[part.type];
+      if (ToolComponent !== undefined) {
+        return (
+          <ToolPartContext.Provider key={i} value={part}>
+            <ToolComponent />
+          </ToolPartContext.Provider>
+        );
       }
       return null;
     });
