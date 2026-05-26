@@ -1,13 +1,9 @@
 import { type ReactNode } from 'react';
 
-import { cn } from '@/lib/tailwind';
-
 /** Props for {@link Root}. */
 type RootProps = {
   /** Section content — typically a {@link Header} followed by a {@link Body}. */
   children: ReactNode;
-  /** When true, the section grows to fill available vertical space in its flex column and its body scrolls. */
-  expanding?: boolean;
 };
 
 /** Props for {@link Header}. */
@@ -29,19 +25,14 @@ type BodyProps = {
  * @example
  * import { SidebarSection } from '@/components/journey';
  *
- * <SidebarSection.Root expanding>
+ * <SidebarSection.Root>
  *   <SidebarSection.Header>Syllabus</SidebarSection.Header>
  *   <SidebarSection.Body>…</SidebarSection.Body>
  * </SidebarSection.Root>
  */
-export function Root({ children, expanding }: RootProps) {
+export function Root({ children }: RootProps) {
   return (
-    <section
-      className={cn(
-        'flex flex-col rounded-lg border',
-        expanding === true && 'min-h-0 flex-1',
-      )}
-    >
+    <section className="flex min-h-0 flex-1 flex-col rounded-lg border">
       {children}
     </section>
   );
@@ -54,7 +45,7 @@ export function Header({ children }: HeaderProps) {
   );
 }
 
-/** Section body — scrolls independently when the section is expanding. */
+/** Section body — scrolls independently. */
 export function Body({ children }: BodyProps) {
   return <div className="min-h-0 flex-1 overflow-y-auto p-4">{children}</div>;
 }

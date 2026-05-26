@@ -61,7 +61,6 @@ describe('buildDraftChapters', () => {
       sections: ['Sec A'],
       status: 'draft',
       href: undefined,
-      current: false,
     });
     expect(chapters[1]).toEqual({
       title: 'Chapter Two',
@@ -69,7 +68,6 @@ describe('buildDraftChapters', () => {
       sections: undefined,
       status: 'draft',
       href: undefined,
-      current: false,
     });
   });
 
@@ -88,10 +86,7 @@ describe('buildDraftChapters', () => {
 
 describe('buildActivatedChapters', () => {
   it('joins journey.chapters with journey.syllabus.chapters by index', () => {
-    const chapters = buildActivatedChapters(baseJourney, {
-      type: 'chapter',
-      idx: 1,
-    });
+    const chapters = buildActivatedChapters(baseJourney);
 
     expect(chapters[0].title).toBe('Intro');
     expect(chapters[0].summary).toBe('Intro summary');
@@ -103,29 +98,14 @@ describe('buildActivatedChapters', () => {
   });
 
   it('sets correct status for each chapter', () => {
-    const chapters = buildActivatedChapters(baseJourney, { type: 'syllabus' });
+    const chapters = buildActivatedChapters(baseJourney);
     expect(chapters[0].status).toBe('done');
     expect(chapters[1].status).toBe('active');
     expect(chapters[2].status).toBe('locked');
   });
 
-  it('sets current=true for the matching chapter index', () => {
-    const chapters = buildActivatedChapters(baseJourney, {
-      type: 'chapter',
-      idx: 1,
-    });
-    expect(chapters[0].current).toBe(false);
-    expect(chapters[1].current).toBe(true);
-    expect(chapters[2].current).toBe(false);
-  });
-
-  it('sets current=false for all chapters when current is syllabus', () => {
-    const chapters = buildActivatedChapters(baseJourney, { type: 'syllabus' });
-    expect(chapters.every((c) => !c.current)).toBe(true);
-  });
-
   it('sets href for done and active chapters, not for locked', () => {
-    const chapters = buildActivatedChapters(baseJourney, { type: 'syllabus' });
+    const chapters = buildActivatedChapters(baseJourney);
     expect(chapters[0].href).toBeDefined();
     expect(chapters[1].href).toBeDefined();
     expect(chapters[2].href).toBeUndefined();
@@ -136,7 +116,7 @@ describe('buildActivatedChapters', () => {
       ...baseJourney,
       syllabus: { chapters: [] },
     };
-    const chapters = buildActivatedChapters(journey, { type: 'syllabus' });
+    const chapters = buildActivatedChapters(journey);
     expect(chapters[0].summary).toBeUndefined();
     expect(chapters[0].sections).toBeUndefined();
   });

@@ -6,23 +6,23 @@ import { chapterPath } from '@/lib/url';
 
 /** Normalized chapter row used by {@link SyllabusPanel} for rendering. */
 export type DisplayChapter = {
-  title: string | undefined;
-  summary: string | undefined;
-  sections: string[] | undefined;
+  title?: string;
+  summary?: string;
+  sections?: string[];
   status: 'draft' | 'locked' | 'active' | 'done';
   /** `undefined` in draft mode and for locked chapters in activated mode. */
-  href: string | undefined;
-  current: boolean;
+  href?: string;
 };
-
-/** Identifies which item in the panel is currently active (activated mode only). */
-export type Current = { type: 'syllabus' } | { type: 'chapter'; idx: number };
 
 /** Converts a partial draft syllabus into {@link DisplayChapter} rows. */
 export function buildDraftChapters(
   draft: DeepPartial<Syllabus> | null,
 ): DisplayChapter[] {
-  return (draft?.chapters ?? [])
+  if (draft === null || draft.chapters === undefined) {
+    return [];
+  }
+
+  return draft.chapters
     .filter(
       (c): c is DeepPartial<Chapter> =>
         c !== undefined && c.title !== undefined,
@@ -33,15 +33,11 @@ export function buildDraftChapters(
       sections: c.sections?.filter((s): s is string => s !== undefined),
       status: 'draft' as const,
       href: undefined,
-      current: false,
     }));
 }
 
 /** Converts an activated journey's chapters into {@link DisplayChapter} rows. */
-export function buildActivatedChapters(
-  journey: Journey,
-  current: Current,
-): DisplayChapter[] {
+export function buildActivatedChapters(journey: Journey): DisplayChapter[] {
   return journey.chapters.map((chapter, i) => {
     const syllabusChapter =
       i < journey.syllabus.chapters.length
@@ -54,7 +50,6 @@ export function buildActivatedChapters(
       status: chapter.status,
       href:
         chapter.status !== 'locked' ? chapterPath(journey, chapter) : undefined,
-      current: current.type === 'chapter' && chapter.idx === current.idx,
     };
   });
 }

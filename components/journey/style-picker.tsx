@@ -1,5 +1,3 @@
-'use client';
-
 import { useTranslations } from 'next-intl';
 
 import type { Style } from '@/lib/server/styles/get';
