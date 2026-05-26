@@ -30,13 +30,9 @@ export default async function Page({
     permanentRedirect({ href: canonicalJourney, locale });
   }
 
-  if (journey.status === 'drafting') {
+  if (journey.status === 'drafting' || journey.chapters.length === 0) {
     const syllabusHref = `${canonicalJourney}/syllabus`;
     redirect({ href: syllabusHref, locale });
-  }
-
-  if (journey.chapters.length === 0) {
-    notFound();
   }
 
   const target =
