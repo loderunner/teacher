@@ -25,15 +25,6 @@ Add this rule to AGENTS.md, and simplify the tsconfig.json include to only point
 to those directories. Then fix the ESLint `allowDefaultProject` rule to include
 relevant files at the root of the repo.
 
-## Persist syllabus draft phase
-
-The syllabus draft phase should be persisted in the database. A journey is
-created immediately after the user sends their first message, and the syllabus
-draft and the messages are persisted in the database. When the user navigates
-back to the journey page, they can resume building their syllabus in chat. In
-fact, the syllabus draft chat should still be available to peruse, kind of like
-a "Chapter 0".
-
 ## Show a "diff" of the syllabus draft when the model updates it
 
 When the model updates the syllabus draft, it should show a "diff" of the
@@ -119,13 +110,6 @@ comparing constructed strings to the journey's root canonical path. We should
 make it easy, using shared primitives, for a page server component to quickly
 check its slug or slugs against the canonical slug, and redirect if necessary.
 
-## Generate title from messages
-
-Currently, we generate a title from the first message, which isn't great. When
-creating a draft journey, we should use the first message, pass it through an
-LLM call, and generate a title from that. Then, when we activate the journey, we
-generate a new, canonical title from the syllabus.
-
 ## Accordion visual glitches
 
 - The first syllabus item in the syllabus panel, the one that links to the
@@ -139,3 +123,14 @@ generate a new, canonical title from the syllabus.
 We need to call `stop` on the chat hook when the user navigates away from a
 page, otherwise the model will continue generating text in the background,
 wasting tokens and money.
+
+## Update pnpm and pin version
+
+Use `devEngines.packageManager` to pin the version of pnpm to >=11.0.0.
+
+## Pagination
+
+We should paginate get functions that return arrays of resources. Maybe just
+journeys? Chapters will always be pretty limited in a single journey. Messages,
+we may just want to make sure we always show all messages in one go? No
+"infinite scroll" or "load more" buttons.

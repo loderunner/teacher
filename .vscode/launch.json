@@ -16,7 +16,6 @@
       "env": {
         "NODE_OPTIONS": "--inspect"
       },
-      "console": "integratedTerminal",
       "runtimeVersion": "24.15"
     },
     {
