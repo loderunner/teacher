@@ -9,17 +9,19 @@ import {
 } from '@phosphor-icons/react';
 import {
   type ChatStatus,
-  type DataUIPart,
   type DynamicToolUIPart,
-  type ToolUIPart,
-  type UIDataTypes,
   type UIMessage,
-  type UITools,
   isReasoningUIPart,
   isTextUIPart,
 } from 'ai';
 import { useTranslations } from 'next-intl';
-import { type ComponentType, type ReactNode, useState } from 'react';
+import {
+  type ComponentType,
+  type ReactNode,
+  createContext,
+  useContext,
+  useState,
+} from 'react';
 
 import {
   Conversation,
@@ -56,45 +58,55 @@ import {
 } from '@/components/ai-elements/reasoning';
 import { Shimmer } from '@/components/ai-elements/shimmer';
 
-// Not exported from `ai` — defined locally from the same source types.
-type InferUIMessageData<T extends UIMessage> =
-  T extends UIMessage<unknown, infer DATA_TYPES, UITools>
-    ? DATA_TYPES
-    : UIDataTypes;
+// Internal context holding the current tool part being rendered by JourneyChatView.
+const ToolPartContext = createContext<unknown>(null);
 
-type InferUIMessageTools<T extends UIMessage> =
-  T extends UIMessage<unknown, UIDataTypes, infer TOOLS> ? TOOLS : UITools;
-
-/**
- * Props passed to a feature-supplied `MessagePartDelegate` component.
- *
- * @template TMessage The typed `UIMessage` variant for the current feature.
- */
-export type MessagePartDelegateProps<TMessage extends UIMessage = UIMessage> = {
-  /**
-   * The message part to render. Will be a tool call, dynamic tool call,
-   * or a data part — text and reasoning are handled by the view itself.
-   */
-  part:
-    | ToolUIPart<InferUIMessageTools<TMessage>>
-    | DynamicToolUIPart
-    | DataUIPart<InferUIMessageData<TMessage>>;
-};
+function assertPartContext<T>(value: unknown): asserts value is T {
+  if (value === null || value === undefined) {
+    throw new Error(
+      'useToolPartContext must be called inside a JourneyChatView tool component',
+    );
+  }
+}
 
 /**
- * Props for the {@link JourneyChatView} generic chat presentation component.
+ * Returns the part currently being rendered by JourneyChatView.
+ * Must be called inside a component registered in the `tools` prop.
  *
- * @template TMessage The typed `UIMessage` variant for the current feature.
+ * @template T The expected part type, defaults to {@link DynamicToolUIPart}.
+ *
+ * @example
+ * function MyToolCard() {
+ *   const part = useToolPartContext<DynamicToolUIPart>();
+ *   return <div>{part.toolCallId}</div>;
+ * }
  */
-export type JourneyChatViewProps<TMessage extends UIMessage = UIMessage> = {
+export function useToolPartContext<T extends object = DynamicToolUIPart>(): T {
+  const value = useContext(ToolPartContext);
+  assertPartContext<T>(value);
+  return value;
+}
+
+/**
+ * Props for the {@link JourneyChatView} chat presentation component.
+ */
+export type JourneyChatViewProps = {
   /** Messages to display in the conversation. */
-  messages: TMessage[];
+  messages: UIMessage[];
   /** Current chat streaming status. */
   status: ChatStatus;
-  /** Placeholder text for the prompt input. */
+  /** Placeholder text for the prompt input (ignored when {@link readOnly} is true). */
   placeholder: string;
-  /** Called when the user submits a message. */
-  onSubmit: (message: PromptInputMessage) => void;
+  /**
+   * When true, omits the prompt and hides edit/regenerate affordances — use for
+   * static transcript pages.
+   */
+  readOnly?: boolean;
+  /**
+   * Called when the user submits a message (not invoked when {@link readOnly}).
+   * Optional when `readOnly` is true.
+   */
+  onSubmit?: (message: PromptInputMessage) => void;
   /** Called when the user clicks the stop button during streaming. */
   onStop?: () => void;
   /** Called when the user requests regeneration of an assistant message. */
@@ -102,10 +114,10 @@ export type JourneyChatViewProps<TMessage extends UIMessage = UIMessage> = {
   /** Called when the user edits and resubmits a user message. */
   onEditUserMessage?: (messageId: string, text: string) => void;
   /**
-   * Optional component for rendering tool call and data parts.
-   * Text and reasoning parts are always handled by the view itself.
+   * Registry mapping tool part types to display components.
+   * Each component reads its part data via {@link useToolPartContext}.
    */
-  MessagePartDelegate?: ComponentType<MessagePartDelegateProps<TMessage>>;
+  tools?: Record<string, ComponentType>;
 };
 
 // Maps assistant message IDs to their previous text versions (before each regeneration).
@@ -166,13 +178,11 @@ const UserMessageEditor = ({
 );
 
 /**
- * Generic chat view that handles text, reasoning, and step-start parts
- * and delegates tool calls and data parts to a feature-supplied component.
- *
- * @template TMessage The typed `UIMessage` variant for the current feature.
+ * Chat view that handles text, reasoning, and step-start parts and dispatches
+ * tool and data parts to feature-supplied display components via a registry.
  *
  * @example
- * // Without a delegate
+ * // Without tools
  * <JourneyChatView
  *   messages={messages}
  *   status={status}
@@ -181,19 +191,20 @@ const UserMessageEditor = ({
  * />
  *
  * @example
- * // With a delegate
- * <JourneyChatView ... MessagePartDelegate={SyllabusPartDelegate} />
+ * // With a tool registry
+ * <JourneyChatView ... tools={{ 'tool-myTool': MyToolDisplay }} />
  */
-export function JourneyChatView<TMessage extends UIMessage = UIMessage>({
+export function JourneyChatView({
   messages,
   status,
   placeholder,
-  onSubmit,
+  readOnly = false,
+  onSubmit = () => {},
   onStop,
   onRegenerate,
   onEditUserMessage,
-  MessagePartDelegate,
-}: JourneyChatViewProps<TMessage>) {
+  tools,
+}: JourneyChatViewProps) {
   const t = useTranslations('JourneyChat');
   const streaming = status === 'streaming' || status === 'submitted';
 
@@ -253,10 +264,6 @@ export function JourneyChatView<TMessage extends UIMessage = UIMessage>({
       messages[messages.length - 1].role === 'assistant' &&
       messages[messages.length - 1].parts.length === 0);
 
-  // Capture before the map so the closure type is `ComponentType | undefined`
-  // and TypeScript can narrow it correctly inside the callback.
-  const Delegate = MessagePartDelegate;
-
   const messageItems = messages.map((msg) => {
     const isLast = msg === lastMessage;
     const isActivelyStreaming = streaming && isLast;
@@ -294,7 +301,7 @@ export function JourneyChatView<TMessage extends UIMessage = UIMessage>({
           ) : (
             <>
               <MessageContent>{text}</MessageContent>
-              {onEditUserMessage !== undefined && !streaming && (
+              {onEditUserMessage !== undefined && !streaming && !readOnly && (
                 <MessageActions className="justify-end transition-opacity focus-within:opacity-100 sm:opacity-0 sm:group-hover:opacity-100">
                   <MessageAction
                     label={t('editMessage')}
@@ -343,12 +350,13 @@ export function JourneyChatView<TMessage extends UIMessage = UIMessage>({
           </MessageResponse>
         );
       }
-      if (Delegate !== undefined) {
-        const delegatePart = part as
-          | ToolUIPart<InferUIMessageTools<TMessage>>
-          | DynamicToolUIPart
-          | DataUIPart<InferUIMessageData<TMessage>>;
-        return <Delegate key={i} part={delegatePart} />;
+      const ToolComponent = tools?.[part.type];
+      if (ToolComponent !== undefined) {
+        return (
+          <ToolPartContext.Provider key={i} value={part}>
+            <ToolComponent />
+          </ToolPartContext.Provider>
+        );
       }
       return null;
     });
@@ -377,13 +385,15 @@ export function JourneyChatView<TMessage extends UIMessage = UIMessage>({
           </MessageBranchContent>
           {!isActivelyStreaming && (
             <MessageToolbar>
-              <MessageBranchSelector>
-                <MessageBranchPrevious />
-                <MessageBranchPage />
-                <MessageBranchNext />
-              </MessageBranchSelector>
+              {!readOnly && (
+                <MessageBranchSelector>
+                  <MessageBranchPrevious />
+                  <MessageBranchPage />
+                  <MessageBranchNext />
+                </MessageBranchSelector>
+              )}
               <MessageActions>
-                {onRegenerate !== undefined && (
+                {onRegenerate !== undefined && !readOnly && (
                   <MessageAction
                     label={t('regenerate')}
                     tooltip={t('regenerate')}
@@ -415,14 +425,16 @@ export function JourneyChatView<TMessage extends UIMessage = UIMessage>({
           <ConversationScrollButton />
         </Conversation>
       )}
-      {showLoadingIndicator && <MessageIndicator type="loading" />}
-      <PromptInput onSubmit={onSubmit}>
-        <PromptInputTextarea disabled={streaming} placeholder={placeholder} />
-        <PromptInputFooter>
-          <div />
-          <PromptInputSubmit status={status} onStop={onStop} />
-        </PromptInputFooter>
-      </PromptInput>
+      {showLoadingIndicator && !readOnly && <MessageIndicator type="loading" />}
+      {!readOnly && (
+        <PromptInput onSubmit={onSubmit}>
+          <PromptInputTextarea disabled={streaming} placeholder={placeholder} />
+          <PromptInputFooter>
+            <div />
+            <PromptInputSubmit status={status} onStop={onStop} />
+          </PromptInputFooter>
+        </PromptInput>
+      )}
     </div>
   );
 }

@@ -32,6 +32,7 @@ describe('getJourney', () => {
         styleId: '456',
         memory: [],
         syllabus,
+        status: 'active',
       },
     ]);
     mockDb.select.from.where.orderBy.mockResolvedValueOnce([
@@ -51,6 +52,7 @@ describe('getJourney', () => {
       title: 'Test Journey',
       styleId: '456',
       memory: [],
+      status: 'active',
       syllabus,
       chapters: [
         {
@@ -87,6 +89,7 @@ describe('getJourney', () => {
         styleId: '456',
         memory: ['Learner prefers examples.'],
         syllabus,
+        status: 'active',
       },
     ]);
     mockDb.select.from.where.orderBy.mockResolvedValueOnce([
@@ -110,6 +113,7 @@ describe('getJourney', () => {
 
     expect(journey).not.toBeNull();
     expect(journey!.memory).toEqual(['Learner prefers examples.']);
+    expect(journey!.status).toBe('active');
     expect(journey!.chapters).toHaveLength(2);
     expect(journey!.chapters[0]).toEqual({
       id: 'ch-1',

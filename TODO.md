@@ -25,15 +25,6 @@ Add this rule to AGENTS.md, and simplify the tsconfig.json include to only point
 to those directories. Then fix the ESLint `allowDefaultProject` rule to include
 relevant files at the root of the repo.
 
-## Persist syllabus draft phase
-
-The syllabus draft phase should be persisted in the database. A journey is
-created immediately after the user sends their first message, and the syllabus
-draft and the messages are persisted in the database. When the user navigates
-back to the journey page, they can resume building their syllabus in chat. In
-fact, the syllabus draft chat should still be available to peruse, kind of like
-a "Chapter 0".
-
 ## Show a "diff" of the syllabus draft when the model updates it
 
 When the model updates the syllabus draft, it should show a "diff" of the
@@ -91,26 +82,6 @@ I'm even thinking this could be a pre-chat guardrail that EVERY chat endpoint
 goes through. So we don't have to check for abuse in every single chat prompt,
 conflating concerns, and make it general.
 
-## CI
-
-Run linter and tests and migrations before deploying.
-
-## Mobile UI
-
-This app was designed with desktop in mind, but now we're going to have to adapt
-it to mobile.
-
-### Welcome chat
-
-- padding around content (top bar is fine)
-- reduce hero font, make sure it fits in the screen width
-- teaching style either centered or right-aligned
-
-### Syllabus chat
-
-- i can only see the syllabus sidebar in the viewport. how can we hide it and
-  make it displayable without taking up too much screen real estate?
-
 ## user profile customization
 
 Account creation and onboarding collects personal info to tailor LLM responses
@@ -120,12 +91,6 @@ to the user.
 
 setup Neon Oauth, and row-level security so that an authenticated user cannot
 access a journey or any related row (chapter or message)
-
-## Use local model for development
-
-Can I set this up so that it uses a local model for development by default? I'm
-running Ollama locally. The developer should still be able to switch a config to
-point to a remote model (the same as production).
 
 ## Review usage of useMemo and useCallback
 
@@ -137,7 +102,35 @@ correctly for React 19 and React compiler.
 Lots of things have changed since the developer documentation was last updated.
 We should update it to reflect the current state of the project.
 
-## Support Math expressions in Streamdown
+## Refactor the "canonical path" logic
 
-Add support for MathJax or MathML or KaTeX or whatever it is that turns
-expressions like $x^2 + y^2 = z^2$ in markdown into beautiful math.
+The "canonical path" logic is a bit messy. It has global functions for
+generating the paths, but nothing to compare an existing slug. Right now we're
+comparing constructed strings to the journey's root canonical path. We should
+make it easy, using shared primitives, for a page server component to quickly
+check its slug or slugs against the canonical slug, and redirect if necessary.
+
+## Accordion visual glitches
+
+- The first syllabus item in the syllabus panel, the one that links to the
+  syllabus chat, is not styled the same as the other syllabus items.
+- The chapter items in the syllabus panel function both as accordion items and
+  plain nav items. The UX is unclear: clicking opens the accordion, but
+  navigates to the chapter page simultaneously.
+
+## Stop generating text when the user navigates away from a page
+
+We need to call `stop` on the chat hook when the user navigates away from a
+page, otherwise the model will continue generating text in the background,
+wasting tokens and money.
+
+## Update pnpm and pin version
+
+Use `devEngines.packageManager` to pin the version of pnpm to >=11.0.0.
+
+## Pagination
+
+We should paginate get functions that return arrays of resources. Maybe just
+journeys? Chapters will always be pretty limited in a single journey. Messages,
+we may just want to make sure we always show all messages in one go? No
+"infinite scroll" or "load more" buttons.

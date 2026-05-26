@@ -4,6 +4,8 @@ import { db } from '@/lib/server/db';
 import { chapters, journeys } from '@/lib/server/db/schema';
 import { type Syllabus, syllabusSchema } from '@/lib/server/syllabus/schema';
 
+export type JourneyChapterStatus = 'locked' | 'active' | 'done';
+
 /** A chapter as returned from the database for display. */
 export type JourneyChapter = {
   /** Unique chapter ID. */
@@ -13,7 +15,7 @@ export type JourneyChapter = {
   /** Chapter title. */
   title: string;
   /** Progression state of the chapter. */
-  status: 'locked' | 'active' | 'done';
+  status: JourneyChapterStatus;
   /** Optional one-paragraph summary written after completion. */
   summary: string | null;
 };
@@ -28,6 +30,8 @@ export type Journey = {
   styleId: string;
   /** Ordered list of learner memory entries for the journey. */
   memory: string[];
+  /** Drafting journeys have no chapters until activation. */
+  status: 'drafting' | 'active';
   /** Structured syllabus for the journey. */
   syllabus: Syllabus;
   /** Ordered list of chapters. */
@@ -54,6 +58,7 @@ export async function getJourney({
       styleId: journeys.styleId,
       memory: journeys.memory,
       syllabus: journeys.syllabus,
+      status: journeys.status,
     })
     .from(journeys)
     .where(and(eq(journeys.id, id), eq(journeys.userId, userId)));
@@ -82,6 +87,7 @@ export async function getJourney({
     title: row.title,
     styleId: row.styleId,
     memory: row.memory,
+    status: row.status,
     syllabus,
     chapters: chapterRows,
   };

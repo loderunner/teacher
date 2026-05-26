@@ -5,8 +5,6 @@ import {
 } from 'next/font/google';
 import { getLocale } from 'next-intl/server';
 
-import { ThemeProvider } from '@/components/theme/provider';
-
 import 'katex/dist/katex.min.css';
 import './globals.css';
 
@@ -40,9 +38,7 @@ export default async function RootLayout({
       lang={locale}
       suppressHydrationWarning
     >
-      <body className="flex h-full flex-col overflow-hidden">
-        <ThemeProvider>{children}</ThemeProvider>
-      </body>
+      <body className="flex h-full flex-col overflow-hidden">{children}</body>
     </html>
   );
 }

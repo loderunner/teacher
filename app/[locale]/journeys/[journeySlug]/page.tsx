@@ -25,8 +25,14 @@ export default async function Page({
     notFound();
   }
 
-  if (journey.chapters.length === 0) {
-    notFound();
+  const canonicalJourney = journeyPath(journey.id, journey.title);
+  if (`/journeys/${journeySlug}` !== canonicalJourney) {
+    permanentRedirect({ href: canonicalJourney, locale });
+  }
+
+  if (journey.status === 'drafting' || journey.chapters.length === 0) {
+    const syllabusHref = `${canonicalJourney}/syllabus`;
+    redirect({ href: syllabusHref, locale });
   }
 
   const target =
@@ -34,12 +40,6 @@ export default async function Page({
     [...journey.chapters].reverse().find((c) => c.status === 'done') ??
     journey.chapters[0];
 
-  const canonicalJourney = journeyPath(journey.id, journey.title);
-  const targetPath = chapterPath(journey, target);
-
-  if (`/journeys/${journeySlug}` !== canonicalJourney) {
-    permanentRedirect({ href: targetPath, locale });
-  }
-
-  redirect({ href: targetPath, locale });
+  const chapterHref = chapterPath(journey, target);
+  redirect({ href: chapterHref, locale });
 }

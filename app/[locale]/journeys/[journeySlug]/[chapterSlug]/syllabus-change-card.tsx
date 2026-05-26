@@ -1,56 +1,53 @@
 'use client';
 
+import type { DynamicToolUIPart } from 'ai';
 import { useTranslations } from 'next-intl';
 import { useState, useTransition } from 'react';
 import { Streamdown } from 'streamdown';
+import { z } from 'zod';
 
 import { applySyllabusChangeAction } from './apply-syllabus-change';
+import { useSyllabusChangeContext } from './syllabus-change-context';
 import { diffSyllabus } from './syllabus-diff';
 
 import { Button } from '@/components/ui/button';
 import { useRouter } from '@/i18n/navigation';
-import type { Journey } from '@/lib/server/journeys/get';
-import type { Syllabus } from '@/lib/server/syllabus/schema';
+import { useToolPartContext } from '@/lib/journey-chat';
+import { syllabusSchema } from '@/lib/server/syllabus/schema';
 import { streamdownPlugins } from '@/lib/streamdown';
 
-/** Props for {@link SyllabusChangeCard}. */
-export type SyllabusChangeCardProps = {
-  /** Stable ID of the tool call that produced this proposal. */
-  toolCallId: string;
-  /** The current journey, used for diff computation and the apply call. */
-  journey: Journey;
-  /** Current URL pathname, used to decide push vs. refresh after apply. */
-  currentPath: string;
-  /** The model's proposal: a reason and the full new syllabus. */
-  proposal: { reason: string; newSyllabus: Syllabus };
-  /** Whether the proposal has already been applied. */
-  applied: boolean;
-  /** Called when the apply action succeeds, before router navigation. */
-  onApplied: () => void;
-};
+const proposalInputSchema = z.object({
+  reason: z.string(),
+  newSyllabus: syllabusSchema,
+});
 
 /**
  * Inline confirmation card for a `proposeSyllabusChange` tool part.
  *
- * Renders the model's reason, a categorical diff, and Apply / Dismiss
- * buttons. Dismissed state is managed locally; it resets when the card
- * unmounts (i.e. on page navigation or refresh), which is acceptable
- * since the chat history is also ephemeral until Story 5.
- *
- * @param props - Journey, current path, and proposal.
+ * Reads part data from {@link useToolPartContext} and page state from
+ * {@link useSyllabusChangeContext}. Renders the model's reason, a categorical
+ * diff, and Apply / Dismiss buttons.
  */
-export function SyllabusChangeCard({
-  journey,
-  currentPath,
-  proposal,
-  applied,
-  onApplied,
-}: SyllabusChangeCardProps) {
+export function SyllabusChangeCard() {
   const t = useTranslations('ChapterChat');
   const router = useRouter();
   const [applying, startApplying] = useTransition();
   const [dismissed, setDismissed] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const part = useToolPartContext<DynamicToolUIPart>();
+  const { journey, currentPath, appliedToolCallIds, onApplied } =
+    useSyllabusChangeContext();
+
+  const toolCallId = part.toolCallId;
+  const parsed = proposalInputSchema.safeParse(part.input);
+
+  if (!parsed.success) {
+    return null;
+  }
+
+  const proposal = parsed.data;
+  const applied = appliedToolCallIds.has(toolCallId);
 
   if (dismissed) {
     return (
@@ -78,7 +75,7 @@ export function SyllabusChangeCard({
           journeyId: journey.id,
           newSyllabus: proposal.newSyllabus,
         });
-        onApplied();
+        onApplied(toolCallId);
         if (result.chapterPath !== currentPath) {
           router.push(result.chapterPath);
         } else {

@@ -6,6 +6,7 @@
   "worktree": {
     "baseRef": "head"
   },
+  "model": "sonnet",
   "hooks": {
     "WorktreeCreate": [
       {

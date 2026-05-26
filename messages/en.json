@@ -13,9 +13,6 @@
   "Welcome": {
     "title": "Start a Journey",
     "tagline": "What do you want to learn?",
-    "draftHeader": "Your syllabus",
-    "emptyDraft": "Chat to start sketching out your syllabus.",
-    "emptyChapterSections": "No sections yet.",
     "startJourney": "Start journey",
     "startJourneyDisabledHint": "Add at least one chapter and pick a style to begin.",
     "promptPlaceholder": "Describe what you want to learn…",
@@ -35,6 +32,10 @@
   "Chapter": {
     "position": "Chapter {n} of {total}",
     "syllabusHeader": "Syllabus",
+    "syllabusChat": "Syllabus chat",
+    "syllabusChapterLabel": "How we built this",
+    "emptyDraft": "Chat to start sketching out your syllabus.",
+    "emptyChapterSections": "No sections yet.",
     "locked": "This chapter is locked. Complete the active chapter to unlock it.",
     "goToActiveChapter": "Go to active chapter"
   },
@@ -80,5 +81,9 @@
     "description": "An unexpected error occurred. Please try again.",
     "tryAgain": "Try again",
     "backHome": "Back to home"
+  },
+  "SyllabusPage": {
+    "header": "Syllabus chat",
+    "description": "The conversation where we built your syllabus."
   }
 }
