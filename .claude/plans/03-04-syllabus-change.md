@@ -3,12 +3,13 @@
 ## Context
 
 Stories 1–3 of D3 (see `.claude/plans/03-01-chapter-page.md`,
-`.claude/plans/03-02-chapter-chat.md`, and `.claude/plans/03-03-chapter-completion.md`)
-have shipped a working chapter destination: the journey URL redirects to the
-active chapter, the chapter page renders the two-column shell with a streaming
-`ChapterChat` client island, and the chat already wires two tools —
-`updateMemory` (silent, server-side) and `markChapterComplete` (signal-only,
-surfaces a "Go to next chapter" button that calls `completeChapterAction`).
+`.claude/plans/03-02-chapter-chat.md`, and
+`.claude/plans/03-03-chapter-completion.md`) have shipped a working chapter
+destination: the journey URL redirects to the active chapter, the chapter page
+renders the two-column shell with a streaming `ChapterChat` client island, and
+the chat already wires two tools — `updateMemory` (silent, server-side) and
+`markChapterComplete` (signal-only, surfaces a "Go to next chapter" button that
+calls `completeChapterAction`).
 
 Story 4 adds the **third** chapter-chat tool and the missing user-confirmed
 mutation in the system: the AI can decide that the syllabus itself needs to
@@ -25,37 +26,37 @@ On **Apply**, a new `applySyllabusChangeAction`:
    title-match (with their `id`, `status`, and `summary` intact), deletes
    `locked` rows that were removed, inserts brand-new chapters as `locked`,
    re-indexes everything to match the new ordering.
-3. Bumps `journeys.currentChapterIndex` to the new idx of the (preserved)
-   active chapter.
-4. Returns the canonical path of the active chapter — which may differ from
-   the current URL if the current chapter was renamed, in which case the
-   client `router.push`es to the new path.
+3. Bumps `journeys.currentChapterIndex` to the new idx of the (preserved) active
+   chapter.
+4. Returns the canonical path of the active chapter — which may differ from the
+   current URL if the current chapter was renamed, in which case the client
+   `router.push`es to the new path.
 
-On **Dismiss**, the tool part is marked as dismissed in session-local UI
-state; nothing else happens. The chat continues. The dismissal state is lost
-on refresh (acceptable — Story 5 will persist tool parts alongside chat
-messages and the dismissal flag can be added there if needed).
+On **Dismiss**, the tool part is marked as dismissed in session-local UI state;
+nothing else happens. The chat continues. The dismissal state is lost on refresh
+(acceptable — Story 5 will persist tool parts alongside chat messages and the
+dismissal flag can be added there if needed).
 
 What stays deferred to Story 5:
 
-- Persisting chat history (and thus the proposal tool-call part) to a
-  `messages` table. Story 4's tool parts are still ephemeral, exactly like
-  `updateMemory` and `markChapterComplete` parts in Stories 2 and 3. This is
-  acceptable: a proposal is meant to be confirmed or dismissed immediately
-  within the same session. Refresh wipes the chat — a fresh proposal can
-  always be solicited again.
+- Persisting chat history (and thus the proposal tool-call part) to a `messages`
+  table. Story 4's tool parts are still ephemeral, exactly like `updateMemory`
+  and `markChapterComplete` parts in Stories 2 and 3. This is acceptable: a
+  proposal is meant to be confirmed or dismissed immediately within the same
+  session. Refresh wipes the chat — a fresh proposal can always be solicited
+  again.
 
 ---
 
 ## Decisions
 
 - **`proposeSyllabusChange` is a signal-only tool.** Same pattern as
-  `markChapterComplete` from Story 3: the model proposes, the user confirms,
-  the server does the work. The tool's `execute` is a no-op returning
-  `{ ok: true }`. Rationale: keeps user agency — syllabus changes are
-  disruptive enough that they should never be silent, and they must never
-  race with concurrent chat turns. The Zod input schema carries the **full**
-  new syllabus and a short `reason` string:
+  `markChapterComplete` from Story 3: the model proposes, the user confirms, the
+  server does the work. The tool's `execute` is a no-op returning
+  `{ ok: true }`. Rationale: keeps user agency — syllabus changes are disruptive
+  enough that they should never be silent, and they must never race with
+  concurrent chat turns. The Zod input schema carries the **full** new syllabus
+  and a short `reason` string:
 
   ```ts
   z.object({
@@ -64,88 +65,82 @@ What stays deferred to Story 5:
   });
   ```
 
-  This requires extending `chapterSchema` in `lib/server/syllabus/schema.ts`
-  to carry an **optional** `id: z.string().optional()` field. Existing
-  call sites (`updateSyllabusDraft` in the welcome chat, where chapters
-  don't yet have IDs) are unaffected because the field is optional; the
-  `proposeSyllabusChange` tool description tells the model when to set
-  it (rename/reorder/preserve) and when to omit it (new chapter).
+  This requires extending `chapterSchema` in `lib/server/syllabus/schema.ts` to
+  carry an **optional** `id: z.string().optional()` field. Existing call sites
+  (`updateSyllabusDraft` in the welcome chat, where chapters don't yet have IDs)
+  are unaffected because the field is optional; the `proposeSyllabusChange` tool
+  description tells the model when to set it (rename/reorder/preserve) and when
+  to omit it (new chapter).
 
-- **Tool description is inline English, not localised.** Four core rules:
-  (1) fire only when there is a concrete pedagogical reason from the
-  conversation; (2) pass the **full** new syllabus, never a delta; (3)
-  for every chapter that maps to an existing one, include its **`id`**
-  from the syllabus block in the system prompt (this is how
-  rename/reorder are detected); for brand-new chapters, omit `id`; (4)
-  preserve `done` and `active` chapters by ID — removing them is rejected
-  server-side. The description also reminds the model that the user must
-  confirm and that proposing a change disrupts flow — to be used sparingly.
+- **Tool description is inline English, not localised.** Four core rules: (1)
+  fire only when there is a concrete pedagogical reason from the conversation;
+  (2) pass the **full** new syllabus, never a delta; (3) for every chapter that
+  maps to an existing one, include its **`id`** from the syllabus block in the
+  system prompt (this is how rename/reorder are detected); for brand-new
+  chapters, omit `id`; (4) preserve `done` and `active` chapters by ID —
+  removing them is rejected server-side. The description also reminds the model
+  that the user must confirm and that proposing a change disrupts flow — to be
+  used sparingly.
 
-- **System prompt extension.** Two changes to `composeChapterSystemPrompt`
-  in `lib/chapter-chat/prompts.ts`:
-  1. **Expose chapter IDs in the syllabus block.** Switch the outline
-     source from `journey.syllabus.chapters` (JSONB, no IDs) to
-     `journey.chapters` (table rows, always have IDs) and prepend each
-     line with the ID in brackets:
-     `${idx + 1}. [${id}] ${title}`. The model is instructed to copy
+- **System prompt extension.** Two changes to `composeChapterSystemPrompt` in
+  `lib/chapter-chat/prompts.ts`:
+  1. **Expose chapter IDs in the syllabus block.** Switch the outline source
+     from `journey.syllabus.chapters` (JSONB, no IDs) to `journey.chapters`
+     (table rows, always have IDs) and prepend each line with the ID in
+     brackets: `${idx + 1}. [${id}] ${title}`. The model is instructed to copy
      IDs back when proposing a change that preserves a chapter.
-  2. **Append a paragraph** to both `chapterPhase.en` and
-     `chapterPhase.fr` describing when and how to call
-     `proposeSyllabusChange`, alongside the existing `updateMemory` and
-     `markChapterComplete` paragraphs.
+  2. **Append a paragraph** to both `chapterPhase.en` and `chapterPhase.fr`
+     describing when and how to call `proposeSyllabusChange`, alongside the
+     existing `updateMemory` and `markChapterComplete` paragraphs.
 
   No structural change to the composer signature.
 
-- **ID-based reconciliation.** Match existing chapter rows to proposed
-  chapters by `chapters.id` (the existing 10-char `nanoid` from D2 — now
-  also surfaced in the URL per Story 1). The model sees IDs in the
-  system prompt and is instructed to round-trip them on every preserved
-  chapter; new chapters omit the `id` field. Title matching was
-  considered and rejected because renames are an explicit use case for
-  this story (the model proposes a new title for an existing chapter)
-  and any title-based scheme can't distinguish a rename from a delete +
-  insert.
+- **ID-based reconciliation.** Match existing chapter rows to proposed chapters
+  by `chapters.id` (the existing 10-char `nanoid` from D2 — now also surfaced in
+  the URL per Story 1). The model sees IDs in the system prompt and is
+  instructed to round-trip them on every preserved chapter; new chapters omit
+  the `id` field. Title matching was considered and rejected because renames are
+  an explicit use case for this story (the model proposes a new title for an
+  existing chapter) and any title-based scheme can't distinguish a rename from a
+  delete + insert.
 
-- **Preserve `done` and `active` chapter rows.** Matched rows keep their
-  `id`, `status`, and `summary`. Only `idx` is updated to match the new
-  ordering. This is the load-bearing invariant: learner progress (summaries,
-  done-state) survives a syllabus change.
+- **Preserve `done` and `active` chapter rows.** Matched rows keep their `id`,
+  `status`, and `summary`. Only `idx` is updated to match the new ordering. This
+  is the load-bearing invariant: learner progress (summaries, done-state)
+  survives a syllabus change.
 
 - **Removed `done`/`active` chapters → reject the proposal server-side.** The
   model is instructed not to remove these, but defense-in-depth requires the
-  server to refuse the apply if the proposal would drop a chapter the user
-  has already engaged with. The action throws and the client surfaces an
-  inline error next to the Apply button.
+  server to refuse the apply if the proposal would drop a chapter the user has
+  already engaged with. The action throws and the client surfaces an inline
+  error next to the Apply button.
 
 - **Removed `locked` chapters → delete.** No persisted state lost.
 
-- **New chapters → insert as `locked`** with their title preserved. They
-  never enter as `active` from this code path — the only `active` chapter
-  remains the previously-`active` chapter (now possibly re-indexed). If the
-  unusual case arises where the journey somehow has no `active` chapter at
-  proposal time, the action throws "Invalid journey state". This should not
-  happen in the chapter-chat flow (you have to be in an active chapter to
-  be chatting).
+- **New chapters → insert as `locked`** with their title preserved. They never
+  enter as `active` from this code path — the only `active` chapter remains the
+  previously-`active` chapter (now possibly re-indexed). If the unusual case
+  arises where the journey somehow has no `active` chapter at proposal time, the
+  action throws "Invalid journey state". This should not happen in the
+  chapter-chat flow (you have to be in an active chapter to be chatting).
 
-- **Re-indexing strategy: two-phase update inside the transaction.** Because
-  of the `chapters_journey_idx_unique` unique index on `(journeyId, idx)`,
-  updating `idx` values in place risks collisions during the intermediate
-  state. The transaction:
-
-  1. **Validate** the proposal against the current chapter set (title
-     matching + reject if any `done`/`active` chapter was removed).
+- **Re-indexing strategy: two-phase update inside the transaction.** Because of
+  the `chapters_journey_idx_unique` unique index on `(journeyId, idx)`, updating
+  `idx` values in place risks collisions during the intermediate state. The
+  transaction:
+  1. **Validate** the proposal against the current chapter set (title matching +
+     reject if any `done`/`active` chapter was removed).
   2. **Delete** locked-removed chapter rows.
-  3. **Shift** all preserved chapter rows to a high temporary range
-     (negative integers, e.g. `idx = -1 - preservedArrayIndex`). Negative
-     offsets avoid any conceivable collision with the new positive idx
-     values; `chapters.idx` has no CHECK constraint so negatives are
-     allowed by the schema.
-  4. **Update** each preserved row to its final positive idx in the new
-     ordering (single UPDATE per row, scoped by `id`).
+  3. **Shift** all preserved chapter rows to a high temporary range (negative
+     integers, e.g. `idx = -1 - preservedArrayIndex`). Negative offsets avoid
+     any conceivable collision with the new positive idx values; `chapters.idx`
+     has no CHECK constraint so negatives are allowed by the schema.
+  4. **Update** each preserved row to its final positive idx in the new ordering
+     (single UPDATE per row, scoped by `id`).
   5. **Insert** any brand-new chapters at their final idx with
      `status = 'locked'`.
-  6. **Update** `journeys.syllabus` and `journeys.currentChapterIndex` (new
-     idx of the preserved active chapter).
+  6. **Update** `journeys.syllabus` and `journeys.currentChapterIndex` (new idx
+     of the preserved active chapter).
 
   All inside one `dbTx.transaction` so partial state can never be observed.
 
@@ -156,65 +151,66 @@ What stays deferred to Story 5:
   post-reconciliation idx and title of the active chapter so the action can
   compute the canonical path.
 
-- **Server action** `app/[locale]/journeys/[journeySlug]/[chapterSlug]/_components/apply-syllabus-change.ts`.
-  Mirrors Story 3's `complete-chapter.ts`: auth, Zod-validate inputs,
-  delegate to `applySyllabusChange`, compute the new `chapterPath` from the
-  refreshed journey state, return `{ chapterPath }` so the client can
-  `router.push` only if the path changed.
+- **Server action**
+  `app/[locale]/journeys/[journeySlug]/[chapterSlug]/_components/apply-syllabus-change.ts`.
+  Mirrors Story 3's `complete-chapter.ts`: auth, Zod-validate inputs, delegate
+  to `applySyllabusChange`, compute the new `chapterPath` from the refreshed
+  journey state, return `{ chapterPath }` so the client can `router.push` only
+  if the path changed.
 
 - **Inline confirm card, not a separate Dialog.** v1 surfaces the proposal
-  inline in the assistant message bubble — same pattern as Story 3's
-  "Go to next chapter" button, just richer (Markdown reason + categorical
-  diff + two buttons). Rationale: a modal Dialog would block the chat while
-  the user reads the proposal; an inline card lets the user re-read prior
-  context to inform their decision and matches the visual rhythm of the
-  conversation. The shadcn `<Dialog>` primitive stays available as a future
-  upgrade path if syllabi grow large enough to need a full-screen diff
-  view — for v1 the categorical diff is compact enough to fit inline.
+  inline in the assistant message bubble — same pattern as Story 3's "Go to next
+  chapter" button, just richer (Markdown reason + categorical diff + two
+  buttons). Rationale: a modal Dialog would block the chat while the user reads
+  the proposal; an inline card lets the user re-read prior context to inform
+  their decision and matches the visual rhythm of the conversation. The shadcn
+  `<Dialog>` primitive stays available as a future upgrade path if syllabi grow
+  large enough to need a full-screen diff view — for v1 the categorical diff is
+  compact enough to fit inline.
 
 - **Dismissal is session-local.** The chapter chat keeps a `useState`
-  `Set<string>` of dismissed part IDs (keyed by message id + part index,
-  since parts have no stable ids of their own). When a
-  `tool-proposeSyllabusChange` part renders, the `renderPart` callback
-  checks the set — if dismissed, it renders a faint "Dismissed" label
-  instead of the card. Refresh wipes the state along with the chat itself
-  (consistent with the rest of the chapter chat history in Story 4).
+  `Set<string>` of dismissed part IDs (keyed by message id + part index, since
+  parts have no stable ids of their own). When a `tool-proposeSyllabusChange`
+  part renders, the `renderPart` callback checks the set — if dismissed, it
+  renders a faint "Dismissed" label instead of the card. Refresh wipes the state
+  along with the chat itself (consistent with the rest of the chapter chat
+  history in Story 4).
 
-- **Apply path: `router.push` vs. `router.refresh`.** After a successful
-  apply, the action returns `{ chapterPath }`. The client compares it to the
-  current URL: if it changed (current chapter was renamed → slug changed),
+- **Apply path: `router.push` vs. `router.refresh`.** After a successful apply,
+  the action returns `{ chapterPath }`. The client compares it to the current
+  URL: if it changed (current chapter was renamed → slug changed),
   `router.push(chapterPath)`; otherwise `router.refresh()` so the server
   re-renders the sidebar `SyllabusPanel` with the new chapter list.
-  `router.refresh` is the correct primitive here: the chapter page is a
-  server component reading `getJourney`, so a refresh repopulates the panel
-  without remounting client state.
+  `router.refresh` is the correct primitive here: the chapter page is a server
+  component reading `getJourney`, so a refresh repopulates the panel without
+  remounting client state.
 
-- **Diff display.** A simple categorical diff is enough for v1:
-  *Added: …*, *Removed: …*, *Renamed: A → B*, *Reordered chapters*.
-  Computed by matching titles between the current `journey.syllabus.chapters`
-  and the proposed `newSyllabus.chapters` (the same normalised-title match
-  the server uses). Sections of new/renamed chapters are not enumerated —
-  just the chapter-level categorical diff. The helper lives next to the
-  inline card component so it is co-located with its only consumer.
+- **Diff display.** A simple categorical diff is enough for v1: _Added: …_,
+  _Removed: …_, _Renamed: A → B_, _Reordered chapters_. Computed by matching
+  titles between the current `journey.syllabus.chapters` and the proposed
+  `newSyllabus.chapters` (the same normalised-title match the server uses).
+  Sections of new/renamed chapters are not enumerated — just the chapter-level
+  categorical diff. The helper lives next to the inline card component so it is
+  co-located with its only consumer.
 
-- **`useTransition`-pending Apply button.** While the action is in flight,
-  both buttons are disabled and the Apply button shows a spinner. Errors
-  surface as an inline `<p className="text-sm text-destructive">` below the
-  buttons using `t('proposalApplyError')`.
+- **`useTransition`-pending Apply button.** While the action is in flight, both
+  buttons are disabled and the Apply button shows a spinner. Errors surface as
+  an inline `<p className="text-sm text-destructive">` below the buttons using
+  `t('proposalApplyError')`.
 
-- **Sidebar panel auto-update is free.** `<SyllabusPanel mode="navigate">`
-  is a server-rendered component fed by `getJourney`. Both `router.push`
-  and `router.refresh` rehydrate it from the server. No client state to
-  manage there.
+- **Sidebar panel auto-update is free.** `<SyllabusPanel mode="navigate">` is a
+  server-rendered component fed by `getJourney`. Both `router.push` and
+  `router.refresh` rehydrate it from the server. No client state to manage
+  there.
 
-- **No new tests.** `messages/parity.test.ts` is kept green by adding the
-  new keys to both `en.json` and `fr.json` in the same commit. Verification
-  is manual end-to-end.
+- **No new tests.** `messages/parity.test.ts` is kept green by adding the new
+  keys to both `en.json` and `fr.json` in the same commit. Verification is
+  manual end-to-end.
 
 - **AI Gateway model strings unchanged.** Story 4 doesn't introduce any new
-  model call — the tool is signal-only, the reconciliation runs server-side
-  with plain SQL — so the existing `'anthropic/claude-sonnet-4-6'` string in
-  the chapter-chat route is untouched.
+  model call — the tool is signal-only, the reconciliation runs server-side with
+  plain SQL — so the existing `'anthropic/claude-sonnet-4-6'` string in the
+  chapter-chat route is untouched.
 
 ---
 
@@ -222,11 +218,12 @@ What stays deferred to Story 5:
 
 ### 0. `lib/server/syllabus/schema.ts` — extend `chapterSchema` with optional `id`
 
-Add a single optional field so existing chapters can be round-tripped through the tool input:
+Add a single optional field so existing chapters can be round-tripped through
+the tool input:
 
 ```ts
 export const chapterSchema = z.object({
-  id: z.string().optional(),       // ← new; absent for new chapters
+  id: z.string().optional(), // ← new; absent for new chapters
   title: z.string().min(1),
   summary: z.string().optional(),
   sections: z.array(z.string()).optional(),
@@ -234,15 +231,21 @@ export const chapterSchema = z.object({
 ```
 
 Existing call sites:
-- `updateSyllabusDraft` (welcome chat) keeps emitting chapters without `id` — chapters don't exist yet during the draft phase. The optional field is silently dropped.
-- The persisted `journeys.syllabus` JSONB may or may not have IDs (depending on whether it was written before or after this story). Story 4's reconciliation reads IDs from `journey.chapters` (the table rows, which always have IDs), not from the JSONB, so no migration is required.
+
+- `updateSyllabusDraft` (welcome chat) keeps emitting chapters without `id` —
+  chapters don't exist yet during the draft phase. The optional field is
+  silently dropped.
+- The persisted `journeys.syllabus` JSONB may or may not have IDs (depending on
+  whether it was written before or after this story). Story 4's reconciliation
+  reads IDs from `journey.chapters` (the table rows, which always have IDs), not
+  from the JSONB, so no migration is required.
 
 ### 1. `lib/chapter-chat/tools.ts` — add `createProposeSyllabusChangeTool`
 
 Add a third factory alongside `createUpdateMemoryTool` (Story 2) and
-`createMarkChapterCompleteTool` (Story 3). The factory shape keeps the call
-site symmetric with the others and leaves room for later closure-captured
-params without a breaking signature change.
+`createMarkChapterCompleteTool` (Story 3). The factory shape keeps the call site
+symmetric with the others and leaves room for later closure-captured params
+without a breaking signature change.
 
 ```ts
 import { tool } from 'ai';
@@ -283,7 +286,9 @@ Rules:
 ### 2. `lib/chapter-chat/prompts.ts` — expose chapter IDs and extend `chapterPhase`
 
 (a) **Syllabus block — switch source to `journey.chapters` and include IDs.**
-The Story 2 sketch derived the outline from `journey.syllabus.chapters` (no IDs available there). Story 4 switches to `journey.chapters` (table rows, always carry `id`):
+The Story 2 sketch derived the outline from `journey.syllabus.chapters` (no IDs
+available there). Story 4 switches to `journey.chapters` (table rows, always
+carry `id`):
 
 ```ts
 const syllabusOutline = journey.chapters
@@ -304,8 +309,8 @@ The current-chapter block stays as-is; the model can already correlate by id.
 
 (b) **Append a paragraph** to both locale strings describing
 `proposeSyllabusChange`. Leave the existing `updateMemory`,
-`markChapterComplete`, and the latency hint paragraphs in place. English
-sketch (mirror French phrasing in the same structure):
+`markChapterComplete`, and the latency hint paragraphs in place. English sketch
+(mirror French phrasing in the same structure):
 
 ```ts
 const chapterPhase: Record<Locale, string> = {
@@ -339,8 +344,7 @@ No other route changes.
 
 ### 4. `lib/server/chapters/applySyllabusChange.ts` — new entity function
 
-The transactional reconciliation. Lives alongside `complete.ts` from
-Story 3.
+The transactional reconciliation. Lives alongside `complete.ts` from Story 3.
 
 ```ts
 import { and, eq, inArray } from 'drizzle-orm';
@@ -431,7 +435,12 @@ export async function applySyllabusChange({
     // 4. Resolve the reconciliation: for each proposed chapter, decide
     //    whether it maps to an existing row (preserve) or is new (insert).
     type Plan =
-      | { kind: 'preserve'; existingId: string; newIdx: number; newTitle: string }
+      | {
+          kind: 'preserve';
+          existingId: string;
+          newIdx: number;
+          newTitle: string;
+        }
       | { kind: 'insert'; newIdx: number; newTitle: string };
     const plan: Plan[] = newSyllabus.chapters.map((c, i) => {
       if (c.id !== undefined) {
@@ -529,11 +538,12 @@ export async function applySyllabusChange({
 
 Notes:
 
-- The `existingById.delete` after each match prevents a malformed proposal
-  from claiming the same existing row twice — if two proposed chapters
-  carry the same id, the second one throws "unknown chapter id" on lookup.
-- New chapter ids are generated by the `chapters.id.$defaultFn(() => nanoid(10))`
-  in the schema — no explicit id assignment is needed in the `insert` call.
+- The `existingById.delete` after each match prevents a malformed proposal from
+  claiming the same existing row twice — if two proposed chapters carry the same
+  id, the second one throws "unknown chapter id" on lookup.
+- New chapter ids are generated by the
+  `chapters.id.$defaultFn(() => nanoid(10))` in the schema — no explicit id
+  assignment is needed in the `insert` call.
 - The negative-idx shift in step 7 works because `chapters.idx` is a plain
   `integer` with no CHECK constraint.
 - `journeys.updatedAt` is bumped automatically by the `$onUpdateFn` in the
@@ -614,7 +624,9 @@ export async function applySyllabusChangeAction(
 
 ### 6. `app/[locale]/journeys/[journeySlug]/[chapterSlug]/_components/syllabus-diff.ts` — new pure helper
 
-The diff matches the server reconciliation exactly: by id, not by title. The current journey is passed in as the source of truth for existing chapters (the JSONB syllabus may not have ids; the journey's `chapters[]` always does).
+The diff matches the server reconciliation exactly: by id, not by title. The
+current journey is passed in as the source of truth for existing chapters (the
+JSONB syllabus may not have ids; the journey's `chapters[]` always does).
 
 ```ts
 import type { Journey } from '@/lib/server/journeys/get';
@@ -695,8 +707,8 @@ export function diffSyllabus(
 
 ### 7. `app/[locale]/journeys/[journeySlug]/[chapterSlug]/_components/syllabus-change-card.tsx` — new
 
-The inline confirmation card. Rendered by `chapter-chat.tsx`'s
-`renderPart` callback when it sees a `tool-proposeSyllabusChange` part.
+The inline confirmation card. Rendered by `chapter-chat.tsx`'s `renderPart`
+callback when it sees a `tool-proposeSyllabusChange` part.
 
 ```tsx
 'use client';
@@ -736,7 +748,7 @@ export function SyllabusChangeCard({
 
   if (dismissed) {
     return (
-      <div className="mt-2 text-sm italic text-muted-foreground">
+      <div className="text-muted-foreground mt-2 text-sm italic">
         {t('proposalDismissed')}
       </div>
     );
@@ -765,7 +777,7 @@ export function SyllabusChangeCard({
 
   return (
     <div className="mt-3 flex flex-col gap-3 rounded border p-3">
-      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+      <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
         {t('proposalReasonHeader')}
       </p>
       <Streamdown>{proposal.reason}</Streamdown>
@@ -778,7 +790,10 @@ export function SyllabusChangeCard({
         )}
         {diff.renamed.map((r) => (
           <li key={r.oldTitle}>
-            {t('proposalRenamed', { oldTitle: r.oldTitle, newTitle: r.newTitle })}
+            {t('proposalRenamed', {
+              oldTitle: r.oldTitle,
+              newTitle: r.newTitle,
+            })}
           </li>
         ))}
         {diff.reordered && <li>{t('proposalReordered')}</li>}
@@ -796,9 +811,7 @@ export function SyllabusChangeCard({
           {t('proposalDismiss')}
         </Button>
       </div>
-      {error !== null && (
-        <p className="text-sm text-destructive">{error}</p>
-      )}
+      {error !== null && <p className="text-destructive text-sm">{error}</p>}
     </div>
   );
 }
@@ -819,8 +832,8 @@ import type { Syllabus } from '@/lib/server/syllabus/schema';
 import { SyllabusChangeCard } from './syllabus-change-card';
 ```
 
-(b) Inside the component, add a `dismissed` set keyed by stable
-part-identity (message id + part index):
+(b) Inside the component, add a `dismissed` set keyed by stable part-identity
+(message id + part index):
 
 ```tsx
 const pathname = usePathname();
@@ -833,13 +846,17 @@ const dismissKey = (messageId: string, index: number): string =>
 ```
 
 (c) Extend the existing `renderPart` callback (Story 3) with a branch for
-`tool-proposeSyllabusChange`. The branch reads the typed input from the
-tool part once the AI SDK has parsed it.
+`tool-proposeSyllabusChange`. The branch reads the typed input from the tool
+part once the AI SDK has parsed it.
 
 ```tsx
 const renderPart = (
   part: UIMessage['parts'][number],
-  { streaming, message, index }: { message: UIMessage; streaming: boolean; index: number },
+  {
+    streaming,
+    message,
+    index,
+  }: { message: UIMessage; streaming: boolean; index: number },
 ) => {
   if (part.type === 'text') {
     return (
@@ -873,10 +890,10 @@ const renderPart = (
 };
 ```
 
-The `as`-cast is the one tolerated boundary cast — AI SDK's tool-part
-typing for dynamically-built tool maps doesn't fully reach across the
-`useChat`/`tool()` divide. If a project-wide type predicate appears later
-(an `extractToolInput<T>` for example), it should replace the cast.
+The `as`-cast is the one tolerated boundary cast — AI SDK's tool-part typing for
+dynamically-built tool maps doesn't fully reach across the `useChat`/`tool()`
+divide. If a project-wide type predicate appears later (an `extractToolInput<T>`
+for example), it should replace the cast.
 
 ### 9. `messages/en.json` + `messages/fr.json` — extend `ChapterChat`
 
@@ -917,8 +934,8 @@ French:
 }
 ```
 
-`messages/parity.test.ts` enforces structural equality — add the keys to
-both files in the same commit.
+`messages/parity.test.ts` enforces structural equality — add the keys to both
+files in the same commit.
 
 ---
 
@@ -927,33 +944,33 @@ both files in the same commit.
 - **Tool-factory pattern**: `lib/chapter-chat/tools.ts` (Stories 2 and 3).
   `createProposeSyllabusChangeTool` is a third entry following the same
   factory-with-inline-English-description shape.
-- **Inline-card-in-renderPart pattern**: `app/[locale]/journeys/[journeySlug]/[chapterSlug]/_components/chapter-chat.tsx`
-  (Story 3) — the existing `tool-markChapterComplete` branch in the
-  `renderPart` callback. Story 4 adds a parallel branch.
+- **Inline-card-in-renderPart pattern**:
+  `app/[locale]/journeys/[journeySlug]/[chapterSlug]/_components/chapter-chat.tsx`
+  (Story 3) — the existing `tool-markChapterComplete` branch in the `renderPart`
+  callback. Story 4 adds a parallel branch.
 - **Transactional entity write**: `lib/server/chapters/complete.ts` (Story 3)
-  for the ownership-gate-via-parent-table pattern inside
-  `dbTx.transaction`. `applySyllabusChange` extends it to multi-row updates
-  with a re-indexing wrinkle (`chapters_journey_idx_unique` on
-  `(journeyId, idx)`).
-- **Server action pattern**: `app/[locale]/journeys/[journeySlug]/[chapterSlug]/_components/complete-chapter.ts`
+  for the ownership-gate-via-parent-table pattern inside `dbTx.transaction`.
+  `applySyllabusChange` extends it to multi-row updates with a re-indexing
+  wrinkle (`chapters_journey_idx_unique` on `(journeyId, idx)`).
+- **Server action pattern**:
+  `app/[locale]/journeys/[journeySlug]/[chapterSlug]/_components/complete-chapter.ts`
   (Story 3) — auth, Zod-validate, delegate, compute navigation path.
   `applySyllabusChangeAction` is a near-clone (no `generateText`,
   reconciliation-only).
-- **Schema-shape reuse**: `lib/server/syllabus/schema.ts` —
-  `syllabusSchema` and `chapterSchema` are reused unchanged for the tool
-  input and the action payload. No new validation shapes.
+- **Schema-shape reuse**: `lib/server/syllabus/schema.ts` — `syllabusSchema` and
+  `chapterSchema` are reused unchanged for the tool input and the action
+  payload. No new validation shapes.
 - **DB schema reference**: `lib/server/db/schema.ts` —
-  `chapters_journey_idx_unique` (the `(journeyId, idx)` unique index) is
-  the constraint the two-phase reindex works around. `chapters.idx` has no
-  CHECK constraint, so negative-temporary-idx is safe.
-- **URL helpers**: `lib/url.ts` — `chapterPath(journey, chapter)` produces
-  the canonical post-apply URL. The action returns the full canonical path
-  so the client can compare against `usePathname()` and decide push vs.
-  refresh.
+  `chapters_journey_idx_unique` (the `(journeyId, idx)` unique index) is the
+  constraint the two-phase reindex works around. `chapters.idx` has no CHECK
+  constraint, so negative-temporary-idx is safe.
+- **URL helpers**: `lib/url.ts` — `chapterPath(journey, chapter)` produces the
+  canonical post-apply URL. The action returns the full canonical path so the
+  client can compare against `usePathname()` and decide push vs. refresh.
 - **Locale-aware navigation**: `i18n/navigation.ts` — `useRouter()` and
   `usePathname()` preserve locale across `router.push` / `router.refresh`.
-- **Dialog primitive availability**: `components/ui/dialog.tsx` — present
-  but intentionally unused in v1; documented here so a future upgrade to a
+- **Dialog primitive availability**: `components/ui/dialog.tsx` — present but
+  intentionally unused in v1; documented here so a future upgrade to a
   full-screen diff view has a clear path.
 
 ---
@@ -963,74 +980,66 @@ both files in the same commit.
 Manual walkthrough in `pnpm dev`, both locales:
 
 1. **Happy path: add a chapter (en).** Build a 2-chapter syllabus, start
-   journey, land on `/en/journeys/<slug>-<id>/1-<ch1>`. Chat through
-   chapter 1; steer the model toward a deep tangent ("Actually, can we
-   spend a whole chapter on X?"). The model fires
-   `proposeSyllabusChange` with a 3-chapter `newSyllabus`. An inline
-   confirmation card renders inside the assistant message: reason
-   paragraph in English Markdown, an "Added: X" line, two buttons.
-   Click **Apply**; on success the page refreshes. Verify in
+   journey, land on `/en/journeys/<slug>-<id>/1-<ch1>`. Chat through chapter 1;
+   steer the model toward a deep tangent ("Actually, can we spend a whole
+   chapter on X?"). The model fires `proposeSyllabusChange` with a 3-chapter
+   `newSyllabus`. An inline confirmation card renders inside the assistant
+   message: reason paragraph in English Markdown, an "Added: X" line, two
+   buttons. Click **Apply**; on success the page refreshes. Verify in
    `pnpm drizzle-kit studio`:
    - `journeys.syllabus` JSONB contains the new 3 chapters in order.
-   - `chapters` rows: original chapter 1 (active) preserves its `id` at
-     idx 0; the new chapter is at its proposed idx with `status='locked'`;
-     original chapter 2 preserves its `id`, at its new idx, still
-     `locked`.
+   - `chapters` rows: original chapter 1 (active) preserves its `id` at idx 0;
+     the new chapter is at its proposed idx with `status='locked'`; original
+     chapter 2 preserves its `id`, at its new idx, still `locked`.
    - `journeys.currentChapterIndex` matches the active chapter's new idx.
    - Sidebar `SyllabusPanel` shows the 3 chapters in the new order.
-2. **Rename current chapter → URL canonicalises.** Steer the model to
-   propose a rename of the current chapter (the model copies the
-   bracketed id from the system prompt and changes only the title).
-   Click Apply; the client detects `result.chapterPath !== currentPath`
-   (the title-slug segment changed) and `router.push`es to the new URL.
-   The URL bar, main column title, and sidebar reflect the new name. In
-   studio, the row's `title` is new but its `id` is unchanged — confirming
-   the rename was identified by id, not by title.
-3. **Reorder existing chapters.** Steer the model to propose swapping two
-   locked chapters (ids kept, array order changed). Apply. The two rows
-   have their `idx` values swapped while `id`s and titles are preserved.
-   No new rows; no deletions. URLs for both chapters remain valid — a
-   bookmark to the now-reordered chapter resolves via id and 308-redirects
-   to the canonical path with the updated `n` prefix.
-4. **Remove a locked chapter.** Steer the model to propose dropping a
-   locked chapter. Apply. The corresponding row is deleted; remaining
-   rows have their `idx` values compacted.
-5. **Defense-in-depth: reject removing a done chapter.** Mark a chapter
-   as `done` in studio (or complete it through the Story 3 flow). Then
-   hand-craft a proposal via devtools that drops the done chapter's id.
-   Apply. The action throws; the inline error appears below the buttons;
-   no DB writes happen.
-5b. **Defense-in-depth: reject unknown chapter id.** Hand-craft a
-    proposal via devtools that carries an `id` not present in the
-    journey. Apply. The action throws "Proposal references unknown
-    chapter id: …"; no DB writes happen.
-6. **Dismiss path.** Click **Dismiss** on any proposal. The card
-   collapses to "Dismissed". The chat continues normally; no DB rows
-   change. Subsequent proposals are not blocked.
-7. **Dismissal is session-local.** Dismiss a proposal, then refresh.
-   Chat history is gone (expected — ephemeral); a fresh proposal renders
-   without the dismissed state.
-8. **Cross-user isolation.** As user B, call
-   `applySyllabusChangeAction` for user A's journey via devtools. The
-   action throws "Journey not found"; no writes happen.
-9. **Auth gate.** Sign out, then call the action programmatically.
-   Returns "Unauthorized"; no DB writes.
-10. **Locale (fr).** Repeat steps 1, 2, and 6 on `/fr`. The model's
-    `reason` field renders in French; button labels and category
-    prefixes come from `messages/fr.json:ChapterChat.proposal*`. The
-    tool description and system-prompt fragment stay English (project
-    policy).
-11. **Markdown reason renders correctly.** Steer the model to include a
-    list or emphasis in the reason. Confirm `<Streamdown>` renders the
-    Markdown.
+2. **Rename current chapter → URL canonicalises.** Steer the model to propose a
+   rename of the current chapter (the model copies the bracketed id from the
+   system prompt and changes only the title). Click Apply; the client detects
+   `result.chapterPath !== currentPath` (the title-slug segment changed) and
+   `router.push`es to the new URL. The URL bar, main column title, and sidebar
+   reflect the new name. In studio, the row's `title` is new but its `id` is
+   unchanged — confirming the rename was identified by id, not by title.
+3. **Reorder existing chapters.** Steer the model to propose swapping two locked
+   chapters (ids kept, array order changed). Apply. The two rows have their
+   `idx` values swapped while `id`s and titles are preserved. No new rows; no
+   deletions. URLs for both chapters remain valid — a bookmark to the
+   now-reordered chapter resolves via id and 308-redirects to the canonical path
+   with the updated `n` prefix.
+4. **Remove a locked chapter.** Steer the model to propose dropping a locked
+   chapter. Apply. The corresponding row is deleted; remaining rows have their
+   `idx` values compacted.
+5. **Defense-in-depth: reject removing a done chapter.** Mark a chapter as
+   `done` in studio (or complete it through the Story 3 flow). Then hand-craft a
+   proposal via devtools that drops the done chapter's id. Apply. The action
+   throws; the inline error appears below the buttons; no DB writes happen. 5b.
+   **Defense-in-depth: reject unknown chapter id.** Hand-craft a proposal via
+   devtools that carries an `id` not present in the journey. Apply. The action
+   throws "Proposal references unknown chapter id: …"; no DB writes happen.
+6. **Dismiss path.** Click **Dismiss** on any proposal. The card collapses to
+   "Dismissed". The chat continues normally; no DB rows change. Subsequent
+   proposals are not blocked.
+7. **Dismissal is session-local.** Dismiss a proposal, then refresh. Chat
+   history is gone (expected — ephemeral); a fresh proposal renders without the
+   dismissed state.
+8. **Cross-user isolation.** As user B, call `applySyllabusChangeAction` for
+   user A's journey via devtools. The action throws "Journey not found"; no
+   writes happen.
+9. **Auth gate.** Sign out, then call the action programmatically. Returns
+   "Unauthorized"; no DB writes.
+10. **Locale (fr).** Repeat steps 1, 2, and 6 on `/fr`. The model's `reason`
+    field renders in French; button labels and category prefixes come from
+    `messages/fr.json:ChapterChat.proposal*`. The tool description and
+    system-prompt fragment stay English (project policy).
+11. **Markdown reason renders correctly.** Steer the model to include a list or
+    emphasis in the reason. Confirm `<Streamdown>` renders the Markdown.
 12. **Idempotency / double-click.** Spam the Apply button while pending.
-    `useTransition` blocks additional submissions; only one transaction
-    runs.
+    `useTransition` blocks additional submissions; only one transaction runs.
 
 Automated:
 
 - `pnpm lint` — Prettier + ESLint clean.
-- `pnpm test` — `messages/parity.test.ts` still passes after the en/fr
-  key additions; `lib/url.test.ts` from Story 1 still passes.
+- `pnpm test` — `messages/parity.test.ts` still passes after the en/fr key
+  additions; `lib/url.test.ts` from Story 1 still passes.
 - `pnpm build` — Next.js production build succeeds with the new
   `lib/server/chapters/applySyllabusChange.ts` and the new server action.

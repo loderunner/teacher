@@ -2,44 +2,127 @@
 
 ## Context
 
-Stories 1 and 2 of D3 (see `.claude/plans/03-chapter-page.md` and `.claude/plans/03-02-chapter-chat.md`) put a working chapter page in place: the journey URL redirects to the active chapter, the chapter page renders a two-column shell with `StylePickerPersist` and `ChapterSyllabusPanel` in the sidebar, and the main column is a streaming `ChapterChat` client island that posts to `POST /api/journeys/[id]/chapters/[n]/chat`. The chapter chat already wires one tool — `updateMemory` — which silently mutates `journeys.memory` in the background.
+Stories 1 and 2 of D3 (see `.claude/plans/03-chapter-page.md` and
+`.claude/plans/03-02-chapter-chat.md`) put a working chapter page in place: the
+journey URL redirects to the active chapter, the chapter page renders a
+two-column shell with `StylePickerPersist` and `ChapterSyllabusPanel` in the
+sidebar, and the main column is a streaming `ChapterChat` client island that
+posts to `POST /api/journeys/[id]/chapters/[n]/chat`. The chapter chat already
+wires one tool — `updateMemory` — which silently mutates `journeys.memory` in
+the background.
 
-Story 3 of D3 adds the **second** chapter-chat tool, the **chapter-completion server action**, and the **next-chapter UI**:
+Story 3 of D3 adds the **second** chapter-chat tool, the **chapter-completion
+server action**, and the **next-chapter UI**:
 
-- The model can decide a chapter is finished and fire `markChapterComplete`. The tool's `execute` is a no-op — it exists to put a recognisable part in the message stream.
-- The client sees `tool-markChapterComplete` parts and renders a "Go to next chapter" button in the chat. Clicking it calls `completeChapterAction`, which:
-  1. Generates a chapter summary (Markdown paragraph) via `generateText` + `Output.object` over the chat messages.
+- The model can decide a chapter is finished and fire `markChapterComplete`. The
+  tool's `execute` is a no-op — it exists to put a recognisable part in the
+  message stream.
+- The client sees `tool-markChapterComplete` parts and renders a "Go to next
+  chapter" button in the chat. Clicking it calls `completeChapterAction`, which:
+  1. Generates a chapter summary (Markdown paragraph) via `generateText` +
+     `Output.object` over the chat messages.
   2. Persists the summary on `chapters.summary`.
   3. Sets the current chapter's `status` to `'done'`.
   4. Unlocks the next chapter (`status` → `'active'`) if any.
   5. Bumps `journeys.currentChapterIndex`.
-  6. Returns the canonical path of the next chapter (or `null` if this was the last chapter).
-- The client then `router.push`es to the next chapter (or `router.refresh()`es to re-render the same chapter as `done` when there is no next).
+  6. Returns the canonical path of the next chapter (or `null` if this was the
+     last chapter).
+- The client then `router.push`es to the next chapter (or `router.refresh()`es
+  to re-render the same chapter as `done` when there is no next).
 
 What stays deferred:
 
-- `proposeSyllabusChange` tool + confirm dialog + `applySyllabusChangeAction` — **Story 4**.
-- Persisting chat history to a `messages` table — **Story 5**. Story 3 still needs the messages to generate a summary; the client passes them in the action body. Story 5 will replace the client-supplied messages with a DB read, transparently to the rest of the flow.
-- A dedicated "Journey complete" view — out of scope. When the last chapter is completed, the syllabus panel already reflects the `done` state and the page simply renders as a done chapter.
+- `proposeSyllabusChange` tool + confirm dialog + `applySyllabusChangeAction` —
+  **Story 4**.
+- Persisting chat history to a `messages` table — **Story 5**. Story 3 still
+  needs the messages to generate a summary; the client passes them in the action
+  body. Story 5 will replace the client-supplied messages with a DB read,
+  transparently to the rest of the flow.
+- A dedicated "Journey complete" view — out of scope. When the last chapter is
+  completed, the syllabus panel already reflects the `done` state and the page
+  simply renders as a done chapter.
 
 ---
 
 ## Decisions
 
-- **`markChapterComplete` is a signal-only tool.** Zod input schema is `z.object({})` (no `reason` field — the model fires the signal, the user confirms by clicking, the server does the work). The `execute` returns `{ ok: true }`. Rationale: keeps user agency — the AI proposes completion, the user confirms. Avoids accidental destructive state changes mid-conversation and matches the pattern from Story 2 (`updateMemory` is silent and runs server-side; `markChapterComplete` is visible and runs only on user confirmation).
-- **Tool description is inline English, not localized.** Three rules emphasise: (1) fire **once** when the chapter material is fully covered and the learner has demonstrated grasp; (2) do **not** continue teaching in the same message after firing; (3) never claim completion in prose without also calling the tool — the tool call is the canonical signal the UI listens for.
-- **`composeChapterSystemPrompt` gets a new locale-monolingual rules paragraph.** Updates the en/fr `chapterPhase` strings in `lib/chapter-chat/prompts.ts` to describe both tools side by side, with the one-line latency hint already present from Story 2 left intact. No structural change to the composer signature.
-- **Summary generation uses `generateText` + `Output.object`**, mirroring `lib/syllabus-chat/bootstrap.ts`. Schema is `z.object({ summary: z.string().min(20).max(500) })`. Model is the plain string `'anthropic/claude-sonnet-4-6'` via AI Gateway. `effort: 'low'` for the call — this is a constrained structured-output task, not a frontier reasoning problem, and Anthropic recommends `low` for non-frontier tasks where latency matters.
-- **Summary content shape.** A single short Markdown paragraph in the second person ("You learned …, you practised …"). No bullet lists, no headings — those would crowd the syllabus panel later when summaries are surfaced. The composer wires the transcript like `bootstrap.ts` does (filter `text` parts only, join `role: text` per message). Tool-part transcripts are intentionally dropped — the summary is about *what was taught*, not what the model did internally.
-- **Summary uses the request locale via `getLocale()` from `next-intl/server`.** Same pattern as `createJourneyAction` and the existing server actions: the summary text must match the locale the user is currently browsing under so an `/fr/` learner does not get an English recap. Pass `parseLocale(await getLocale())` into `generateChapterSummary`.
-- **Client passes messages to the server action.** Story 5 will replace this with a DB read, but Story 3 ships value now. Security caveat documented inline: a hostile client can fabricate messages, so the worst case is a misleading summary. The action still calls `validateUIMessages({ messages })` server-side to defend against malformed payloads, and the summary text is never used in security-sensitive code paths.
-- **`completeChapter` entity function lives at `lib/server/chapters/complete.ts`.** This creates the `chapters/` subdirectory for the first time (per the layout in `00-journey-app.md`). It accepts `{ userId, journeyId, idx, summary }`, runs the full state transition in a single `dbTx.transaction`, and returns `{ nextIdx: number | null }`. Every UPDATE statement is scoped by `userId` via a join through `journeys.userId` so a request for a chapter owned by another user is a no-op (no leak, no error) — same shape as `setStyle.ts`, extended to a parent-table check.
-- **Transaction is idempotent on already-done chapters.** If the chapter is already `'done'` when the function runs, it does not re-emit a `'done'` write or bump anything; it just computes `nextIdx` from the current chapter set and returns. This matches user expectations when the button is clicked twice (double-click, network retry) and avoids racing summary writes.
-- **Navigation uses `useRouter` from `i18n/navigation.ts`.** The action returns `{ nextChapterPath: string | null }`; the client calls `router.push(nextChapterPath)` when non-null and `router.refresh()` otherwise (re-renders the now-done current chapter so the syllabus panel updates).
-- **The "Next chapter" button renders inside the AI message bubble**, alongside the assistant's final text in the same message — that's where `tool-markChapterComplete` parts naturally appear. The shared `ChatScaffold` from Story 2 already accepts a per-page `renderPart` callback; Story 3 just extends the chapter chat's callback with a `tool-markChapterComplete` branch alongside the existing `text` branch. No scaffold change, no new sub-component.
-- **Button is `useTransition`-pending.** While the action is in flight the button is disabled and shows a loading spinner. On error, surface a toast or inline message — keep it simple; the button can re-enable so the user can retry.
-- **No new tests** beyond keeping `messages/parity.test.ts` green after the i18n additions. Verification is manual end-to-end.
-- **No first-turn effort boost on the summary call.** This isn't a chat turn at all (it's a single `generateText` server-side call), so the syllabus-route's "first user message → `effort: 'max'`" pattern doesn't apply. The summary call uses `effort: 'low'` flat.
+- **`markChapterComplete` is a signal-only tool.** Zod input schema is
+  `z.object({})` (no `reason` field — the model fires the signal, the user
+  confirms by clicking, the server does the work). The `execute` returns
+  `{ ok: true }`. Rationale: keeps user agency — the AI proposes completion, the
+  user confirms. Avoids accidental destructive state changes mid-conversation
+  and matches the pattern from Story 2 (`updateMemory` is silent and runs
+  server-side; `markChapterComplete` is visible and runs only on user
+  confirmation).
+- **Tool description is inline English, not localized.** Three rules emphasise:
+  (1) fire **once** when the chapter material is fully covered and the learner
+  has demonstrated grasp; (2) do **not** continue teaching in the same message
+  after firing; (3) never claim completion in prose without also calling the
+  tool — the tool call is the canonical signal the UI listens for.
+- **`composeChapterSystemPrompt` gets a new locale-monolingual rules
+  paragraph.** Updates the en/fr `chapterPhase` strings in
+  `lib/chapter-chat/prompts.ts` to describe both tools side by side, with the
+  one-line latency hint already present from Story 2 left intact. No structural
+  change to the composer signature.
+- **Summary generation uses `generateText` + `Output.object`**, mirroring
+  `lib/syllabus-chat/bootstrap.ts`. Schema is
+  `z.object({ summary: z.string().min(20).max(500) })`. Model is the plain
+  string `'anthropic/claude-sonnet-4-6'` via AI Gateway. `effort: 'low'` for the
+  call — this is a constrained structured-output task, not a frontier reasoning
+  problem, and Anthropic recommends `low` for non-frontier tasks where latency
+  matters.
+- **Summary content shape.** A single short Markdown paragraph in the second
+  person ("You learned …, you practised …"). No bullet lists, no headings —
+  those would crowd the syllabus panel later when summaries are surfaced. The
+  composer wires the transcript like `bootstrap.ts` does (filter `text` parts
+  only, join `role: text` per message). Tool-part transcripts are intentionally
+  dropped — the summary is about _what was taught_, not what the model did
+  internally.
+- **Summary uses the request locale via `getLocale()` from `next-intl/server`.**
+  Same pattern as `createJourneyAction` and the existing server actions: the
+  summary text must match the locale the user is currently browsing under so an
+  `/fr/` learner does not get an English recap. Pass
+  `parseLocale(await getLocale())` into `generateChapterSummary`.
+- **Client passes messages to the server action.** Story 5 will replace this
+  with a DB read, but Story 3 ships value now. Security caveat documented
+  inline: a hostile client can fabricate messages, so the worst case is a
+  misleading summary. The action still calls `validateUIMessages({ messages })`
+  server-side to defend against malformed payloads, and the summary text is
+  never used in security-sensitive code paths.
+- **`completeChapter` entity function lives at
+  `lib/server/chapters/complete.ts`.** This creates the `chapters/` subdirectory
+  for the first time (per the layout in `00-journey-app.md`). It accepts
+  `{ userId, journeyId, idx, summary }`, runs the full state transition in a
+  single `dbTx.transaction`, and returns `{ nextIdx: number | null }`. Every
+  UPDATE statement is scoped by `userId` via a join through `journeys.userId` so
+  a request for a chapter owned by another user is a no-op (no leak, no error) —
+  same shape as `setStyle.ts`, extended to a parent-table check.
+- **Transaction is idempotent on already-done chapters.** If the chapter is
+  already `'done'` when the function runs, it does not re-emit a `'done'` write
+  or bump anything; it just computes `nextIdx` from the current chapter set and
+  returns. This matches user expectations when the button is clicked twice
+  (double-click, network retry) and avoids racing summary writes.
+- **Navigation uses `useRouter` from `i18n/navigation.ts`.** The action returns
+  `{ nextChapterPath: string | null }`; the client calls
+  `router.push(nextChapterPath)` when non-null and `router.refresh()` otherwise
+  (re-renders the now-done current chapter so the syllabus panel updates).
+- **The "Next chapter" button renders inside the AI message bubble**, alongside
+  the assistant's final text in the same message — that's where
+  `tool-markChapterComplete` parts naturally appear. The shared `ChatScaffold`
+  from Story 2 already accepts a per-page `renderPart` callback; Story 3 just
+  extends the chapter chat's callback with a `tool-markChapterComplete` branch
+  alongside the existing `text` branch. No scaffold change, no new
+  sub-component.
+- **Button is `useTransition`-pending.** While the action is in flight the
+  button is disabled and shows a loading spinner. On error, surface a toast or
+  inline message — keep it simple; the button can re-enable so the user can
+  retry.
+- **No new tests** beyond keeping `messages/parity.test.ts` green after the i18n
+  additions. Verification is manual end-to-end.
+- **No first-turn effort boost on the summary call.** This isn't a chat turn at
+  all (it's a single `generateText` server-side call), so the syllabus-route's
+  "first user message → `effort: 'max'`" pattern doesn't apply. The summary call
+  uses `effort: 'low'` flat.
 
 ---
 
@@ -47,7 +130,11 @@ What stays deferred:
 
 ### 1. `lib/chapter-chat/tools.ts` — add `createMarkChapterCompleteTool`
 
-Add a second tool factory alongside `createUpdateMemoryTool`. Like its sibling, this one is a factory in case Story 4+ wants to close over `journeyId`/`chapterIdx` for richer telemetry, but for now the tool takes no constructor params and no input — both are kept as `z.object({})` to leave room for evolution without a schema break on the client.
+Add a second tool factory alongside `createUpdateMemoryTool`. Like its sibling,
+this one is a factory in case Story 4+ wants to close over
+`journeyId`/`chapterIdx` for richer telemetry, but for now the tool takes no
+constructor params and no input — both are kept as `z.object({})` to leave room
+for evolution without a schema break on the client.
 
 ```ts
 import { tool } from 'ai';
@@ -77,7 +164,11 @@ Rules:
 
 ### 2. `lib/chapter-chat/prompts.ts` — extend the rules block
 
-Update both `chapterPhase.en` and `chapterPhase.fr` to mention `markChapterComplete` alongside `updateMemory`. Keep the existing latency hint line ("Extended thinking adds latency…") in place. Sketch (English; mirror French phrasing in the same structure, second person, no English-language tokens):
+Update both `chapterPhase.en` and `chapterPhase.fr` to mention
+`markChapterComplete` alongside `updateMemory`. Keep the existing latency hint
+line ("Extended thinking adds latency…") in place. Sketch (English; mirror
+French phrasing in the same structure, second person, no English-language
+tokens):
 
 ```ts
 const chapterPhase: Record<Locale, string> = {
@@ -100,7 +191,9 @@ No structural change to `composeChapterSystemPrompt` itself.
 
 ### 3. `lib/chapter-chat/prompts.ts` — add `composeChapterSummaryPrompt`
 
-Co-locate the summary-generation prompt composer with the chat prompt composer. It is locale-monolingual and returns the full prompt string consumed by `generateChapterSummary`.
+Co-locate the summary-generation prompt composer with the chat prompt composer.
+It is locale-monolingual and returns the full prompt string consumed by
+`generateChapterSummary`.
 
 ```ts
 /** Parameters for composing the chapter-summary generation prompt. */
@@ -157,7 +250,8 @@ ${transcript}`;
 }
 ```
 
-Filtering to text-only parts mirrors `bootstrap.ts`. Tool calls are excluded by design.
+Filtering to text-only parts mirrors `bootstrap.ts`. Tool calls are excluded by
+design.
 
 ### 4. `lib/chapter-chat/complete.ts` — new
 
@@ -229,11 +323,15 @@ export async function generateChapterSummary({
 }
 ```
 
-Justification for `effort: 'low'`: this is a constrained structured-output task (single paragraph, fixed schema), explicitly the use case Anthropic flags as not needing extra reasoning budget. Adaptive thinking stays on for any unusual case but defaults stay tight.
+Justification for `effort: 'low'`: this is a constrained structured-output task
+(single paragraph, fixed schema), explicitly the use case Anthropic flags as not
+needing extra reasoning budget. Adaptive thinking stays on for any unusual case
+but defaults stay tight.
 
 ### 5. `lib/server/chapters/complete.ts` — new entity function
 
-First module under `lib/server/chapters/`. Mirrors `setStyle.ts` for scoping but uses `dbTx` for the multi-row transaction.
+First module under `lib/server/chapters/`. Mirrors `setStyle.ts` for scoping but
+uses `dbTx` for the multi-row transaction.
 
 ```ts
 import { and, eq } from 'drizzle-orm';
@@ -310,17 +408,16 @@ export async function completeChapter({
     await tx
       .update(chapters)
       .set({ status: 'done', summary })
-      .where(and(eq(chapters.id, current.id), eq(chapters.journeyId, journeyId)));
+      .where(
+        and(eq(chapters.id, current.id), eq(chapters.journeyId, journeyId)),
+      );
 
     if (nextIdx !== null) {
       await tx
         .update(chapters)
         .set({ status: 'active' })
         .where(
-          and(
-            eq(chapters.journeyId, journeyId),
-            eq(chapters.idx, nextIdx),
-          ),
+          and(eq(chapters.journeyId, journeyId), eq(chapters.idx, nextIdx)),
         );
     }
 
@@ -336,13 +433,18 @@ export async function completeChapter({
 ```
 
 Notes:
-- Every UPDATE on `chapters` is bounded by `journeyId` (already verified to belong to `userId`). The first `select` is the ownership gate; subsequent writes can rely on the gate because they're inside the same transaction.
-- `currentChapterIndex` is clamped to the last chapter's idx when this was the last chapter — keeps the field meaningful for the "where am I" UI.
+
+- Every UPDATE on `chapters` is bounded by `journeyId` (already verified to
+  belong to `userId`). The first `select` is the ownership gate; subsequent
+  writes can rely on the gate because they're inside the same transaction.
+- `currentChapterIndex` is clamped to the last chapter's idx when this was the
+  last chapter — keeps the field meaningful for the "where am I" UI.
 - Drizzle manages `journeys.updatedAt` via the `$onUpdateFn` in the schema.
 
 ### 6. `app/[locale]/journeys/[journeySlug]/[chapterSlug]/_components/complete-chapter.ts` — new server action
 
-Co-located with the chapter page (same convention as Story 1's `set-journey-style.ts`).
+Co-located with the chapter page (same convention as Story 1's
+`set-journey-style.ts`).
 
 ```ts
 'use server';
@@ -506,12 +608,17 @@ const handleComplete = () => {
 };
 ```
 
-(c) Extend the existing `renderPart` callback from Story 2 with a branch for `tool-markChapterComplete`. The callback is the single per-page divergence from the welcome chat; the shared `ChatScaffold` consumes it unchanged.
+(c) Extend the existing `renderPart` callback from Story 2 with a branch for
+`tool-markChapterComplete`. The callback is the single per-page divergence from
+the welcome chat; the shared `ChatScaffold` consumes it unchanged.
 
 ```tsx
 const renderPart = (
   part: UIMessage['parts'][number],
-  { streaming, index }: { message: UIMessage; streaming: boolean; index: number },
+  {
+    streaming,
+    index,
+  }: { message: UIMessage; streaming: boolean; index: number },
 ) => {
   if (part.type === 'text') {
     return (
@@ -535,9 +642,14 @@ const renderPart = (
 };
 ```
 
-The button surfaces inline within the assistant message that fired the tool, which is exactly where the user expects to see it.
+The button surfaces inline within the assistant message that fired the tool,
+which is exactly where the user expects to see it.
 
-(d) Error surface (optional, lightweight). Wrap the `await` in a `try/catch` and store the error in local state to render a small inline note next to the button. A toast system is not yet in the project — for Story 3 a plain `<p className="text-sm text-destructive">` is fine. Surface a generic `t('completeError')` string; no need to disclose internals.
+(d) Error surface (optional, lightweight). Wrap the `await` in a `try/catch` and
+store the error in local state to render a small inline note next to the button.
+A toast system is not yet in the project — for Story 3 a plain
+`<p className="text-sm text-destructive">` is fine. Surface a generic
+`t('completeError')` string; no need to disclose internals.
 
 ### 9. `messages/en.json` + `messages/fr.json` — extend `ChapterChat`
 
@@ -563,19 +675,41 @@ French:
 }
 ```
 
-`messages/parity.test.ts` enforces structural equality — add to both files in the same commit.
+`messages/parity.test.ts` enforces structural equality — add to both files in
+the same commit.
 
 ---
 
 ## Critical files reference
 
-- **Tool-factory pattern**: `lib/chapter-chat/tools.ts` (Story 2). `markChapterComplete` follows the same exported-factory convention, just without constructor params.
-- **Structured-output generation**: `lib/syllabus-chat/bootstrap.ts` — `generateText` + `Output.object` shape, transcript-from-messages helper, locale-keyed instruction map. `generateChapterSummary` mirrors it; the only deltas are the schema (single `summary` field) and the addition of `providerOptions` with `effort: 'low'` + adaptive thinking.
-- **Transactional entity write**: `lib/server/journeys/setStyle.ts` for the `(id, userId)` scoping idiom; `lib/server/db/index.ts` for `dbTx`. The new `completeChapter` extends the scoping pattern across two tables by gating reads on the parent `journeys.userId` before issuing child writes inside the same `dbTx.transaction`.
-- **Server action pattern**: `app/[locale]/_components/create-journey.ts` — auth, Zod validate, `getLocale`, delegate to feature module + entity, return navigation path. `completeChapterAction` is a near-clone.
-- **Client message-part rendering**: `components/chat-scaffold.tsx` (Story 2) exposes a `renderPart` callback per page. Story 3 extends the chapter chat's callback with a `tool-markChapterComplete` branch.
-- **Locale-aware navigation**: `i18n/navigation.ts` — `useRouter().push(path)` and `useRouter().refresh()`. Server-side, `chapterPath` from `lib/url.ts` (added in Story 1) returns the locale-relative path; `useRouter` from `i18n/navigation` prepends the locale.
-- **Schema reference**: `lib/server/db/schema.ts` — `chapters.summary` is `text('summary')` (nullable today; the UPDATE sets it). `chapters.status` is the `chapter_status` enum. `journeys.currentChapterIndex` defaults to 0 and is a plain integer. The unique index on `(journeyId, idx)` guarantees the `idx + 1` lookup is unambiguous.
+- **Tool-factory pattern**: `lib/chapter-chat/tools.ts` (Story 2).
+  `markChapterComplete` follows the same exported-factory convention, just
+  without constructor params.
+- **Structured-output generation**: `lib/syllabus-chat/bootstrap.ts` —
+  `generateText` + `Output.object` shape, transcript-from-messages helper,
+  locale-keyed instruction map. `generateChapterSummary` mirrors it; the only
+  deltas are the schema (single `summary` field) and the addition of
+  `providerOptions` with `effort: 'low'` + adaptive thinking.
+- **Transactional entity write**: `lib/server/journeys/setStyle.ts` for the
+  `(id, userId)` scoping idiom; `lib/server/db/index.ts` for `dbTx`. The new
+  `completeChapter` extends the scoping pattern across two tables by gating
+  reads on the parent `journeys.userId` before issuing child writes inside the
+  same `dbTx.transaction`.
+- **Server action pattern**: `app/[locale]/_components/create-journey.ts` —
+  auth, Zod validate, `getLocale`, delegate to feature module + entity, return
+  navigation path. `completeChapterAction` is a near-clone.
+- **Client message-part rendering**: `components/chat-scaffold.tsx` (Story 2)
+  exposes a `renderPart` callback per page. Story 3 extends the chapter chat's
+  callback with a `tool-markChapterComplete` branch.
+- **Locale-aware navigation**: `i18n/navigation.ts` — `useRouter().push(path)`
+  and `useRouter().refresh()`. Server-side, `chapterPath` from `lib/url.ts`
+  (added in Story 1) returns the locale-relative path; `useRouter` from
+  `i18n/navigation` prepends the locale.
+- **Schema reference**: `lib/server/db/schema.ts` — `chapters.summary` is
+  `text('summary')` (nullable today; the UPDATE sets it). `chapters.status` is
+  the `chapter_status` enum. `journeys.currentChapterIndex` defaults to 0 and is
+  a plain integer. The unique index on `(journeyId, idx)` guarantees the
+  `idx + 1` lookup is unambiguous.
 
 ---
 
@@ -583,21 +717,55 @@ French:
 
 Manual walkthrough in `pnpm dev`, both locales:
 
-1. **Happy path (en, two-chapter journey).** Build a 2-chapter syllabus, start journey, land on `/en/journeys/<slug>-<id>/1-<ch1>`. Chat through chapter 1; once the model has covered the chapter, steer it ("I think I've got this — anything else?"). Observe the model firing `markChapterComplete`. A "Go to next chapter" button renders inline in that assistant message. Click it; the button becomes disabled with a spinner, the action runs, the page navigates to `/en/journeys/<slug>-<id>/2-<ch2>`. Check `drizzle-kit studio`:
-   - `chapters` row for ch1: `status = 'done'`, `summary` is a Markdown paragraph mentioning what was taught.
+1. **Happy path (en, two-chapter journey).** Build a 2-chapter syllabus, start
+   journey, land on `/en/journeys/<slug>-<id>/1-<ch1>`. Chat through chapter 1;
+   once the model has covered the chapter, steer it ("I think I've got this —
+   anything else?"). Observe the model firing `markChapterComplete`. A "Go to
+   next chapter" button renders inline in that assistant message. Click it; the
+   button becomes disabled with a spinner, the action runs, the page navigates
+   to `/en/journeys/<slug>-<id>/2-<ch2>`. Check `drizzle-kit studio`:
+   - `chapters` row for ch1: `status = 'done'`, `summary` is a Markdown
+     paragraph mentioning what was taught.
    - `chapters` row for ch2: `status = 'active'`.
    - `journeys.currentChapterIndex = 1`.
-2. **Syllabus panel reflects state.** On the chapter-2 page, the syllabus panel shows a ✓ next to chapter 1 (clickable link back), chapter 2 bold/highlighted as current.
-3. **Last chapter edge case.** From the chapter-2 page, repeat the flow. The button label is `t('completeJourney')` (en: "Mark this chapter complete"). Click it; `nextChapterPath` is `null`, the client calls `router.refresh()`. The page re-renders for the now-done chapter (no 404 — done chapters are still visitable). `journeys.currentChapterIndex` clamps to `1`. Syllabus panel shows ✓ on both chapters.
-4. **Idempotency.** Reload the just-completed chapter page. Try clicking the button again (if a `markChapterComplete` part is still rendered in the chat) — `completeChapterAction` short-circuits to the idempotent branch (`status !== 'active'`), no second summary is generated, the user is redirected to the next-chapter path (or refreshed). Confirm `chapters.summary` was not overwritten.
-5. **Auth gate.** Sign out, then call `completeChapterAction` programmatically via the browser devtools (e.g., navigate to a stale tab). Returns an unauthorized error; no DB writes happen.
-6. **Cross-user isolation.** As user A, complete a chapter and grab the `journeyId`. Sign in as user B, manually fire `completeChapterAction` against A's `journeyId` from devtools. `getJourney` returns `null`, the action throws "Journey not found", no writes happen.
-7. **Locale (fr).** Repeat steps 1–3 on `/fr`. Tool prose stays English (inline tool description), but the model's chat output, the button labels, and the generated chapter summary in `chapters.summary` are all in French — verify the summary text in drizzle-kit studio is in French (the action picks locale up from `getLocale()`, same mechanism as `createJourneyAction`).
-8. **Style fragment influences summary voice.** Switch the chapter style to "Tutorial" before completing; the summary tone should differ subtly from the "Teacher" preset for the same conversation.
-9. **No double-click hazard.** Click the button repeatedly while the action is pending — the disabled state and `useTransition` flag block additional submissions. Only one summary is generated.
+2. **Syllabus panel reflects state.** On the chapter-2 page, the syllabus panel
+   shows a ✓ next to chapter 1 (clickable link back), chapter 2 bold/highlighted
+   as current.
+3. **Last chapter edge case.** From the chapter-2 page, repeat the flow. The
+   button label is `t('completeJourney')` (en: "Mark this chapter complete").
+   Click it; `nextChapterPath` is `null`, the client calls `router.refresh()`.
+   The page re-renders for the now-done chapter (no 404 — done chapters are
+   still visitable). `journeys.currentChapterIndex` clamps to `1`. Syllabus
+   panel shows ✓ on both chapters.
+4. **Idempotency.** Reload the just-completed chapter page. Try clicking the
+   button again (if a `markChapterComplete` part is still rendered in the chat)
+   — `completeChapterAction` short-circuits to the idempotent branch
+   (`status !== 'active'`), no second summary is generated, the user is
+   redirected to the next-chapter path (or refreshed). Confirm
+   `chapters.summary` was not overwritten.
+5. **Auth gate.** Sign out, then call `completeChapterAction` programmatically
+   via the browser devtools (e.g., navigate to a stale tab). Returns an
+   unauthorized error; no DB writes happen.
+6. **Cross-user isolation.** As user A, complete a chapter and grab the
+   `journeyId`. Sign in as user B, manually fire `completeChapterAction` against
+   A's `journeyId` from devtools. `getJourney` returns `null`, the action throws
+   "Journey not found", no writes happen.
+7. **Locale (fr).** Repeat steps 1–3 on `/fr`. Tool prose stays English (inline
+   tool description), but the model's chat output, the button labels, and the
+   generated chapter summary in `chapters.summary` are all in French — verify
+   the summary text in drizzle-kit studio is in French (the action picks locale
+   up from `getLocale()`, same mechanism as `createJourneyAction`).
+8. **Style fragment influences summary voice.** Switch the chapter style to
+   "Tutorial" before completing; the summary tone should differ subtly from the
+   "Teacher" preset for the same conversation.
+9. **No double-click hazard.** Click the button repeatedly while the action is
+   pending — the disabled state and `useTransition` flag block additional
+   submissions. Only one summary is generated.
 
 Automated:
 
 - `pnpm lint` — Prettier + ESLint clean.
-- `pnpm test` — `messages/parity.test.ts` still passes after the en/fr key additions; Story 1's `lib/url.test.ts` still passes.
-- `pnpm build` — Next.js production build succeeds with the new `lib/server/chapters/` directory and the new server action.
+- `pnpm test` — `messages/parity.test.ts` still passes after the en/fr key
+  additions; Story 1's `lib/url.test.ts` still passes.
+- `pnpm build` — Next.js production build succeeds with the new
+  `lib/server/chapters/` directory and the new server action.
