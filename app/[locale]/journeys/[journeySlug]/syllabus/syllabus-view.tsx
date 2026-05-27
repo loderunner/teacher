@@ -2,11 +2,11 @@ import type { UIMessage } from 'ai';
 import { getTranslations } from 'next-intl/server';
 import type { ComponentType } from 'react';
 
+import { JourneyChatViewIsland } from './journey-chat-view-island';
 import { SyllabusDraftDisplay } from './syllabus-draft-display';
 
 import { ChatPageShell, Title } from '@/components/chat-page';
 import { StyleLabel, SyllabusPanel } from '@/components/journey';
-import { JourneyChatView } from '@/lib/journey-chat';
 import type { Journey } from '@/lib/server/journeys/get';
 
 const SYLLABUS_TOOLS: Record<string, ComponentType> = {
@@ -36,13 +36,7 @@ export async function SyllabusView({ journey, messages, locale }: Props) {
         <ChatPageShell.Header>
           <Title>{t('header')}</Title>
         </ChatPageShell.Header>
-        <JourneyChatView
-          messages={messages}
-          placeholder=""
-          readOnly
-          status="ready"
-          tools={SYLLABUS_TOOLS}
-        />
+        <JourneyChatViewIsland messages={messages} tools={SYLLABUS_TOOLS} />
       </ChatPageShell.Content>
       <ChatPageShell.Sidebar>
         <SyllabusPanel

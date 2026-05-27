@@ -1,4 +1,4 @@
-'use client';
+import 'client-only';
 
 import { BrainIcon, CaretDownIcon } from '@phosphor-icons/react';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';

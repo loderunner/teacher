@@ -1,4 +1,4 @@
-'use client';
+import 'client-only';
 
 import { ArrowDownIcon, DownloadSimpleIcon } from '@phosphor-icons/react';
 import type { UIMessage } from 'ai';
