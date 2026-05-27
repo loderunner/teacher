@@ -18,8 +18,8 @@ importers:
         specifier: 4.6.2
         version: 4.6.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@clerk/nextjs':
-        specifier: 7.3.0
-        version: 7.3.0(next@16.2.4(@babel/core@7.29.7)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        specifier: 7.4.1
+        version: 7.4.1(next@16.2.4(@babel/core@7.29.7)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@neondatabase/serverless':
         specifier: 1.1.0
         version: 1.1.0
@@ -390,8 +390,8 @@ packages:
     resolution: {integrity: sha512-wcA+BcXHJyoZWh7aRfSp56u3uSLHHDlBHLfJ86DoC8fCxwMkl4/njwjN8sahFm5fRN5gOkUd2qnxYwBHCLeDoQ==}
     engines: {node: '>=20.9.0'}
 
-  '@clerk/nextjs@7.3.0':
-    resolution: {integrity: sha512-Dip2oOVc720amG9bBZT1L9y7FoDJjRyz8MaGtbp2SUrtRuvaVq0WhHYzGTI1Nqy5tHMcnzEOSG7KsGf4FwIvzw==}
+  '@clerk/nextjs@7.4.1':
+    resolution: {integrity: sha512-hFdzwF9RwymIdYuIRxNknAu0IiUZmcFweVWUg+Lu/dOZSHeNS/2H8dVa7B4LpAcYg07nEdU/FIdfvWU12lo/IQ==}
     engines: {node: '>=20.9.0'}
     peerDependencies:
       next: ^15.2.8 || ^15.3.8 || ^15.4.10 || ^15.5.9 || ^15.6.0-0 || ^16.0.10 || ^16.1.0-0
@@ -6940,7 +6940,7 @@ snapshots:
       - react
       - react-dom
 
-  '@clerk/nextjs@7.3.0(next@16.2.4(@babel/core@7.29.7)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+  '@clerk/nextjs@7.4.1(next@16.2.4(@babel/core@7.29.7)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
     dependencies:
       '@clerk/backend': 3.4.13(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@clerk/react': 6.7.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
