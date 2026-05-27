@@ -35,7 +35,7 @@ export function deriveSyllabusDraftsFromMessages(messages: UIMessage[]): {
       }
 
       if (
-        !part.input ||
+        part.input === null ||
         typeof part.input !== 'object' ||
         !('draft' in part.input)
       ) {
