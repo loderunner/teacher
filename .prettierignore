@@ -1,4 +1,5 @@
-.claude/
+.claude/skills/
+.claude/worktrees/
 .agents/
 lib/server/db/migrations/
 pnpm-lock.yaml

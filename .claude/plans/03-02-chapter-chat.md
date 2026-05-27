@@ -12,11 +12,12 @@ chapter's nanoid. The page layer already resolved chapters by ID; the API now
 matches. Index-based routing would silently map to the wrong chapter if chapters
 are ever reordered (Story 4).
 
-**`lib/journey-chat/` replaces the planned `components/chat-scaffold.tsx`.**
-An initial `ChatScaffold` component was created and then rejected as the wrong
+**`lib/journey-chat/` replaces the planned `components/chat-scaffold.tsx`.** An
+initial `ChatScaffold` component was created and then rejected as the wrong
 level of abstraction — the `renderPart` factory pattern added complexity without
-meaningful factorisation. The final shared primitive lives in `lib/journey-chat/`
-as two exports:
+meaningful factorisation. The final shared primitive lives in
+`lib/journey-chat/` as two exports:
+
 - `useJourneyChat` — generic hook wrapping `useChat` with locale injection and
   per-submit `body` forwarding, eliminating stale-closure issues.
 - `JourneyChatView` — generic presentation component handling text, reasoning,
@@ -45,21 +46,22 @@ exports `createUpdateMemoryTool`, a factory that closes over `userId` and
 
 ## Context
 
-Story 1 of D3 (see `.claude/plans/03-chapter-page.md`) lands the chapter
-route, the redirect from the journey URL, and a two-column chapter page whose
-main column currently shows a `t('Chapter.chatComingSoon')` placeholder. The
-sidebar already hosts `StylePickerPersist` and a `ChapterSyllabusPanel`.
+Story 1 of D3 (see `.claude/plans/03-chapter-page.md`) lands the chapter route,
+the redirect from the journey URL, and a two-column chapter page whose main
+column currently shows a `t('Chapter.chatComingSoon')` placeholder. The sidebar
+already hosts `StylePickerPersist` and a `ChapterSyllabusPanel`.
 
-Story 2 fills that placeholder with the real thing: a streaming AI
-conversation, scoped to one chapter, with full awareness of the journey's
-syllabus, the learner memory, the chapter content, and the current teaching
-style. The model can silently refine `journeys.memory` mid-session via an
-`updateMemory` tool. No other tools are wired in this story.
+Story 2 fills that placeholder with the real thing: a streaming AI conversation,
+scoped to one chapter, with full awareness of the journey's syllabus, the
+learner memory, the chapter content, and the current teaching style. The model
+can silently refine `journeys.memory` mid-session via an `updateMemory` tool. No
+other tools are wired in this story.
 
 What stays deferred:
 
 - `markChapterComplete` tool + the "Go to next chapter" UI — **Story 3**.
-- `proposeSyllabusChange` tool + the confirm dialog + `applySyllabusChangeAction` — **Story 4**.
+- `proposeSyllabusChange` tool + the confirm dialog +
+  `applySyllabusChangeAction` — **Story 4**.
 - Persisting chat history (`messages` table, reload on refresh) — **Story 5**.
 
 Story 2's chat history is **ephemeral** in exactly the same way the welcome
@@ -71,20 +73,71 @@ conversation. The persisted state Story 2 produces is limited to whatever
 
 ## Decisions
 
-- **Route shape: `POST /api/journeys/[id]/chapters/[n]/chat`.** `[id]` is the journey nanoid, `[n]` is the **1-based** chapter number from the URL (matches `chapterPath` and the visible "Chapter N" numbering). The handler converts `n` to a 0-based `idx` for DB lookup.
-- **Auth via Clerk `auth()`; 401 when signed out; 404 when journey/chapter missing or chapter is `locked`; 400 on a malformed body.** Mirrors `app/api/syllabus/chat/route.ts` exactly.
-- **Body validated with Zod**: `{ messages: UIMessage[], locale: 'en' | 'fr' }`. Unlike the syllabus chat there is no `styleId` in the body — the chapter's style is whatever is currently stored on `journeys.styleId`, fetched server-side. Avoids drift between the picker UI and the server prompt and ties tool execution to persisted state.
-- **Locale-monolingual prompts.** Locale comes from the request body. Style fragments are looked up via `getStyle()` and the `[locale]` index, like the syllabus chat.
-- **Feature module under `lib/chapter-chat/`** with `prompts.ts` and `tools.ts`. Tool descriptions are inline English, not localized.
-- **`updateMemory` does a full replacement of the Markdown memory string** — no JSON Patch, no merge. The Zod schema is just `{ memory: string }`. Matches the project decision that memory is a Markdown blob.
-- **Tool execution gets `userId` + `journeyId` via closure.** The route handler constructs the `updateMemory` tool inside the request scope, capturing the authenticated `userId` and the resolved `journeyId`; the tool's `execute` calls a new pure entity function `updateJourneyMemory({ userId, journeyId, memory })`. Tool inputs themselves only carry the new memory text.
-- **Plain `'anthropic/claude-sonnet-4-6'` model string via AI Gateway.** No `@ai-sdk/anthropic` imports. Same `streamText` + ephemeral cache + adaptive thinking shape as `app/api/syllabus/chat/route.ts`.
-- **Effort: `'low'` for chapter chat (no first-turn boost).** Per Anthropic's [Sonnet 4.6 effort guidance](https://platform.claude.com/docs/en/build-with-claude/effort): *"Low effort … for chat and non-coding use cases where faster turnaround is prioritized."* The syllabus phase used `effort: 'max'` on the first turn because the model had to design a coherent syllabus from scratch — chapter chat has no equivalent burst-of-planning moment; every turn is conversational teaching. Adaptive thinking stays on, so the model still escalates internally when a learner asks a genuinely hard question; the soft cap only nudges defaults. We also append a one-line prompt hint per Anthropic's documented pattern: *"Extended thinking adds latency and should only be used when it will meaningfully improve answer quality. When in doubt, respond directly."* The lower effort also discourages over-eager `updateMemory` calls (effort affects tool-call frequency too).
-- **`updateMemory` tool parts render as nothing.** The client message mapper renders only `text` parts (same `part.type !== 'text' ? null : …` filter as `welcome-chat.tsx`).
-- **`ChapterChat` is a client island.** The chapter page (server component) passes `journey` + `chapter` props down. The client uses `useChat` from `@ai-sdk/react` with `DefaultChatTransport`, posts to `/api/journeys/${journey.id}/chapters/${chapter.idx + 1}/chat`, and sends `locale` in each request body.
-- **Chat region uses the shared `ChatScaffold`.** Story 1 introduced `components/chat-page-shell.tsx` and `components/syllabus-panel.tsx`. Story 2 extracts the third shared piece — `components/chat-scaffold.tsx` — owning the Conversation + Message-mapping + PromptInput stack. Both the welcome page and the chapter page render through it; the only per-page difference is the `renderPart` callback (welcome filters to text only; chapter does the same in Story 2 and adds the completion-button branch in Story 3). Retrofit `welcome-chat.tsx` to consume the scaffold in this same diff so the two layouts stay aligned by construction.
-- **`getJourney` must expose `memory`.** Today's select list omits it. Story 2 adds `memory: journeys.memory` to the select and adds a `memory: string` field to the `Journey` type so the chat route handler can read it without an extra round-trip. No migration needed — `memory` is already `notNull().default('')`.
-- **No new tests** beyond keeping `messages/parity.test.ts` green. Verified manually end-to-end (chat streams, memory writes land in DB).
+- **Route shape: `POST /api/journeys/[id]/chapters/[n]/chat`.** `[id]` is the
+  journey nanoid, `[n]` is the **1-based** chapter number from the URL (matches
+  `chapterPath` and the visible "Chapter N" numbering). The handler converts `n`
+  to a 0-based `idx` for DB lookup.
+- **Auth via Clerk `auth()`; 401 when signed out; 404 when journey/chapter
+  missing or chapter is `locked`; 400 on a malformed body.** Mirrors
+  `app/api/syllabus/chat/route.ts` exactly.
+- **Body validated with Zod**: `{ messages: UIMessage[], locale: 'en' | 'fr' }`.
+  Unlike the syllabus chat there is no `styleId` in the body — the chapter's
+  style is whatever is currently stored on `journeys.styleId`, fetched
+  server-side. Avoids drift between the picker UI and the server prompt and ties
+  tool execution to persisted state.
+- **Locale-monolingual prompts.** Locale comes from the request body. Style
+  fragments are looked up via `getStyle()` and the `[locale]` index, like the
+  syllabus chat.
+- **Feature module under `lib/chapter-chat/`** with `prompts.ts` and `tools.ts`.
+  Tool descriptions are inline English, not localized.
+- **`updateMemory` does a full replacement of the Markdown memory string** — no
+  JSON Patch, no merge. The Zod schema is just `{ memory: string }`. Matches the
+  project decision that memory is a Markdown blob.
+- **Tool execution gets `userId` + `journeyId` via closure.** The route handler
+  constructs the `updateMemory` tool inside the request scope, capturing the
+  authenticated `userId` and the resolved `journeyId`; the tool's `execute`
+  calls a new pure entity function
+  `updateJourneyMemory({ userId, journeyId, memory })`. Tool inputs themselves
+  only carry the new memory text.
+- **Plain `'anthropic/claude-sonnet-4-6'` model string via AI Gateway.** No
+  `@ai-sdk/anthropic` imports. Same `streamText` + ephemeral cache + adaptive
+  thinking shape as `app/api/syllabus/chat/route.ts`.
+- **Effort: `'low'` for chapter chat (no first-turn boost).** Per Anthropic's
+  [Sonnet 4.6 effort guidance](https://platform.claude.com/docs/en/build-with-claude/effort):
+  _"Low effort … for chat and non-coding use cases where faster turnaround is
+  prioritized."_ The syllabus phase used `effort: 'max'` on the first turn
+  because the model had to design a coherent syllabus from scratch — chapter
+  chat has no equivalent burst-of-planning moment; every turn is conversational
+  teaching. Adaptive thinking stays on, so the model still escalates internally
+  when a learner asks a genuinely hard question; the soft cap only nudges
+  defaults. We also append a one-line prompt hint per Anthropic's documented
+  pattern: _"Extended thinking adds latency and should only be used when it will
+  meaningfully improve answer quality. When in doubt, respond directly."_ The
+  lower effort also discourages over-eager `updateMemory` calls (effort affects
+  tool-call frequency too).
+- **`updateMemory` tool parts render as nothing.** The client message mapper
+  renders only `text` parts (same `part.type !== 'text' ? null : …` filter as
+  `welcome-chat.tsx`).
+- **`ChapterChat` is a client island.** The chapter page (server component)
+  passes `journey` + `chapter` props down. The client uses `useChat` from
+  `@ai-sdk/react` with `DefaultChatTransport`, posts to
+  `/api/journeys/${journey.id}/chapters/${chapter.idx + 1}/chat`, and sends
+  `locale` in each request body.
+- **Chat region uses the shared `ChatScaffold`.** Story 1 introduced
+  `components/chat-page-shell.tsx` and `components/syllabus-panel.tsx`. Story 2
+  extracts the third shared piece — `components/chat-scaffold.tsx` — owning the
+  Conversation + Message-mapping + PromptInput stack. Both the welcome page and
+  the chapter page render through it; the only per-page difference is the
+  `renderPart` callback (welcome filters to text only; chapter does the same in
+  Story 2 and adds the completion-button branch in Story 3). Retrofit
+  `welcome-chat.tsx` to consume the scaffold in this same diff so the two
+  layouts stay aligned by construction.
+- **`getJourney` must expose `memory`.** Today's select list omits it. Story 2
+  adds `memory: journeys.memory` to the select and adds a `memory: string` field
+  to the `Journey` type so the chat route handler can read it without an extra
+  round-trip. No migration needed — `memory` is already `notNull().default('')`.
+- **No new tests** beyond keeping `messages/parity.test.ts` green. Verified
+  manually end-to-end (chat streams, memory writes land in DB).
 
 ---
 
@@ -92,7 +145,8 @@ conversation. The persisted state Story 2 produces is limited to whatever
 
 ### 1. `lib/server/journeys/get.ts` — surface `memory`
 
-Add `memory: journeys.memory` to the journey row select, and add a `memory: string` field to the `Journey` type.
+Add `memory: journeys.memory` to the journey row select, and add a
+`memory: string` field to the `Journey` type.
 
 ```ts
 export type Journey = {
@@ -107,11 +161,14 @@ export type Journey = {
 
 JSDoc the new field: `/** Markdown learner memory for the journey. */`.
 
-No callers break — Story 1's chapter page and the welcome flow only read `chapters`, `syllabus`, `title`, `id`, `styleId`.
+No callers break — Story 1's chapter page and the welcome flow only read
+`chapters`, `syllabus`, `title`, `id`, `styleId`.
 
 ### 2. `lib/server/journeys/updateMemory.ts` — new entity function
 
-Mirror `setStyle.ts` exactly. Scoped UPDATE by `(id, userId)` so an authenticated request for a journey owned by a different user is a no-op (no leak, no error).
+Mirror `setStyle.ts` exactly. Scoped UPDATE by `(id, userId)` so an
+authenticated request for a journey owned by a different user is a no-op (no
+leak, no error).
 
 ```ts
 import { and, eq } from 'drizzle-orm';
@@ -149,7 +206,10 @@ export async function updateJourneyMemory({
 
 ### 3. `lib/chapter-chat/prompts.ts` — new
 
-Mirrors `lib/syllabus-chat/prompts.ts`. Composes the chapter-phase system prompt from: the style fragment for the locale, a chapter-phase rules block in the locale, the full syllabus (chapter titles only — keeps the prompt compact), the current chapter's title + summary + sections, and the learner memory verbatim.
+Mirrors `lib/syllabus-chat/prompts.ts`. Composes the chapter-phase system prompt
+from: the style fragment for the locale, a chapter-phase rules block in the
+locale, the full syllabus (chapter titles only — keeps the prompt compact), the
+current chapter's title + summary + sections, and the learner memory verbatim.
 
 ```ts
 import type { Locale } from '@/i18n/locale';
@@ -222,11 +282,15 @@ ${journey.memory.trim() === '' ? '_(empty)_' : journey.memory}`;
 }
 ```
 
-Rationale for "chapter titles only" in the syllabus block: full per-chapter detail for every chapter would bloat the prompt and dilute focus on the *current* chapter. Story 4 (syllabus-change) will reuse this composer; expand context there if needed.
+Rationale for "chapter titles only" in the syllabus block: full per-chapter
+detail for every chapter would bloat the prompt and dilute focus on the
+_current_ chapter. Story 4 (syllabus-change) will reuse this composer; expand
+context there if needed.
 
 ### 4. `lib/chapter-chat/tools.ts` — new
 
-Tool **factory** that closes over `userId` and `journeyId`. The factory pattern is the project's idiom for tools that need request-scoped DB access.
+Tool **factory** that closes over `userId` and `journeyId`. The factory pattern
+is the project's idiom for tools that need request-scoped DB access.
 
 ```ts
 import { tool } from 'ai';
@@ -273,35 +337,59 @@ Rules:
 
 ### 5. `app/api/journeys/[id]/chapters/[n]/chat/route.ts` — new
 
-Mirrors `app/api/syllabus/chat/route.ts`. Next.js 16 dynamic-param API: `params: Promise<{ id: string; n: string }>` is awaited before use.
+Mirrors `app/api/syllabus/chat/route.ts`. Next.js 16 dynamic-param API:
+`params: Promise<{ id: string; n: string }>` is awaited before use.
 
 Step-by-step:
 
 1. `const { userId } = await auth()`; 401 if null.
-2. `const { id, n } = await context.params`; parse `n` to integer ≥ 1, 400 on fail.
-3. `await req.json()` + Zod parse `{ messages: unknown[], locale: 'en' | 'fr' }`; 400 on fail.
+2. `const { id, n } = await context.params`; parse `n` to integer ≥ 1, 400 on
+   fail.
+3. `await req.json()` + Zod parse
+   `{ messages: unknown[], locale: 'en' | 'fr' }`; 400 on fail.
 4. `await ensureUser(userId)`.
 5. `const journey = await getJourney({ userId, id })` → 404 if null.
-6. `const chapter = journey.chapters.find(c => c.idx === n - 1)`; 404 if missing or `chapter.status === 'locked'`.
+6. `const chapter = journey.chapters.find(c => c.idx === n - 1)`; 404 if missing
+   or `chapter.status === 'locked'`.
 7. `const style = getStyle(journey.styleId)`; 400 if null (defensive).
 8. `const messages = await validateUIMessages({ messages: parsed.messages })`.
-9. Build `system = composeChapterSystemPrompt({ style, locale, journey, chapter })`.
-10. Build `tools = { updateMemory: createUpdateMemoryTool({ userId, journeyId: journey.id }) }`.
-11. Build `modelMessages` exactly like the syllabus route: prepend `{ role: 'system', content: system, providerOptions: ephemeralCache }`, then `convertToModelMessages(messages)` with `ephemeralCache` stamped on the last message.
+9. Build
+   `system = composeChapterSystemPrompt({ style, locale, journey, chapter })`.
+10. Build
+    `tools = { updateMemory: createUpdateMemoryTool({ userId, journeyId: journey.id }) }`.
+11. Build `modelMessages` exactly like the syllabus route: prepend
+    `{ role: 'system', content: system, providerOptions: ephemeralCache }`, then
+    `convertToModelMessages(messages)` with `ephemeralCache` stamped on the last
+    message.
 12. `streamText({ model: 'anthropic/claude-sonnet-4-6', messages: modelMessages, tools, providerOptions: { anthropic: { thinking: { type: 'adaptive' }, effort: 'low' } }, experimental_transform: smoothStream() })`.
 13. `return result.toUIMessageStreamResponse()`.
 
-Export `maxDuration = 60` and a `RequestBody` type for client typing parity with the syllabus route.
+Export `maxDuration = 60` and a `RequestBody` type for client typing parity with
+the syllabus route.
 
-No first-turn effort boost. Chapter chat is uniformly conversational and Anthropic explicitly recommends `low` effort for chat use cases on Sonnet 4.6. Adaptive thinking still escalates internally when a turn genuinely warrants it.
+No first-turn effort boost. Chapter chat is uniformly conversational and
+Anthropic explicitly recommends `low` effort for chat use cases on Sonnet 4.6.
+Adaptive thinking still escalates internally when a turn genuinely warrants it.
 
-**Prompt-level latency hint.** Append one line to the chapter-phase rules block in `prompts.ts` (both locales): *"Extended thinking adds latency and should only be used when it will meaningfully improve answer quality. When in doubt, respond directly."* This is Anthropic's documented pattern for tuning adaptive thinking down via the system prompt and complements the `effort: 'low'` setting.
+**Prompt-level latency hint.** Append one line to the chapter-phase rules block
+in `prompts.ts` (both locales): _"Extended thinking adds latency and should only
+be used when it will meaningfully improve answer quality. When in doubt, respond
+directly."_ This is Anthropic's documented pattern for tuning adaptive thinking
+down via the system prompt and complements the `effort: 'low'` setting.
 
-**Follow-up (out of scope, worth noting).** The syllabus route currently uses `effort: 'max'` on the first user message. Per the same Anthropic guidance, `max` is meant for "genuinely frontier problems" and can lead to overthinking on structured-output tasks. A future tweak — not in this story — is to drop the syllabus first-turn boost to `high` (or omit it; `high` is the default) and let adaptive thinking handle escalation.
+**Follow-up (out of scope, worth noting).** The syllabus route currently uses
+`effort: 'max'` on the first user message. Per the same Anthropic guidance,
+`max` is meant for "genuinely frontier problems" and can lead to overthinking on
+structured-output tasks. A future tweak — not in this story — is to drop the
+syllabus first-turn boost to `high` (or omit it; `high` is the default) and let
+adaptive thinking handle escalation.
 
 ### 6a. `components/chat-scaffold.tsx` — new shared chat region
 
-Extract the Conversation + Message + PromptInput stack from `welcome-chat.tsx` into a shared client component used by both pages. This is the third shared building block (after `chat-page-shell` and `syllabus-panel` from Story 1) that locks the two layouts together.
+Extract the Conversation + Message + PromptInput stack from `welcome-chat.tsx`
+into a shared client component used by both pages. This is the third shared
+building block (after `chat-page-shell` and `syllabus-panel` from Story 1) that
+locks the two layouts together.
 
 ```tsx
 'use client';
@@ -314,10 +402,7 @@ import {
   ConversationContent,
   ConversationScrollButton,
 } from '@/components/ai-elements/conversation';
-import {
-  Message,
-  MessageContent,
-} from '@/components/ai-elements/message';
+import { Message, MessageContent } from '@/components/ai-elements/message';
 import {
   PromptInput,
   PromptInputFooter,
@@ -358,7 +443,11 @@ export function ChatScaffold({
   const messageItems = messages.map((msg) => {
     const isLast = msg === lastMessage;
     const parts = msg.parts.map((part, i) =>
-      renderPart(part, { message: msg, streaming: streaming && isLast, index: i }),
+      renderPart(part, {
+        message: msg,
+        streaming: streaming && isLast,
+        index: i,
+      }),
     );
     return (
       <Message key={msg.id} from={msg.role}>
@@ -391,16 +480,21 @@ export function ChatScaffold({
 }
 ```
 
-Rendered inside `<ChatPageShell>`'s left column slot — no outer wrapper needed (the shell already provides `flex flex-1 flex-col gap-4 overflow-hidden`).
+Rendered inside `<ChatPageShell>`'s left column slot — no outer wrapper needed
+(the shell already provides `flex flex-1 flex-col gap-4 overflow-hidden`).
 
 ### 6b. `app/[locale]/_components/welcome-chat.tsx` — retrofit to use `ChatScaffold`
 
-Replace the inline Conversation/PromptInput stack with `<ChatScaffold>`. The `renderPart` callback is the existing text-only filter:
+Replace the inline Conversation/PromptInput stack with `<ChatScaffold>`. The
+`renderPart` callback is the existing text-only filter:
 
 ```tsx
 const renderPart = (
   part: UIMessage['parts'][number],
-  { streaming, index }: { message: UIMessage; streaming: boolean; index: number },
+  {
+    streaming,
+    index,
+  }: { message: UIMessage; streaming: boolean; index: number },
 ) => {
   if (part.type !== 'text') return null;
   return (
@@ -456,7 +550,10 @@ export function ChapterChat({ journey, chapter }: Props) {
 
   const renderPart = (
     part: UIMessage['parts'][number],
-    { streaming, index }: { message: UIMessage; streaming: boolean; index: number },
+    {
+      streaming,
+      index,
+    }: { message: UIMessage; streaming: boolean; index: number },
   ) => {
     if (part.type === 'text') {
       return (
@@ -480,7 +577,9 @@ export function ChapterChat({ journey, chapter }: Props) {
 }
 ```
 
-The `renderPart` callback is the only place the chapter chat diverges from the welcome chat. Story 3 will extend its `renderPart` to surface the `markChapterComplete` button; no scaffold change needed.
+The `renderPart` callback is the only place the chapter chat diverges from the
+welcome chat. Story 3 will extend its `renderPart` to surface the
+`markChapterComplete` button; no scaffold change needed.
 
 ### 7. `app/[locale]/journeys/[journeySlug]/[chapterSlug]/_components/chapter-page.tsx` — mount the chat
 
@@ -496,7 +595,12 @@ with:
 <ChapterChat journey={journey} chapter={chapter} />
 ```
 
-No layout adjustments needed: `ChatPageShell` already provides `flex flex-1 flex-col gap-4 overflow-hidden` for the left column, and `ChatScaffold` slots in directly without an extra wrapper — same shape as the welcome page. The chapter title block stays as the first child of the column; the scaffold takes the remaining height via its `flex-1` Conversation. Import `ChapterChat` from the same `_components/` directory.
+No layout adjustments needed: `ChatPageShell` already provides
+`flex flex-1 flex-col gap-4 overflow-hidden` for the left column, and
+`ChatScaffold` slots in directly without an extra wrapper — same shape as the
+welcome page. The chapter title block stays as the first child of the column;
+the scaffold takes the remaining height via its `flex-1` Conversation. Import
+`ChapterChat` from the same `_components/` directory.
 
 ### 8. `messages/en.json` + `messages/fr.json`
 
@@ -511,19 +615,38 @@ No layout adjustments needed: `ChatPageShell` already provides `flex flex-1 flex
 
 French: `"Posez vos questions sur ce chapitre…"`.
 
-`messages/parity.test.ts` enforces structural equality, so both files must add/remove keys in the same commit.
+`messages/parity.test.ts` enforces structural equality, so both files must
+add/remove keys in the same commit.
 
 ---
 
 ## Critical files reference
 
-- **Streaming route pattern**: `app/api/syllabus/chat/route.ts` — auth, Zod body validation, `validateUIMessages`, ephemeral cache, `streamText`, `toUIMessageStreamResponse()`. Story 2's handler is a near-clone with a different prompt composer, a different tool set, and an additional journey/chapter resolution step.
-- **Feature module shape**: `lib/syllabus-chat/{prompts,tool}.ts` — layout, `Record<Locale, string>` constants, inline tool description in English, JSDoc style for exported types and functions. `lib/chapter-chat/{prompts,tools}.ts` follows the same conventions.
-- **Client chat pattern**: `app/[locale]/_components/welcome-chat.tsx` — `useChat` + `DefaultChatTransport`, sending extra fields via `sendMessage(..., { body: { ... } })`, AI Elements `Conversation`/`Message`/`MessageResponse`, filtering non-text parts, disabling the textarea during stream.
-- **Entity-layer pattern**: `lib/server/journeys/setStyle.ts` — scoped UPDATE on `(id, userId)`, named input type, JSDoc. `updateMemory.ts` follows the same shape.
-- **Schema reference**: `lib/server/db/schema.ts` — `journeys.memory` is `text('memory').notNull().default('')`. No migration needed.
-- **Style + locale plumbing**: `lib/server/styles/get.ts` (`getStyle`, `listPresets`), `i18n/locale.ts` (`parseLocale`, `Locale`). Reused unchanged.
-- **AI Elements**: `components/ai-elements/{conversation,message,prompt-input}.tsx` — already wired through the welcome chat; `MessageResponse` wraps Streamdown with code/math/mermaid/cjk plugins.
+- **Streaming route pattern**: `app/api/syllabus/chat/route.ts` — auth, Zod body
+  validation, `validateUIMessages`, ephemeral cache, `streamText`,
+  `toUIMessageStreamResponse()`. Story 2's handler is a near-clone with a
+  different prompt composer, a different tool set, and an additional
+  journey/chapter resolution step.
+- **Feature module shape**: `lib/syllabus-chat/{prompts,tool}.ts` — layout,
+  `Record<Locale, string>` constants, inline tool description in English, JSDoc
+  style for exported types and functions. `lib/chapter-chat/{prompts,tools}.ts`
+  follows the same conventions.
+- **Client chat pattern**: `app/[locale]/_components/welcome-chat.tsx` —
+  `useChat` + `DefaultChatTransport`, sending extra fields via
+  `sendMessage(..., { body: { ... } })`, AI Elements
+  `Conversation`/`Message`/`MessageResponse`, filtering non-text parts,
+  disabling the textarea during stream.
+- **Entity-layer pattern**: `lib/server/journeys/setStyle.ts` — scoped UPDATE on
+  `(id, userId)`, named input type, JSDoc. `updateMemory.ts` follows the same
+  shape.
+- **Schema reference**: `lib/server/db/schema.ts` — `journeys.memory` is
+  `text('memory').notNull().default('')`. No migration needed.
+- **Style + locale plumbing**: `lib/server/styles/get.ts` (`getStyle`,
+  `listPresets`), `i18n/locale.ts` (`parseLocale`, `Locale`). Reused unchanged.
+- **AI Elements**:
+  `components/ai-elements/{conversation,message,prompt-input}.tsx` — already
+  wired through the welcome chat; `MessageResponse` wraps Streamdown with
+  code/math/mermaid/cjk plugins.
 
 ---
 
@@ -531,18 +654,46 @@ French: `"Posez vos questions sur ce chapitre…"`.
 
 Manual walkthrough in `pnpm dev`, both locales:
 
-1. **Happy path (en).** Build a syllabus in `/en/`, start a journey. The redirect lands on `/en/journeys/<jslug>-<jid>/1-<cslug>`. Type a question — assistant streams a reply in the main column. Streamdown renders Markdown (code fences, lists) progressively.
-2. **System prompt sanity.** The assistant should not propose to skip ahead to a later chapter, and should reference the chapter title/sections when asked "what are we covering". Optional sanity probe: ask it to enumerate the syllabus — it should produce the chapter outline you authored.
-3. **`updateMemory` writes land in DB.** Open `pnpm drizzle-kit studio`, watch `journeys.memory` for the active journey. Tell the chat something durable about yourself ("I already know JavaScript; I just want the Python differences"). After 1–3 turns the model should silently call `updateMemory`; the studio cell updates to a Markdown blob containing that fact. The chat UI shows **no** visible indication of the tool call.
-4. **Memory persistence across reloads.** Refresh the chapter page. Chat history is gone (expected — ephemeral), but the journey object the server prompt composer sees on the next first message includes the updated memory. Confirm by asking "what do you know about me?" — the assistant should paraphrase the memory it persisted earlier.
-5. **Locked chapter still 404.** From Story 1: visit a locked chapter URL directly — Next.js not-found. As defense-in-depth, hit the route handler directly while the chapter is locked: `curl -X POST -H 'Cookie: …' /api/journeys/<id>/chapters/2/chat …` — must 404.
-6. **401 when signed out.** `curl -X POST /api/journeys/<id>/chapters/1/chat -d '{...}'` with no Clerk session — 401.
+1. **Happy path (en).** Build a syllabus in `/en/`, start a journey. The
+   redirect lands on `/en/journeys/<jslug>-<jid>/1-<cslug>`. Type a question —
+   assistant streams a reply in the main column. Streamdown renders Markdown
+   (code fences, lists) progressively.
+2. **System prompt sanity.** The assistant should not propose to skip ahead to a
+   later chapter, and should reference the chapter title/sections when asked
+   "what are we covering". Optional sanity probe: ask it to enumerate the
+   syllabus — it should produce the chapter outline you authored.
+3. **`updateMemory` writes land in DB.** Open `pnpm drizzle-kit studio`, watch
+   `journeys.memory` for the active journey. Tell the chat something durable
+   about yourself ("I already know JavaScript; I just want the Python
+   differences"). After 1–3 turns the model should silently call `updateMemory`;
+   the studio cell updates to a Markdown blob containing that fact. The chat UI
+   shows **no** visible indication of the tool call.
+4. **Memory persistence across reloads.** Refresh the chapter page. Chat history
+   is gone (expected — ephemeral), but the journey object the server prompt
+   composer sees on the next first message includes the updated memory. Confirm
+   by asking "what do you know about me?" — the assistant should paraphrase the
+   memory it persisted earlier.
+5. **Locked chapter still 404.** From Story 1: visit a locked chapter URL
+   directly — Next.js not-found. As defense-in-depth, hit the route handler
+   directly while the chapter is locked:
+   `curl -X POST -H 'Cookie: …' /api/journeys/<id>/chapters/2/chat …` —
+   must 404.
+6. **401 when signed out.**
+   `curl -X POST /api/journeys/<id>/chapters/1/chat -d '{...}'` with no Clerk
+   session — 401.
 7. **400 on malformed body.** Same endpoint with `{}` — 400.
-8. **Locale (fr).** Repeat steps 1–4 on `/fr`. Assistant responses must contain no English words. The system prompt + style fragment + chapter-phase rules all flow through the French branch.
-9. **Style persistence still works.** Change the style from the chapter sidebar; reload; ask the next question — the response tone should reflect the new style fragment (the route handler fetches `journey.styleId` fresh per request, not from the client).
+8. **Locale (fr).** Repeat steps 1–4 on `/fr`. Assistant responses must contain
+   no English words. The system prompt + style fragment + chapter-phase rules
+   all flow through the French branch.
+9. **Style persistence still works.** Change the style from the chapter sidebar;
+   reload; ask the next question — the response tone should reflect the new
+   style fragment (the route handler fetches `journey.styleId` fresh per
+   request, not from the client).
 
 Automated:
 
 - `pnpm lint` — Prettier + ESLint clean.
-- `pnpm test` — `messages/parity.test.ts` still passes after the en/fr key changes; the Story 1 `lib/url.test.ts` still passes (untouched).
-- `pnpm build` — Next.js production build succeeds with the new dynamic route segments `app/api/journeys/[id]/chapters/[n]/chat/route.ts`.
+- `pnpm test` — `messages/parity.test.ts` still passes after the en/fr key
+  changes; the Story 1 `lib/url.test.ts` still passes (untouched).
+- `pnpm build` — Next.js production build succeeds with the new dynamic route
+  segments `app/api/journeys/[id]/chapters/[n]/chat/route.ts`.
