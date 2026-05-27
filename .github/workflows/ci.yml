@@ -5,6 +5,11 @@ on:
       - main
   workflow_dispatch: {}
 
+permissions:
+  contents: read
+  checks: write
+  statuses: write
+
 jobs:
   lint:
     runs-on: ubuntu-latest

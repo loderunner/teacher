@@ -1,4 +1,4 @@
-'use client';
+import 'client-only';
 
 import { type MotionProps, motion } from 'motion/react';
 import { type CSSProperties, memo } from 'react';

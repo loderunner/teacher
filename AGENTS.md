@@ -366,14 +366,25 @@ const panel =
 return <div>{panel}</div>;
 ```
 
-## `'use client'`
+## `'use client'` and `client-only`
 
-`'use client'` marks a boundary in the module graph. Place it on the
-**outermost** file that requires client-only capabilities — everything that file
-imports becomes part of the client bundle automatically; you do not re-declare
-the directive in child files.
+`'use client'` marks a boundary in the React module graph — everything in its
+import subtree becomes part of the client bundle. Place it **only on files
+inside `app/`** (pages, layouts, and route-colocated components). Reusable files
+under `lib/` and `components/` do not carry `'use client'` because they cannot
+know whether a caller will place them at a server/client boundary.
 
-A file needs `'use client'` when it uses:
+Reusable files that require client-only capabilities instead import the
+[`client-only`](https://www.npmjs.com/package/client-only) package, which
+produces a build-time error if the file is accidentally imported into a Server
+Component:
+
+```ts
+import 'client-only';
+// hooks, browser APIs, event handlers safe to use below
+```
+
+A file needs `client-only` when it uses:
 
 - `useState`, `useReducer`, `useRef`, or any hook that holds mutable state
 - `useEffect`, `useLayoutEffect`, or other lifecycle hooks
@@ -382,15 +393,30 @@ A file needs `'use client'` when it uses:
 - `useRouter` from `@/i18n/navigation` (wraps Next.js `useRouter`)
 - Any custom hook that uses the above internally
 
-A file does **not** need `'use client'` for:
+A file does **not** need `client-only` for:
 
 - `useTranslations` / `useLocale` from `next-intl` (v3+ supports Server
   Components)
 - Pure data-in → markup-out components with no interactivity
 - Components that only forward `children` without adding state or handlers
 
-Push the boundary as deep as possible: if only one small button in a large
-layout needs interactivity, extract it into its own file and mark only that.
+When a server-rendered page needs a small interactive island, create a thin
+`'use client'` wrapper colocated in the route directory. The wrapper establishes
+the boundary; the reusable components it imports are guarded by `client-only`.
+
+Name the wrapper after the component it wraps with an `Island` suffix:
+`JourneyChatViewIsland` wraps `JourneyChatView`, lives in
+`journey-chat-view-island.tsx`. This makes it immediately obvious the file is a
+boundary shim, not a semantic component.
+
+```
+app/[locale]/journeys/[journeySlug]/syllabus/
+├── syllabus-view.tsx            ← Server Component
+└── journey-chat-view-island.tsx ← 'use client' thin wrapper (the boundary)
+
+lib/journey-chat/
+└── view.tsx                     ← import 'client-only'; no 'use client'
+```
 
 ## CSS
 

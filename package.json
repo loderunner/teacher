@@ -31,6 +31,7 @@
     "@streamdown/mermaid": "1.0.2",
     "ai": "6.0.175",
     "class-variance-authority": "0.7.1",
+    "client-only": "0.0.1",
     "clsx": "2.1.1",
     "cmdk": "1.1.1",
     "drizzle-orm": "1.0.0-beta.22",
@@ -72,7 +73,7 @@
     "prettier-plugin-tailwindcss": "0.8.0",
     "tailwindcss": "4.2.4",
     "typescript": "5.9.3",
-    "vercel": "53.2.0",
+    "vercel": "54.4.1",
     "vitest": "4.1.5"
   }
 }
