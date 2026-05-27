@@ -12,6 +12,10 @@ vi.mock('ai', () => ({
   generateText: mockGenerateText,
 }));
 
+vi.mock('@/lib/ai/model', () => ({
+  getModel: () => 'anthropic/claude-sonnet-4-6',
+}));
+
 describe('bootstrapJourney', () => {
   beforeEach(() => {
     vi.clearAllMocks();

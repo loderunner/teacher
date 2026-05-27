@@ -34,16 +34,25 @@ export function deriveSyllabusDraftsFromMessages(messages: UIMessage[]): {
         continue;
       }
 
+      if (
+        !part.input ||
+        typeof part.input !== 'object' ||
+        !('draft' in part.input)
+      ) {
+        continue;
+      }
+      const rawDraft = (part.input as { draft: unknown }).draft;
+
       // If we haven't seen a partial draft yet, try to parse the raw draft as a
       // partial draft.
       if (!partialSeen) {
-        const parsed = syllabusSchema.partial().safeParse(part.input);
+        const parsed = syllabusSchema.partial().safeParse(rawDraft);
         partialDraft = parsed.success ? parsed.data : null;
         partialSeen = true;
       }
 
-      // Try toarse the raw draft as a full draft.
-      const full = syllabusSchema.safeParse(part.input);
+      // Try to parse the raw draft as a full draft.
+      const full = syllabusSchema.safeParse(rawDraft);
       if (full.success) {
         draft = full.data;
         return { draft, partialDraft };
