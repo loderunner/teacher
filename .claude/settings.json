@@ -8,17 +8,6 @@
   },
   "model": "sonnet",
   "hooks": {
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "nvm use 1>&2",
-            "timeout": 30
-          }
-        ]
-      }
-    ],
     "WorktreeCreate": [
       {
         "hooks": [
