@@ -2,6 +2,7 @@ import { auth } from '@clerk/nextjs/server';
 import {
   type SystemModelMessage,
   type UIMessage,
+  type UserModelMessage,
   convertToModelMessages,
   generateId,
   smoothStream,
@@ -47,8 +48,11 @@ type RouteContext = {
   params: Promise<{ journeyId: string; chapterId: string }>;
 };
 
-function stripProposalParts(list: UIMessage[]): UIMessage[] {
+function stripSyllabusChangeContent(list: UIMessage[]): UIMessage[] {
   return list.flatMap((m) => {
+    if (m.role === 'user') {
+      return m.metadata?.type === 'action' ? [] : [m];
+    }
     if (m.role !== 'assistant') {
       return [m];
     }
@@ -61,6 +65,8 @@ function stripProposalParts(list: UIMessage[]): UIMessage[] {
     return [{ ...m, parts }];
   });
 }
+
+const startCue: UserModelMessage = { role: 'user' as const, content: 'Begin.' };
 
 export async function POST(
   req: Request,
@@ -112,7 +118,7 @@ export async function POST(
     await syncMessages({
       journeyId: journey.id,
       chapterId,
-      messages: stripProposalParts(messages),
+      messages: stripSyllabusChangeContent(messages),
     });
   }
 
@@ -133,7 +139,6 @@ export async function POST(
   // Most LLM APIs require at least one user message. When the client sends an
   // empty history (assistant-first turn), inject a silent start cue so the
   // model responds from the system prompt alone.
-  const startCue = { role: 'user' as const, content: 'Begin.' };
   const modelMessages =
     history.length === 0
       ? [startCue]
@@ -158,15 +163,11 @@ export async function POST(
     originalMessages: messages,
     generateMessageId: generateId,
     onFinish: async ({ messages: updated }) => {
-      try {
-        await syncMessages({
-          journeyId: journey.id,
-          chapterId,
-          messages: stripProposalParts(updated),
-        });
-      } catch (err) {
-        console.error('chapter chat onFinish: failed to persist messages', err);
-      }
+      await syncMessages({
+        journeyId: journey.id,
+        chapterId,
+        messages: stripSyllabusChangeContent(updated),
+      });
     },
   });
 }
