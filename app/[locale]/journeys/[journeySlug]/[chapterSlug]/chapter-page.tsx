@@ -1,5 +1,6 @@
 'use client';
 
+import type { UIMessage } from 'ai';
 import { useTranslations } from 'next-intl';
 import {
   type ComponentType,
@@ -27,9 +28,10 @@ const CHAPTER_TOOLS: Record<string, ComponentType> = {
 type Props = {
   journey: Journey;
   chapter: JourneyChapter;
+  initialMessages: UIMessage[];
 };
 
-export function ChapterPage({ journey, chapter }: Props) {
+export function ChapterPage({ journey, chapter, initialMessages }: Props) {
   const t = useTranslations('Chapter');
   const tChat = useTranslations('ChapterChat');
   const router = useRouter();
@@ -46,6 +48,7 @@ export function ChapterPage({ journey, chapter }: Props) {
     triggerResponse,
   } = useJourneyChat({
     api: `/api/journeys/${journey.id}/chapters/${chapter.id}/chat`,
+    initialMessages,
   });
 
   const [appliedToolCallIds, setAppliedToolCallIds] = useState(
@@ -53,12 +56,12 @@ export function ChapterPage({ journey, chapter }: Props) {
   );
 
   const handleSyllabusApplied = useCallback(
-    (toolCallId: string) => {
+    (toolCallId: string, syntheticMessageId?: string) => {
       setAppliedToolCallIds((prev) => new Set(prev).add(toolCallId));
       setMessages((prev) => [
         ...prev,
         {
-          id: crypto.randomUUID(),
+          id: syntheticMessageId ?? crypto.randomUUID(),
           role: 'user',
           metadata: { type: 'action' },
           parts: [{ type: 'text', text: tChat('proposalAppliedMessage') }],
@@ -68,14 +71,20 @@ export function ChapterPage({ journey, chapter }: Props) {
     [setMessages, tChat],
   );
 
-  const startedRef = useRef(false);
+  const triggeredRef = useRef(false);
   useEffect(() => {
-    if (startedRef.current) {
+    if (triggeredRef.current) {
       return;
     }
-    startedRef.current = true;
+    triggeredRef.current = true;
+    const last = initialMessages.at(-1);
+    if (last !== undefined && last.role !== 'user') {
+      return;
+    }
     triggerResponse();
-  }, [triggerResponse]);
+    // Only the initial state matters; later changes are handled by submit/regenerate.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [completing, startCompleting] = useTransition();
   const [completeError, setCompleteError] = useState<string | null>(null);
@@ -98,7 +107,6 @@ export function ChapterPage({ journey, chapter }: Props) {
         const result = await completeChapterAction({
           journeyId: journey.id,
           chapterIdx: chapter.idx,
-          messages,
         });
         if (result.nextChapterPath !== null) {
           router.push(result.nextChapterPath);
@@ -109,7 +117,7 @@ export function ChapterPage({ journey, chapter }: Props) {
         setCompleteError(tChat('completeError'));
       }
     });
-  }, [journey.id, chapter.idx, router, tChat, messages]);
+  }, [journey.id, chapter.idx, router, tChat]);
 
   return (
     <ChatPageShell.Root>
