@@ -1,7 +1,6 @@
 'use server';
 
 import { auth } from '@clerk/nextjs/server';
-import { type UIMessage, validateUIMessages } from 'ai';
 import { getLocale } from 'next-intl/server';
 import { z } from 'zod';
 
@@ -9,6 +8,7 @@ import { parseLocale } from '@/i18n/locale';
 import { generateChapterSummary } from '@/lib/chapter-chat/complete';
 import { completeChapter } from '@/lib/server/chapters/complete';
 import { getJourney } from '@/lib/server/journeys/get';
+import { getMessages } from '@/lib/server/messages';
 import { getStyle } from '@/lib/server/styles/get';
 import { chapterPath } from '@/lib/url';
 
@@ -18,8 +18,6 @@ export type CompleteChapterInput = {
   journeyId: string;
   /** Zero-based index of the chapter being completed. */
   chapterIdx: number;
-  /** Full chat transcript for this chapter (client-supplied until Story 5). */
-  messages: UIMessage[];
 };
 
 /** Result returned by {@link completeChapterAction}. */
@@ -31,20 +29,15 @@ export type CompleteChapterResult = {
 const inputSchema = z.object({
   journeyId: z.string().min(1),
   chapterIdx: z.number().int().min(0),
-  messages: z.array(z.custom<UIMessage>()),
 });
 
 /**
  * Server action that finalises a chapter: generates a summary, persists it,
  * marks the chapter `done`, and unlocks the next chapter.
  *
- * Until Story 5 lands chat-history persistence, the transcript used for the
- * summary is supplied by the client. The summary is non-security-sensitive
- * (educational colour text only); a malicious client can at worst produce a
- * misleading recap. The input is still validated for structural safety via
- * `validateUIMessages` before being passed to the LLM.
+ * Loads the chat transcript from the DB; the client no longer supplies it.
  *
- * @param input - Journey ID, chapter index, and chat transcript.
+ * @param input - Journey ID and chapter index.
  * @returns The canonical path of the next chapter, or `null` if last chapter.
  * @throws Error when the caller is not authenticated or inputs are invalid.
  */
@@ -57,7 +50,6 @@ export async function completeChapterAction(
   }
 
   const parsed = inputSchema.parse(input);
-  const messages = await validateUIMessages({ messages: parsed.messages });
 
   const journey = await getJourney({ userId, id: parsed.journeyId });
   if (journey === null) {
@@ -83,6 +75,11 @@ export async function completeChapterAction(
   }
 
   const locale = parseLocale(await getLocale());
+
+  const messages = await getMessages({
+    journeyId: journey.id,
+    chapterId: chapter.id,
+  });
 
   const summary = await generateChapterSummary({
     style,
