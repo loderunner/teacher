@@ -125,7 +125,6 @@ export async function POST(
     tools,
     providerOptions: {
       anthropic: { thinking: { type: 'adaptive' }, effort: 'low' },
-      ollama: { think: true },
     },
     experimental_transform: smoothStream(),
   });

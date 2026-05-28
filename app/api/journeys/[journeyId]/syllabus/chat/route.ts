@@ -114,7 +114,6 @@ export async function POST(req: Request): Promise<Response> {
         thinking: { type: 'adaptive' },
         ...(initialUserMessage ? { effort: 'max' } : {}),
       },
-      ollama: { think: true },
     },
     experimental_transform: smoothStream({ delayInMs: null }),
   });

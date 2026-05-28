@@ -42,7 +42,6 @@ export async function generateChapterSummary({
     prompt,
     providerOptions: {
       anthropic: { thinking: { type: 'adaptive' }, effort: 'low' },
-      ollama: { think: true },
     },
   });
 
