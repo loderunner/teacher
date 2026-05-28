@@ -56,12 +56,12 @@ export function ChapterPage({ journey, chapter, initialMessages }: Props) {
   );
 
   const handleSyllabusApplied = useCallback(
-    (toolCallId: string, syntheticMessageId?: string) => {
+    (toolCallId: string) => {
       setAppliedToolCallIds((prev) => new Set(prev).add(toolCallId));
       setMessages((prev) => [
         ...prev,
         {
-          id: syntheticMessageId ?? crypto.randomUUID(),
+          id: crypto.randomUUID(),
           role: 'user',
           metadata: { type: 'action' },
           parts: [{ type: 'text', text: tChat('proposalAppliedMessage') }],

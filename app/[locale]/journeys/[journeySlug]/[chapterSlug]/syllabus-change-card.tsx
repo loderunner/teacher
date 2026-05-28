@@ -75,7 +75,7 @@ export function SyllabusChangeCard() {
           journeyId: journey.id,
           newSyllabus: proposal.newSyllabus,
         });
-        onApplied(toolCallId, result.syntheticMessageId);
+        onApplied(toolCallId);
         if (result.chapterPath !== currentPath) {
           router.push(result.chapterPath);
         } else {

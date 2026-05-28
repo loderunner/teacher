@@ -13,7 +13,7 @@ type SyllabusChangeContextValue = {
   /** Tool call IDs of already-applied proposals. */
   appliedToolCallIds: Set<string>;
   /** Called when a proposal is successfully applied. */
-  onApplied: (toolCallId: string, syntheticMessageId?: string) => void;
+  onApplied: (toolCallId: string) => void;
 };
 
 export const SyllabusChangeContext =
