@@ -26,19 +26,21 @@ import { ensureUser } from '@/lib/server/users/ensure';
 
 export const maxDuration = 60;
 
+type ChapterChatMetadata = { type: 'action-syllabusChangeApplied' };
+
 /**
  * Request body for `POST /api/journeys/[id]/chapters/[chapterId]/chat`.
  * Exported so callers can type-check their fetch body.
  */
 export type RequestBody = {
   /** Chat history to send to the model. */
-  messages: UIMessage[];
+  messages: UIMessage<ChapterChatMetadata>[];
   /** Locale for selecting the correct system prompt language. */
   locale: Locale;
 };
 
 const requestBodySchema: z.ZodType<RequestBody> = z.object({
-  messages: z.array(z.custom<UIMessage>()),
+  messages: z.array(z.custom<UIMessage<ChapterChatMetadata>>()),
   locale: z.union([z.literal('en'), z.literal('fr')]),
 });
 
@@ -48,16 +50,12 @@ type RouteContext = {
   params: Promise<{ journeyId: string; chapterId: string }>;
 };
 
-function stripSyllabusChangeContent(list: UIMessage[]): UIMessage[] {
+function stripSyllabusChangeContent(
+  list: UIMessage<ChapterChatMetadata>[],
+): UIMessage<ChapterChatMetadata>[] {
   return list.flatMap((m) => {
     if (m.role === 'user') {
-      const meta = m.metadata;
-      const syllabusChangeApplied =
-        typeof meta === 'object' &&
-        meta !== null &&
-        'type' in meta &&
-        meta.type === 'action-syllabusChangeApplied';
-      return syllabusChangeApplied ? [] : [m];
+      return m.metadata?.type === 'action-syllabusChangeApplied' ? [] : [m];
     }
     if (m.role !== 'assistant') {
       return [m];
@@ -94,7 +92,7 @@ export async function POST(
 
   const { locale } = parsed;
 
-  let messages: UIMessage[] = [];
+  let messages: UIMessage<ChapterChatMetadata>[] = [];
   if (parsed.messages.length > 0) {
     try {
       messages = await validateUIMessages({ messages: parsed.messages });
