@@ -63,7 +63,7 @@ export function ChapterPage({ journey, chapter, initialMessages }: Props) {
         {
           id: crypto.randomUUID(),
           role: 'user',
-          metadata: { type: 'syllabusChangeApplied' },
+          metadata: { type: 'action-syllabusChangeApplied' },
           parts: [{ type: 'text', text: tChat('proposalAppliedMessage') }],
         },
       ]);
