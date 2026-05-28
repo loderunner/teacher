@@ -34,14 +34,10 @@ export function deriveSyllabusDraftsFromMessages(messages: UIMessage[]): {
         continue;
       }
 
-      if (
-        part.input === null ||
-        typeof part.input !== 'object' ||
-        !('draft' in part.input)
-      ) {
+      if (part.input === null || typeof part.input !== 'object') {
         continue;
       }
-      const rawDraft = part.input.draft;
+      const rawDraft = part.input;
 
       // If we haven't seen a partial draft yet, try to parse the raw draft as a
       // partial draft.
