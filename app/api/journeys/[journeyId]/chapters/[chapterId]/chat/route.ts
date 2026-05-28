@@ -51,7 +51,7 @@ type RouteContext = {
 function stripSyllabusChangeContent(list: UIMessage[]): UIMessage[] {
   return list.flatMap((m) => {
     if (m.role === 'user') {
-      return m.metadata?.type === 'action' ? [] : [m];
+      return m.metadata?.type === 'syllabusChangeApplied' ? [] : [m];
     }
     if (m.role !== 'assistant') {
       return [m];
