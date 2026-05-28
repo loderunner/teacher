@@ -3,6 +3,7 @@ import {
   type SystemModelMessage,
   type UIMessage,
   convertToModelMessages,
+  generateId,
   smoothStream,
   streamText,
   validateUIMessages,
@@ -18,6 +19,7 @@ import {
   createProposeSyllabusChangeTool,
 } from '@/lib/chapter-chat/tools';
 import { getJourney } from '@/lib/server/journeys/get';
+import { syncMessages } from '@/lib/server/messages';
 import { getStyle } from '@/lib/server/styles/get';
 import { ensureUser } from '@/lib/server/users/ensure';
 
@@ -44,6 +46,21 @@ const ephemeralCache = { anthropic: { cacheControl: { type: 'ephemeral' } } };
 type RouteContext = {
   params: Promise<{ journeyId: string; chapterId: string }>;
 };
+
+function stripProposalParts(list: UIMessage[]): UIMessage[] {
+  return list.flatMap((m) => {
+    if (m.role !== 'assistant') {
+      return [m];
+    }
+    const parts = m.parts.filter(
+      (p) => p.type !== 'tool-proposeSyllabusChange',
+    );
+    if (parts.length === 0) {
+      return [];
+    }
+    return [{ ...m, parts }];
+  });
+}
 
 export async function POST(
   req: Request,
@@ -91,6 +108,14 @@ export async function POST(
     return new Response('Bad Request', { status: 400 });
   }
 
+  if (messages.length > 0) {
+    await syncMessages({
+      journeyId: journey.id,
+      chapterId,
+      messages: stripProposalParts(messages),
+    });
+  }
+
   const system: SystemModelMessage = {
     role: 'system',
     content: composeChapterSystemPrompt({ style, locale, journey, chapter }),
@@ -129,5 +154,19 @@ export async function POST(
     experimental_transform: smoothStream(),
   });
 
-  return result.toUIMessageStreamResponse();
+  return result.toUIMessageStreamResponse({
+    originalMessages: messages,
+    generateMessageId: generateId,
+    onFinish: async ({ messages: updated }) => {
+      try {
+        await syncMessages({
+          journeyId: journey.id,
+          chapterId,
+          messages: stripProposalParts(updated),
+        });
+      } catch (err) {
+        console.error('chapter chat onFinish: failed to persist messages', err);
+      }
+    },
+  });
 }
