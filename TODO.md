@@ -12,6 +12,17 @@ https://code.claude.com/docs/en/agent-sdk/user-input.md
 Find out if a component for this already exists in ai-elements. If not, create
 it, copying the style of the `Confirmation` component.
 
+We will also need to apply the same pattern to any "user elicitaion" tool, like
+the `proposeSyllabusChange` tool.
+
+## Rewrite "no-op" tools for persistence
+
+Most of the tools are "no-ops". They don't have any meaningful code in
+`execute`. This is an artifact from when the messages and syllabus were not
+persisted and client-only. Now that every message and tool use is persisted, we
+can refactor the tools to actually do something, affect the back or frontend,
+and respond with an actual tool use result or error.
+
 ## No source outside app/ or lib/
 
 No source should be outside the app/ or lib/ directories. All source should be
