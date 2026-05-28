@@ -55,13 +55,19 @@ describe('deriveSyllabusDraftsFromMessages', () => {
 
   it('extracts chapters with only the required title field', () => {
     const messages = [
-      assistantWithTool({ chapters: [{ title: 'Intro' }, { title: 'Advanced' }] }),
+      assistantWithTool({
+        chapters: [{ title: 'Intro' }, { title: 'Advanced' }],
+      }),
     ];
 
     const { draft, partialDraft } = deriveSyllabusDraftsFromMessages(messages);
 
-    expect(draft).toEqual({ chapters: [{ title: 'Intro' }, { title: 'Advanced' }] });
-    expect(partialDraft).toEqual({ chapters: [{ title: 'Intro' }, { title: 'Advanced' }] });
+    expect(draft).toEqual({
+      chapters: [{ title: 'Intro' }, { title: 'Advanced' }],
+    });
+    expect(partialDraft).toEqual({
+      chapters: [{ title: 'Intro' }, { title: 'Advanced' }],
+    });
   });
 
   it('falls back to the previous fully-valid draft when the latest input is mid-stream', () => {
