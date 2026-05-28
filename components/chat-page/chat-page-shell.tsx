@@ -5,7 +5,6 @@ import { useTranslations } from 'next-intl';
 import {
   type ReactNode,
   createContext,
-  useCallback,
   useContext,
   useEffect,
   useState,
@@ -75,8 +74,8 @@ export function Root({ children }: RootProps) {
   const [hasSidebar, setHasSidebar] = useState(false);
   const t = useTranslations('Chapter');
 
-  const toggle = useCallback(() => setOpen((o) => !o), []);
-  const close = useCallback(() => setOpen(false), []);
+  const toggle = () => setOpen((o) => !o);
+  const close = () => setOpen(false);
 
   return (
     <SidebarContext.Provider

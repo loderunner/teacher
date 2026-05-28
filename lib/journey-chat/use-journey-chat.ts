@@ -3,7 +3,6 @@
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport, type UIMessage } from 'ai';
 import { useLocale } from 'next-intl';
-import { useCallback } from 'react';
 
 import type { PromptInputMessage } from '@/components/ai-elements/prompt-input';
 import { parseLocale } from '@/i18n/locale';
@@ -86,12 +85,9 @@ export function useJourneyChat<TMessage extends UIMessage = UIMessage>({
     void sendMessage({ text, messageId }, { body: { locale, ...body } });
   };
 
-  const triggerResponse = useCallback(
-    (body?: Record<string, unknown>) => {
-      void sendMessage(undefined, { body: { locale, ...body } });
-    },
-    [sendMessage, locale],
-  );
+  const triggerResponse = (body?: Record<string, unknown>) => {
+    void sendMessage(undefined, { body: { locale, ...body } });
+  };
 
   return {
     messages,

@@ -4,7 +4,6 @@ import type { UIMessage } from 'ai';
 import { useTranslations } from 'next-intl';
 import {
   type ComponentType,
-  useCallback,
   useEffect,
   useRef,
   useState,
@@ -55,21 +54,18 @@ export function ChapterPage({ journey, chapter, initialMessages }: Props) {
     () => new Set<string>(),
   );
 
-  const handleSyllabusApplied = useCallback(
-    (toolCallId: string) => {
-      setAppliedToolCallIds((prev) => new Set(prev).add(toolCallId));
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: crypto.randomUUID(),
-          role: 'user',
-          metadata: { type: 'action-syllabusChangeApplied' },
-          parts: [{ type: 'text', text: tChat('proposalAppliedMessage') }],
-        },
-      ]);
-    },
-    [setMessages, tChat],
-  );
+  const handleSyllabusApplied = (toolCallId: string) => {
+    setAppliedToolCallIds((prev) => new Set(prev).add(toolCallId));
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: crypto.randomUUID(),
+        role: 'user',
+        metadata: { type: 'action-syllabusChangeApplied' },
+        parts: [{ type: 'text', text: tChat('proposalAppliedMessage') }],
+      },
+    ]);
+  };
 
   const triggeredRef = useRef(false);
   useEffect(() => {
@@ -100,7 +96,7 @@ export function ChapterPage({ journey, chapter, initialMessages }: Props) {
     ? tChat('completeJourney')
     : tChat('completeChapter');
 
-  const handleComplete = useCallback(() => {
+  const handleComplete = () => {
     startCompleting(async () => {
       try {
         setCompleteError(null);
@@ -117,7 +113,7 @@ export function ChapterPage({ journey, chapter, initialMessages }: Props) {
         setCompleteError(tChat('completeError'));
       }
     });
-  }, [journey.id, chapter.idx, router, tChat]);
+  };
 
   return (
     <ChatPageShell.Root>
