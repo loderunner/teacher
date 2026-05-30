@@ -1,52 +1,87 @@
-# Journey
-
-AI-powered "teach yourself anything" app. Built with Next.js 16 (App Router),
-Clerk auth, Neon Postgres, Drizzle ORM, Tailwind v4, and shadcn/ui.
+# Journey — contribution guide
 
 ## Prerequisites
 
-- Node.js 20+
-- pnpm
-- Vercel CLI (`npm install -g vercel`)
-- A Vercel project linked to this repo (`vercel link`)
+- Node.js 24+
+- pnpm (via [Corepack](https://nodejs.org/api/corepack.html): `corepack enable`)
+- Access to the Vercel project (needed for `vercel env pull`)
 
 ## Local setup
 
 ```bash
 pnpm install
-vercel env pull .env.local   # pulls Clerk + Neon credentials from Vercel
+pnpm exec vercel link              # one-time: link your local clone to the Vercel project
+pnpm exec vercel env pull .env.local  # pull Clerk + Neon + AI Gateway credentials
+pnpm dev                           # start dev server at http://localhost:3000 (Turbopack)
 ```
 
-## Daily development
+`.env.local` is gitignored. Never commit it.
 
-```bash
-pnpm dev        # start dev server at http://localhost:3000
-pnpm typecheck  # TypeScript type check (no emit)
-pnpm lint       # Prettier check + ESLint (next/core-web-vitals + eslint-config-loderunner)
-pnpm lint:fix   # Prettier write + ESLint --fix
-pnpm test       # vitest (run once)
-pnpm test:watch # vitest (watch mode)
-```
+## Scripts
+
+| Command              | What it does                                         |
+| -------------------- | ---------------------------------------------------- |
+| `pnpm dev`           | Dev server on port 3000 (Turbopack, HMR)             |
+| `pnpm build`         | Production build                                     |
+| `pnpm typecheck`     | TypeScript type-check (no emit)                      |
+| `pnpm lint`          | Prettier check + ESLint (zero warnings allowed)      |
+| `pnpm lint:fix`      | Prettier write + ESLint --fix                        |
+| `pnpm test`          | Vitest, run once                                     |
+| `pnpm test:watch`    | Vitest, watch mode                                   |
+| `pnpm test:coverage` | Vitest with v8 coverage report                       |
+| `pnpm db:generate`   | Generate a new Drizzle migration from schema changes |
+| `pnpm db:migrate`    | Apply pending migrations to the Neon database        |
 
 ## Database
-
-All DB commands read credentials from `.env.local` via `drizzle.config.ts`.
-
-```bash
-pnpm db:generate  # generate a new migration from schema changes
-pnpm db:migrate   # apply pending migrations to the Neon dev database
-pnpm db:studio    # open Drizzle Studio (browser UI for the DB)
-```
 
 Schema lives in `lib/server/db/schema.ts`. Migrations are committed to
 `lib/server/db/migrations/`.
 
-## Deployment
+After editing the schema, always regenerate and commit the migration:
 
 ```bash
-vercel deploy           # preview deployment
-vercel deploy --prod    # promote to production
+pnpm db:generate   # generates SQL in lib/server/db/migrations/
+pnpm db:migrate    # applies it to the dev database (reads DATABASE_URL from .env.local)
 ```
 
-The Vercel project has Clerk and Neon provisioned via the Marketplace.
-Environment variables are managed there — do not commit `.env.local`.
+Never hand-edit `_journal.json` or snapshot files — always go through
+`db:generate`.
+
+### Local Postgres (optional)
+
+For offline development or to avoid hitting the shared Neon dev database, start
+a local Postgres instance via Docker Compose and point `DATABASE_URL` at it:
+
+```bash
+docker compose up -d
+# then in .env.local:
+# DATABASE_URL=postgres://journey:journey@localhost:5432/journey
+```
+
+## CI / CD
+
+Every push to `main` triggers a Vercel deployment. The build pipeline in
+`vercel.json` runs:
+
+```
+pnpm test && pnpm build && pnpm db:migrate
+```
+
+Tests and migrations must pass for the deployment to succeed. There is no
+separate migration step — Drizzle migrates the production database as part of
+the build. Do not run `vercel deploy` manually; use `git push` instead.
+
+## Environment variables
+
+All credentials are provisioned via the Vercel Marketplace (Clerk, Neon, Vercel
+AI Gateway) and managed through the Vercel dashboard. Pull them locally with
+`vercel env pull`. To add or change a variable, use the Vercel dashboard or:
+
+```bash
+pnpm exec vercel env add MY_VAR
+```
+
+## Architecture notes
+
+See `AGENTS.md` for the full coding standards, file layout conventions, and
+feature module architecture.
