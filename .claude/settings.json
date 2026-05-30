@@ -3,6 +3,7 @@
   "permissions": {
     "deny": ["Edit(./lib/server/db/migrations/**/snapshot.json)"]
   },
+  "plansDirectory": "./.claude/plans",
   "worktree": {
     "baseRef": "head"
   },

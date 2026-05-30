@@ -6,6 +6,7 @@ import { LockedChapterPage } from './locked-chapter-page';
 
 import { permanentRedirect } from '@/i18n/navigation';
 import { getJourney } from '@/lib/server/journeys/get';
+import { getMessages } from '@/lib/server/messages';
 import { ensureUser } from '@/lib/server/users/ensure';
 import { chapterPath, parseChapterSlug, parseJourneySlug } from '@/lib/url';
 
@@ -63,5 +64,16 @@ export default async function Page({
     );
   }
 
-  return <ChapterPage chapter={chapter} journey={journey} />;
+  const initialMessages = await getMessages({
+    journeyId: journey.id,
+    chapterId: chapter.id,
+  });
+
+  return (
+    <ChapterPage
+      chapter={chapter}
+      initialMessages={initialMessages}
+      journey={journey}
+    />
+  );
 }
