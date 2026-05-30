@@ -7,10 +7,8 @@ import {
   type ReactNode,
   createContext,
   memo,
-  useCallback,
   useContext,
   useEffect,
-  useMemo,
   useRef,
 } from 'react';
 import { Streamdown } from 'streamdown';
@@ -97,24 +95,14 @@ export const Reasoning = memo(
       }
     }, [isStreaming, setDuration]);
 
-    const handleOpenChange = useCallback(
-      (newOpen: boolean) => {
-        setIsOpen(newOpen);
-      },
-      [setIsOpen],
-    );
-
-    const contextValue = useMemo(
-      () => ({ duration, isOpen, isStreaming, setIsOpen }),
-      [duration, isOpen, isStreaming, setIsOpen],
-    );
-
     return (
-      <ReasoningContext.Provider value={contextValue}>
+      <ReasoningContext.Provider
+        value={{ duration, isOpen, isStreaming, setIsOpen }}
+      >
         <Collapsible
           className={cn('not-prose mb-2', className)}
           open={isOpen}
-          onOpenChange={handleOpenChange}
+          onOpenChange={setIsOpen}
           {...props}
         >
           {children}
