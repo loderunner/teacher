@@ -67,6 +67,13 @@ export function ChapterPage({ journey, chapter, initialMessages }: Props) {
     ]);
   };
 
+  useEffect(
+    () => () => {
+      stop();
+    },
+    [stop],
+  );
+
   const triggeredRef = useRef(false);
   useEffect(() => {
     if (triggeredRef.current) {
