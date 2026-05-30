@@ -13,7 +13,7 @@ Find out if a component for this already exists in ai-elements. If not, create
 it, copying the style of the `Confirmation` component.
 
 We will also need to apply the same pattern to any "user elicitaion" tool, like
-the `proposeSyllabusChange` tool.
+the `proposeSyllabusChange` tool and others if required.
 
 ## Rewrite "no-op" tools for persistence
 
@@ -103,16 +103,6 @@ to the user.
 setup Neon Oauth, and row-level security so that an authenticated user cannot
 access a journey or any related row (chapter or message)
 
-## Review usage of useMemo and useCallback
-
-We should review the usage of useMemo and useCallback to ensure we're using them
-correctly for React 19 and React compiler.
-
-## Update developer documentation
-
-Lots of things have changed since the developer documentation was last updated.
-We should update it to reflect the current state of the project.
-
 ## Refactor the "canonical path" logic
 
 The "canonical path" logic is a bit messy. It has global functions for
@@ -126,7 +116,7 @@ check its slug or slugs against the canonical slug, and redirect if necessary.
 - The first syllabus item in the syllabus panel, the one that links to the
   syllabus chat, is not styled the same as the other syllabus items.
 - The chapter items in the syllabus panel function both as accordion items and
-  plain nav items. The UX is unclear: clicking opens the accordion, but
+  navigation items. The UX is unclear: clicking opens the accordion, but
   navigates to the chapter page simultaneously.
 
 ## Stop generating text when the user navigates away from a page
@@ -135,13 +125,23 @@ We need to call `stop` on the chat hook when the user navigates away from a
 page, otherwise the model will continue generating text in the background,
 wasting tokens and money.
 
-## Update pnpm and pin version
-
-Use `devEngines.packageManager` to pin the version of pnpm to >=11.0.0.
-
 ## Pagination
 
 We should paginate get functions that return arrays of resources. Maybe just
 journeys? Chapters will always be pretty limited in a single journey. Messages,
 we may just want to make sure we always show all messages in one go? No
 "infinite scroll" or "load more" buttons.
+
+## Find a better name for the project
+
+The project is currently called "Journey" which is generic and stupid. The repo
+is named "teacher" which doesn't make sense either. We should work our way to
+finding a better name for the project.
+
+## Conversation branching
+
+Currently, or at least after we are done with the delta message transport, the
+conversation is linear. When a user edits a user message or regenerates an
+assistant message, every message after that message is deleted. We should find a
+way to support a full conversation tree, with branching. And add controls to
+navigate between branches in the UI.

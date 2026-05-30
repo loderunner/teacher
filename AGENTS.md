@@ -455,6 +455,50 @@ parameter is part of the URL path and its value makes no sense as a resource
 identifier, the address is effectively non-existent — return 404, not 400.
 Reserve 400 for problems with the request _body_.
 
+## JSON validation and serialization
+
+Use Zod schemas at every JSON boundary. Parse untrusted input with the schema
+after `JSON.parse` or `req.json()`. Run trusted output through the schema before
+`JSON.stringify` or `Response.json()` — this validates shape and strips fields
+the schema does not allow.
+
+Define schemas next to the entity they describe (e.g.
+`lib/server/syllabus/schema.ts`). Infer TypeScript types with
+`z.infer<typeof …>`; do not maintain parallel hand-written types for the same
+shape.
+
+Validate all **incoming** JSON:
+
+- API request bodies (`req.json()`, webhook payloads, etc.)
+- JSON/JSONB columns read from `SELECT` results
+
+Serialize all **outgoing** JSON:
+
+- API response bodies (`Response.json()`, etc.)
+- JSON/JSONB column values written by `INSERT` or `UPDATE`
+
+```ts
+// correct — validate after parse
+let parsed: RequestBody;
+try {
+  parsed = requestBodySchema.parse(await req.json());
+} catch {
+  return new Response('Bad Request', { status: 400 });
+}
+
+// incorrect — trust parsed JSON
+const parsed = (await req.json()) as RequestBody;
+
+// correct — validate JSON column after SELECT
+const syllabus = syllabusSchema.parse(row.syllabus);
+
+// correct — serialize before write
+await db.update(journeys).set({ syllabus: syllabusSchema.parse(syllabus) });
+
+// incorrect — persist unvalidated JSON
+await db.update(journeys).set({ syllabus });
+```
+
 ## Testing
 
 ### Test structure
