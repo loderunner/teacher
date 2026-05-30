@@ -63,7 +63,12 @@ export function SyllabusChat({ journey, initialMessages, presets }: Props) {
 
   const body = { journeyId: journey.id };
 
-  useEffect(() => () => { stop(); }, [stop]);
+  useEffect(
+    () => () => {
+      stop();
+    },
+    [stop],
+  );
 
   // When the draft was just created from the hero, the only persisted message
   // is the user's first prompt — kick off the assistant response on mount.
