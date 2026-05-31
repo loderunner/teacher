@@ -1,3 +1,5 @@
+export type { ChatMessageMetadata } from './metadata';
+
 export type {
   HandleSubmitParams,
   UseJourneyChatParams,

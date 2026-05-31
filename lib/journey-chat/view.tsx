@@ -23,6 +23,8 @@ import {
   useState,
 } from 'react';
 
+import { isChatMessageMetadata } from './metadata';
+
 import {
   Conversation,
   ConversationContent,
@@ -274,15 +276,16 @@ export function JourneyChatView({
         .map((p) => p.text)
         .join('\n');
 
-      const metadata = msg.metadata;
-      const isAction =
-        typeof metadata === 'object' &&
-        metadata !== null &&
-        'type' in metadata &&
-        metadata.type === 'action';
+      const { metadata } = msg;
 
-      if (isAction) {
-        return <MessageEvent key={msg.id}>{text}</MessageEvent>;
+      if (isChatMessageMetadata(metadata)) {
+        if (metadata.hidden === true) {
+          return null;
+        }
+
+        if (metadata.action !== undefined) {
+          return <MessageEvent key={msg.id}>{text}</MessageEvent>;
+        }
       }
 
       const editing = editingId === msg.id;

@@ -60,7 +60,10 @@ export function useJourneyChat<TMessage extends UIMessage = UIMessage>({
   const locale = parseLocale(useLocale());
   const { messages, setMessages, sendMessage, status, stop, regenerate } =
     useChat<TMessage>({
-      transport: new DefaultChatTransport({ api }),
+      transport: new DefaultChatTransport({
+        api,
+        prepareSendMessagesRequest: prepareChatRequest,
+      }),
       ...(initialMessages !== undefined ? { messages: initialMessages } : {}),
     });
 
@@ -101,4 +104,44 @@ export function useJourneyChat<TMessage extends UIMessage = UIMessage>({
     handleEditMessage,
     triggerResponse,
   };
+}
+
+/** Options passed by the AI SDK to {@link prepareChatRequest}. */
+type PrepareChatRequestOptions = {
+  messages: UIMessage[];
+  trigger: 'submit-message' | 'regenerate-message';
+  messageId?: string;
+  body?: Readonly<Record<string, unknown>>;
+};
+
+/**
+ * Transforms the full SDK message list into a delta request body. Called by
+ * `DefaultChatTransport` before each send.
+ *
+ * - `regenerate-message` → `{ regenerateFromMessageId }` (no message payload).
+ * - `submit-message` with messages → `{ message: last }` (single delta).
+ * - `submit-message` with empty messages → no `message` (start signal for
+ *   assistant-first chapters).
+ *
+ * @example
+ * new DefaultChatTransport({ api, prepareSendMessagesRequest: prepareChatRequest })
+ */
+export function prepareChatRequest({
+  messages,
+  trigger,
+  messageId,
+  body,
+}: PrepareChatRequestOptions): { body: Record<string, unknown> } {
+  if (trigger === 'regenerate-message') {
+    return { body: { ...body, regenerateFromMessageId: messageId } };
+  }
+
+  const requestBody: Record<string, unknown> = { ...body };
+
+  const last = messages.at(-1);
+  if (last !== undefined) {
+    requestBody.message = last;
+  }
+
+  return { body: requestBody };
 }
