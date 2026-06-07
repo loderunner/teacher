@@ -56,12 +56,10 @@ export function SyllabusChat({ journey, initialMessages, presets }: Props) {
     handleRegenerate,
     handleEditMessage,
     triggerResponse,
-  } = useJourneyChat<UIMessage>({
+  } = useJourneyChat({
     api: `/api/journeys/${journey.id}/syllabus/chat`,
     initialMessages,
   });
-
-  const body = { journeyId: journey.id };
 
   useEffect(
     () => () => {
@@ -69,6 +67,7 @@ export function SyllabusChat({ journey, initialMessages, presets }: Props) {
     },
     [stop],
   );
+
 
   // When the draft was just created from the hero, the only persisted message
   // is the user's first prompt — kick off the assistant response on mount.
@@ -85,7 +84,7 @@ export function SyllabusChat({ journey, initialMessages, presets }: Props) {
       return;
     }
     triggeredRef.current = true;
-    triggerResponse(body);
+    triggerResponse();
     // Only the initial state matters; later changes are handled by submit/regenerate.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -102,7 +101,6 @@ export function SyllabusChat({ journey, initialMessages, presets }: Props) {
     startTransition(async () => {
       const result = await activateJourneyAction({
         journeyId: journey.id,
-        messages,
         syllabus,
       });
       router.push(result.path);
@@ -118,11 +116,11 @@ export function SyllabusChat({ journey, initialMessages, presets }: Props) {
           status={status}
           tools={SYLLABUS_TOOLS}
           onEditUserMessage={(messageId, text) =>
-            handleEditMessage({ messageId, text, body })
+            handleEditMessage({ messageId, text })
           }
-          onRegenerate={(messageId) => handleRegenerate({ messageId, body })}
+          onRegenerate={(messageId) => handleRegenerate({ messageId })}
           onStop={stop}
-          onSubmit={(msg) => handleSubmit({ ...msg, body })}
+          onSubmit={handleSubmit}
         />
         {startable && (
           <ChatPageShell.Footer>

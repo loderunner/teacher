@@ -1,12 +1,12 @@
 'use server';
 
 import { auth } from '@clerk/nextjs/server';
-import type { UIMessage } from 'ai';
 import { getLocale } from 'next-intl/server';
 
 import { parseLocale } from '@/i18n/locale';
 import { activateJourney } from '@/lib/server/journeys/activate';
 import { getJourney } from '@/lib/server/journeys/get';
+import { getMessages } from '@/lib/server/messages';
 import { type Syllabus, syllabusSchema } from '@/lib/server/syllabus/schema';
 import { ensureUser } from '@/lib/server/users/ensure';
 import { bootstrapJourney } from '@/lib/syllabus-chat';
@@ -15,7 +15,6 @@ import { journeyPath } from '@/lib/url';
 /** Input for {@link activateJourneyAction}. */
 export type ActivateJourneyInput = {
   journeyId: string;
-  messages: UIMessage[];
   syllabus: Syllabus;
 };
 
@@ -30,7 +29,7 @@ export type ActivateJourneyResult = {
  * and inserts chapter records. The journey row's stored `styleId` is the
  * source of truth — picker changes during drafting do not propagate.
  *
- * @param input - Journey id, transcript, and syllabus.
+ * @param input - Journey id and syllabus.
  * @returns URL path to the active journey root.
  * @throws Error when unauthenticated, journey is missing, or not drafting.
  */
@@ -52,9 +51,14 @@ export async function activateJourneyAction(
   const syllabus = syllabusSchema.parse(input.syllabus);
   const locale = parseLocale(await getLocale());
 
+  const messages = await getMessages({
+    journeyId: input.journeyId,
+    chapterId: null,
+  });
+
   const { title, memory } = await bootstrapJourney({
     draft: syllabus,
-    messages: input.messages,
+    messages,
     locale,
   });
 

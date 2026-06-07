@@ -17,7 +17,11 @@ import { SyllabusChangeContext } from './syllabus-change-context';
 import { Button, ChatPageShell, Title } from '@/components/chat-page';
 import { StyleLabel, SyllabusPanel } from '@/components/journey';
 import { usePathname, useRouter } from '@/i18n/navigation';
-import { JourneyChatView, useJourneyChat } from '@/lib/journey-chat';
+import {
+  type ChatMessageMetadata,
+  JourneyChatView,
+  useJourneyChat,
+} from '@/lib/journey-chat';
 import type { Journey, JourneyChapter } from '@/lib/server/journeys/get';
 
 const CHAPTER_TOOLS: Record<string, ComponentType> = {
@@ -27,7 +31,7 @@ const CHAPTER_TOOLS: Record<string, ComponentType> = {
 type Props = {
   journey: Journey;
   chapter: JourneyChapter;
-  initialMessages: UIMessage[];
+  initialMessages: UIMessage<ChatMessageMetadata>[];
 };
 
 export function ChapterPage({ journey, chapter, initialMessages }: Props) {
@@ -61,10 +65,13 @@ export function ChapterPage({ journey, chapter, initialMessages }: Props) {
       {
         id: crypto.randomUUID(),
         role: 'user',
-        metadata: { type: 'action-syllabusChangeApplied' },
+        metadata: {
+          action: 'syllabusChangeApplied',
+        } satisfies ChatMessageMetadata,
         parts: [{ type: 'text', text: tChat('proposalAppliedMessage') }],
       },
     ]);
+    triggerResponse();
   };
 
   useEffect(
