@@ -31,7 +31,7 @@ const CHAPTER_TOOLS: Record<string, ComponentType> = {
 type Props = {
   journey: Journey;
   chapter: JourneyChapter;
-  initialMessages: UIMessage[];
+  initialMessages: UIMessage<ChatMessageMetadata>[];
 };
 
 export function ChapterPage({ journey, chapter, initialMessages }: Props) {
