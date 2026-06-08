@@ -189,3 +189,9 @@ source of truth.
 Once you've done that, first update and extend the AGENTS.md file to reflect the
 new best practices. Then dispatch subagents to update the codebase to use the
 new best practices.
+
+## loading dots positioning
+
+loading dots are positioned at the bottom of the message content, right above
+the prompt input. I want them to be positioned at the place where the next
+message will appear.
