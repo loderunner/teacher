@@ -4,7 +4,7 @@ import { auth } from '@clerk/nextjs/server';
 import { nanoid } from 'nanoid';
 
 import { createDraftJourney } from '@/lib/server/journeys/create';
-import { syncMessages } from '@/lib/server/messages';
+import { saveMessages } from '@/lib/server/messages';
 import { ensureUser } from '@/lib/server/users/ensure';
 import { journeyPath } from '@/lib/url';
 
@@ -53,7 +53,7 @@ export async function createDraftJourneyAction(
     styleId: input.styleId,
   });
 
-  await syncMessages({
+  await saveMessages({
     journeyId: journey.id,
     chapterId: null,
     messages: [
