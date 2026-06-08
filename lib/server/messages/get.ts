@@ -38,6 +38,7 @@ export async function getMessages({
       id: messages.id,
       role: messages.role,
       parts: messages.parts,
+      metadata: messages.metadata,
     })
     .from(messages)
     .where(scope)
@@ -47,7 +48,12 @@ export async function getMessages({
     .filter((row): row is (typeof rows)[number] & { role: UIMessage['role'] } =>
       isChatRole(row.role),
     )
-    .map((row) => {
-      return { id: row.id, role: row.role, parts: row.parts };
-    });
+    .map((row) => ({
+      id: row.id,
+      role: row.role,
+      parts: row.parts,
+      ...(row.metadata !== null && row.metadata !== undefined
+        ? { metadata: row.metadata }
+        : {}),
+    }));
 }

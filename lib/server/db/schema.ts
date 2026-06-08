@@ -92,6 +92,7 @@ export const messages = pgTable(
     }),
     role: text('role').notNull(),
     parts: jsonb('parts').$type<UIMessage['parts']>().notNull(),
+    metadata: jsonb('metadata').$type<UIMessage['metadata']>(),
     createdAt: timestamp('created_at').notNull().defaultNow(),
   },
   (t) => [index('messages_journey_chapter_idx').on(t.journeyId, t.chapterId)],

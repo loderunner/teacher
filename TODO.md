@@ -145,3 +145,53 @@ conversation is linear. When a user edits a user message or regenerates an
 assistant message, every message after that message is deleted. We should find a
 way to support a full conversation tree, with branching. And add controls to
 navigate between branches in the UI.
+
+## Better request schema validation
+
+The API for the chat routes has 2-3 modes of operation:
+
+- New conversation (no user message)
+- New user message or edited user message
+- Regenerate assistant message
+
+Right now we have custom validation logic for mutual exclusion of the modes in
+the request body. We would prefer that Zod does this validation for us.
+
+## Drop Vercel AI Gateway
+
+Who are we kidding? Let's just shoot for Anthropic API directly in production,
+and stick to oMLX for local development.
+
+## Proper mock usage
+
+A lot of our mocks have a factory function in the vi.mock call. This is
+unnecessary in most cases, especially if we're replaing module functions with
+`vi.fn`. That should be built-in, and we can use `vi.mocked` to get the mocked
+function.
+
+Read the docs for mocking in Vitest:
+
+- https://vitest.dev/guide/learn/mock-functions.html
+- https://vitest.dev/guide/mocking/functions
+- https://vitest.dev/guide/mocking/modules
+- https://vitest.dev/guide/mocking/timers
+- https://vitest.dev/guide/mocking/dates
+- https://vitest.dev/guide/mocking/globals
+- https://vitest.dev/guide/mocking/requests
+- https://vitest.dev/guide/mocking/file-system
+- https://vitest.dev/guide/mocking/classes
+
+Then establish the best practices for mocking with Vitest in our codebase. Rely
+more on the Vitest docs than on the code you encounter in GiHub or other
+sources. Most people have terrible mocking practices. The docs are the best
+source of truth.
+
+Once you've done that, first update and extend the AGENTS.md file to reflect the
+new best practices. Then dispatch subagents to update the codebase to use the
+new best practices.
+
+## loading dots positioning
+
+loading dots are positioned at the bottom of the message content, right above
+the prompt input. I want them to be positioned at the place where the next
+message will appear.

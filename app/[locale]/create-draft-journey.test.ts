@@ -7,17 +7,17 @@ vi.mock('@clerk/nextjs/server', () => ({ auth: vi.fn() }));
 vi.mock('@/lib/server/journeys/create', () => ({
   createDraftJourney: vi.fn(),
 }));
-vi.mock('@/lib/server/messages', () => ({ syncMessages: vi.fn() }));
+vi.mock('@/lib/server/messages', () => ({ saveMessages: vi.fn() }));
 vi.mock('@/lib/server/users/ensure', () => ({ ensureUser: vi.fn() }));
 
 import { createDraftJourney } from '@/lib/server/journeys/create';
-import { syncMessages } from '@/lib/server/messages';
+import { saveMessages } from '@/lib/server/messages';
 import { ensureUser } from '@/lib/server/users/ensure';
 
 const mockAuth = vi.mocked(auth);
 const mockCreateDraftJourney = vi.mocked(createDraftJourney);
 const mockEnsureUser = vi.mocked(ensureUser);
-const mockSyncMessages = vi.mocked(syncMessages);
+const mockSaveMessages = vi.mocked(saveMessages);
 
 describe('createDraftJourneyAction', () => {
   beforeEach(() => {
@@ -28,7 +28,7 @@ describe('createDraftJourneyAction', () => {
       id: 'jid10chars',
       title: 'Learn Rust',
     });
-    mockSyncMessages.mockResolvedValue(undefined);
+    mockSaveMessages.mockResolvedValue(undefined);
   });
 
   it('throws when unauthenticated', async () => {
@@ -51,8 +51,8 @@ describe('createDraftJourneyAction', () => {
       styleId: 'teacher',
     });
 
-    expect(mockSyncMessages).toHaveBeenCalledOnce();
-    const args = mockSyncMessages.mock.calls[0][0];
+    expect(mockSaveMessages).toHaveBeenCalledOnce();
+    const args = mockSaveMessages.mock.calls[0][0];
     expect(args.journeyId).toBe('jid10chars');
     expect(args.chapterId).toBeNull();
     expect(args.messages).toHaveLength(1);

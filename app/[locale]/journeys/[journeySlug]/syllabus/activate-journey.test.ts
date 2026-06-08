@@ -9,16 +9,19 @@ vi.mock('next-intl/server', () => ({
 }));
 vi.mock('@/lib/server/journeys/activate', () => ({ activateJourney: vi.fn() }));
 vi.mock('@/lib/server/journeys/get', () => ({ getJourney: vi.fn() }));
+vi.mock('@/lib/server/messages', () => ({ getMessages: vi.fn() }));
 vi.mock('@/lib/server/users/ensure', () => ({ ensureUser: vi.fn() }));
 vi.mock('@/lib/syllabus-chat', () => ({ bootstrapJourney: vi.fn() }));
 
 import { activateJourney } from '@/lib/server/journeys/activate';
 import { getJourney } from '@/lib/server/journeys/get';
+import { getMessages } from '@/lib/server/messages';
 import { ensureUser } from '@/lib/server/users/ensure';
 import { bootstrapJourney } from '@/lib/syllabus-chat';
 
 const mockAuth = vi.mocked(auth);
 const mockGetJourney = vi.mocked(getJourney);
+const mockGetMessages = vi.mocked(getMessages);
 const mockBootstrap = vi.mocked(bootstrapJourney);
 const mockActivate = vi.mocked(activateJourney);
 const mockEnsureUser = vi.mocked(ensureUser);
@@ -40,6 +43,7 @@ describe('activateJourneyAction', () => {
       syllabus: { chapters: [] },
       chapters: [],
     });
+    mockGetMessages.mockResolvedValue([]);
     mockBootstrap.mockResolvedValue({ title: 'Final', memory: ['Mem'] });
     mockActivate.mockResolvedValue({ id: 'j1', title: 'Final' });
   });
@@ -48,11 +52,7 @@ describe('activateJourneyAction', () => {
     mockAuth.mockResolvedValueOnce({ userId: null } as never);
 
     await expect(
-      activateJourneyAction({
-        journeyId: 'j1',
-        messages: [],
-        syllabus: validSyllabus,
-      }),
+      activateJourneyAction({ journeyId: 'j1', syllabus: validSyllabus }),
     ).rejects.toThrow('Unauthorized');
   });
 
@@ -69,11 +69,7 @@ describe('activateJourneyAction', () => {
     });
 
     await expect(
-      activateJourneyAction({
-        journeyId: 'j1',
-        messages: [],
-        syllabus: validSyllabus,
-      }),
+      activateJourneyAction({ journeyId: 'j1', syllabus: validSyllabus }),
     ).rejects.toThrow('not in drafting status');
 
     expect(mockBootstrap).not.toHaveBeenCalled();
@@ -81,13 +77,27 @@ describe('activateJourneyAction', () => {
   });
 
   it('bootstraps and activates the draft journey', async () => {
+    const storedMessages = [
+      {
+        id: 'u1',
+        role: 'user' as const,
+        parts: [{ type: 'text' as const, text: 'Hi' }],
+      },
+    ];
+    mockGetMessages.mockResolvedValueOnce(storedMessages);
+
     const result = await activateJourneyAction({
       journeyId: 'j1',
-      messages: [],
       syllabus: validSyllabus,
     });
 
-    expect(mockBootstrap).toHaveBeenCalledOnce();
+    expect(mockGetMessages).toHaveBeenCalledExactlyOnceWith({
+      journeyId: 'j1',
+      chapterId: null,
+    });
+    expect(mockBootstrap).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ messages: storedMessages }),
+    );
     expect(mockActivate).toHaveBeenCalledExactlyOnceWith({
       userId: 'user-1',
       journeyId: 'j1',
