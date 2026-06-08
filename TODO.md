@@ -195,3 +195,23 @@ new best practices.
 loading dots are positioned at the bottom of the message content, right above
 the prompt input. I want them to be positioned at the place where the next
 message will appear.
+
+## Prompt testing and evaluations
+
+Use a hybrid of **PromptFoo** (as a library) and **Vitest** (as the test runner)
+for targeted, developer-native LLM tests. These are not large-scale evals — they
+are focused regression tests for prompt behaviour, living alongside the code
+they test.
+
+Adopt the following conventions:
+
+- Prompt test files live next to the prompt they test:
+  `course-generator.test.ts` next to `course-generator.ts`.
+- Create a separate Vitest test project for prompt tests, and add it to the
+  `vitest.config.ts` file.
+- Use PromptFoo's Vitest matchers (`toPassLLMRubric`, `toMatchFactuality`,
+  `toMatchSemanticSimilarity`) for LLM-graded assertions.
+- Enable `experimental_telemetry` on Vercel AI SDK calls in tests to capture
+  tool call traces for trajectory assertions.
+
+Add a new section to AGENTS.md for prompt testing and evaluations guidelines.

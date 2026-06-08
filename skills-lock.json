@@ -49,6 +49,18 @@
       "skillPath": "skills/next-best-practices/SKILL.md",
       "computedHash": "f4678aef4ffc10a5ea64a91e57abe5a5081af813b06d58d565caf3e8ef56e26c"
     },
+    "promptfoo-evals": {
+      "source": "promptfoo/promptfoo",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/promptfoo-evals/SKILL.md",
+      "computedHash": "3356c5a2b3ac89acb599cee77818e9fcaab3a0326c01b1290249c34769380355"
+    },
+    "redteam-plugin-development": {
+      "source": "promptfoo/promptfoo",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/redteam-plugin-development/SKILL.md",
+      "computedHash": "d91726a59cf7af9f7692a27d29676b1429dfa4b27f06b6bcbc72c9a898613cbe"
+    },
     "shadcn": {
       "source": "shadcn/ui",
       "sourceType": "github",
