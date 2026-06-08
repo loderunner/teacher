@@ -4,7 +4,7 @@ import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport, type UIMessage } from 'ai';
 import { useLocale } from 'next-intl';
 
-import { type ChatMessageMetadata } from './metadata';
+import { type ChatMessageMetadata, isChatMessageMetadata } from './metadata';
 
 import type { PromptInputMessage } from '@/components/ai-elements/prompt-input';
 import { parseLocale } from '@/i18n/locale';
@@ -16,7 +16,7 @@ export type UseJourneyChatParams = {
   /** The API route to send chat messages to. */
   api: string;
   /** Pre-populated messages for resumed sessions. */
-  initialMessages?: JourneyChatMessage[];
+  initialMessages?: UIMessage[];
 };
 
 /** Message submission payload, optionally augmented with per-submit body fields. */
@@ -58,13 +58,21 @@ export type HandleEditMessageParams = {
  */
 export function useJourneyChat({ api, initialMessages }: UseJourneyChatParams) {
   const locale = parseLocale(useLocale());
+  const typedInitialMessages = initialMessages?.map(
+    (m): JourneyChatMessage => ({
+      ...m,
+      metadata: isChatMessageMetadata(m.metadata) ? m.metadata : undefined,
+    }),
+  );
   const { messages, setMessages, sendMessage, status, stop, regenerate } =
     useChat<JourneyChatMessage>({
       transport: new DefaultChatTransport({
         api,
         prepareSendMessagesRequest: prepareChatRequest,
       }),
-      ...(initialMessages !== undefined ? { messages: initialMessages } : {}),
+      ...(typedInitialMessages !== undefined
+        ? { messages: typedInitialMessages }
+        : {}),
     });
 
   const streaming = status === 'streaming' || status === 'submitted';
