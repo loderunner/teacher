@@ -2,4 +2,5 @@ export { bootstrapJourney } from './bootstrap';
 export type { BootstrapJourneyInput, BootstrapResult } from './bootstrap';
 export { composeSyllabusSystemPrompt } from './prompts';
 export type { ComposeSyllabusSystemPromptParams } from './prompts';
-export { updateSyllabusDraftTool } from './tool';
+export { createUpdateSyllabusDraftTool } from './tool';
+export type { CreateUpdateSyllabusDraftToolParams } from './tool';

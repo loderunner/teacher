@@ -68,7 +68,6 @@ export function SyllabusChat({ journey, initialMessages, presets }: Props) {
     [stop],
   );
 
-
   // When the draft was just created from the hero, the only persisted message
   // is the user's first prompt — kick off the assistant response on mount.
   const triggeredRef = useRef(false);
@@ -97,12 +96,8 @@ export function SyllabusChat({ journey, initialMessages, presets }: Props) {
     if (!startable) {
       return;
     }
-    const syllabus = draft;
     startTransition(async () => {
-      const result = await activateJourneyAction({
-        journeyId: journey.id,
-        syllabus,
-      });
+      const result = await activateJourneyAction({ journeyId: journey.id });
       router.push(result.path);
     });
   };

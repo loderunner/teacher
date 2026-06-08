@@ -163,7 +163,14 @@ export async function POST(
 
   const tools = {
     appendMemories: createAppendMemoriesTool({ userId, journeyId: journey.id }),
-    markChapterComplete: createMarkChapterCompleteTool(),
+    markChapterComplete: createMarkChapterCompleteTool({
+      userId,
+      journey,
+      chapter,
+      messages: history,
+      style,
+      locale,
+    }),
     proposeSyllabusChange: createProposeSyllabusChangeTool(),
   };
 

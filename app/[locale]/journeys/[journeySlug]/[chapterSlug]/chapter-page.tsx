@@ -2,19 +2,12 @@
 
 import type { UIMessage } from 'ai';
 import { useTranslations } from 'next-intl';
-import {
-  type ComponentType,
-  useEffect,
-  useRef,
-  useState,
-  useTransition,
-} from 'react';
+import { type ComponentType, useEffect, useRef, useState } from 'react';
 
-import { completeChapterAction } from './complete-chapter';
 import { SyllabusChangeCard } from './syllabus-change-card';
 import { SyllabusChangeContext } from './syllabus-change-context';
 
-import { Button, ChatPageShell, Title } from '@/components/chat-page';
+import { ChatPageShell, Title } from '@/components/chat-page';
 import { StyleLabel, SyllabusPanel } from '@/components/journey';
 import { usePathname, useRouter } from '@/i18n/navigation';
 import {
@@ -32,6 +25,21 @@ type Props = {
   journey: Journey;
   chapter: JourneyChapter;
   initialMessages: UIMessage[];
+};
+
+type MarkChapterCompleteOutput = { nextChapterPath: string | null };
+
+const isMarkChapterCompleteOutput = (
+  v: unknown,
+): v is MarkChapterCompleteOutput => {
+  if (typeof v !== 'object' || v === null || !('nextChapterPath' in v)) {
+    return false;
+  }
+  const record = v as Record<string, unknown>;
+  return (
+    record.nextChapterPath === null ||
+    typeof record.nextChapterPath === 'string'
+  );
 };
 
 export function ChapterPage({ journey, chapter, initialMessages }: Props) {
@@ -96,38 +104,35 @@ export function ChapterPage({ journey, chapter, initialMessages }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const [completing, startCompleting] = useTransition();
-  const [completeError, setCompleteError] = useState<string | null>(null);
-
-  const chapterComplete = messages.some(
-    (m) =>
-      m.role === 'assistant' &&
-      m.parts.some((p) => p.type === 'tool-markChapterComplete'),
-  );
-
-  const lastChapter = chapter.idx === journey.chapters.length - 1;
-  const completeLabel = lastChapter
-    ? tChat('completeJourney')
-    : tChat('completeChapter');
-
-  const handleComplete = () => {
-    startCompleting(async () => {
-      try {
-        setCompleteError(null);
-        const result = await completeChapterAction({
-          journeyId: journey.id,
-          chapterIdx: chapter.idx,
-        });
-        if (result.nextChapterPath !== null) {
-          router.push(result.nextChapterPath);
+  const navigatedRef = useRef(false);
+  useEffect(() => {
+    if (status !== 'ready' || navigatedRef.current) {
+      return;
+    }
+    for (const m of messages) {
+      if (m.role !== 'assistant') {
+        continue;
+      }
+      for (const p of m.parts) {
+        if (p.type !== 'tool-markChapterComplete') {
+          continue;
+        }
+        if (p.state !== 'output-available') {
+          continue;
+        }
+        if (!isMarkChapterCompleteOutput(p.output)) {
+          continue;
+        }
+        navigatedRef.current = true;
+        if (p.output.nextChapterPath !== null) {
+          router.push(p.output.nextChapterPath);
         } else {
           router.refresh();
         }
-      } catch {
-        setCompleteError(tChat('completeError'));
+        return;
       }
-    });
-  };
+    }
+  }, [status, messages, router]);
 
   return (
     <ChatPageShell.Root>
@@ -163,20 +168,6 @@ export function ChapterPage({ journey, chapter, initialMessages }: Props) {
             onSubmit={handleSubmit}
           />
         </SyllabusChangeContext.Provider>
-        {chapterComplete && (
-          <>
-            {completeError !== null && (
-              <p className="text-destructive mx-auto w-full max-w-3xl px-1 text-sm">
-                {completeError}
-              </p>
-            )}
-            <ChatPageShell.Footer>
-              <Button disabled={completing} onClick={handleComplete}>
-                {completeLabel}
-              </Button>
-            </ChatPageShell.Footer>
-          </>
-        )}
       </ChatPageShell.Content>
       <ChatPageShell.Sidebar>
         <SyllabusPanel
