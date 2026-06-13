@@ -96,12 +96,8 @@ export function SyllabusChat({ journey, initialMessages, presets }: Props) {
     if (!startable) {
       return;
     }
-    const syllabus = draft;
     startTransition(async () => {
-      const result = await activateJourneyAction({
-        journeyId: journey.id,
-        syllabus,
-      });
+      const result = await activateJourneyAction({ journeyId: journey.id });
       router.push(result.path);
     });
   };

@@ -26,7 +26,7 @@ const mockBootstrap = vi.mocked(bootstrapJourney);
 const mockActivate = vi.mocked(activateJourney);
 const mockEnsureUser = vi.mocked(ensureUser);
 
-const validSyllabus = { chapters: [{ title: 'One' }] };
+const storedSyllabus = { chapters: [{ title: 'One' }] };
 
 describe('activateJourneyAction', () => {
   beforeEach(() => {
@@ -38,9 +38,8 @@ describe('activateJourneyAction', () => {
       title: 'Draft',
       styleId: 'teacher',
       memory: [],
-
       status: 'drafting',
-      syllabus: { chapters: [] },
+      syllabus: storedSyllabus,
       chapters: [],
     });
     mockGetMessages.mockResolvedValue([]);
@@ -51,9 +50,9 @@ describe('activateJourneyAction', () => {
   it('throws when unauthenticated', async () => {
     mockAuth.mockResolvedValueOnce({ userId: null } as never);
 
-    await expect(
-      activateJourneyAction({ journeyId: 'j1', syllabus: validSyllabus }),
-    ).rejects.toThrow('Unauthorized');
+    await expect(activateJourneyAction({ journeyId: 'j1' })).rejects.toThrow(
+      'Unauthorized',
+    );
   });
 
   it('throws and skips bootstrap when the journey is not drafting', async () => {
@@ -62,18 +61,25 @@ describe('activateJourneyAction', () => {
       title: 'Done',
       styleId: 'teacher',
       memory: [],
-
       status: 'active',
-      syllabus: validSyllabus,
+      syllabus: storedSyllabus,
       chapters: [],
     });
 
-    await expect(
-      activateJourneyAction({ journeyId: 'j1', syllabus: validSyllabus }),
-    ).rejects.toThrow('not in drafting status');
+    await expect(activateJourneyAction({ journeyId: 'j1' })).rejects.toThrow(
+      'not in drafting status',
+    );
 
     expect(mockBootstrap).not.toHaveBeenCalled();
     expect(mockActivate).not.toHaveBeenCalled();
+  });
+
+  it('bootstraps using the syllabus stored on the journey row', async () => {
+    await activateJourneyAction({ journeyId: 'j1' });
+
+    expect(mockBootstrap).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ draft: storedSyllabus }),
+    );
   });
 
   it('bootstraps and activates the draft journey', async () => {
@@ -86,10 +92,7 @@ describe('activateJourneyAction', () => {
     ];
     mockGetMessages.mockResolvedValueOnce(storedMessages);
 
-    const result = await activateJourneyAction({
-      journeyId: 'j1',
-      syllabus: validSyllabus,
-    });
+    const result = await activateJourneyAction({ journeyId: 'j1' });
 
     expect(mockGetMessages).toHaveBeenCalledExactlyOnceWith({
       journeyId: 'j1',
@@ -103,7 +106,7 @@ describe('activateJourneyAction', () => {
       journeyId: 'j1',
       title: 'Final',
       memory: ['Mem'],
-      syllabus: validSyllabus,
+      syllabus: storedSyllabus,
     });
     expect(result.path).toBe('/journeys/final-j1');
   });

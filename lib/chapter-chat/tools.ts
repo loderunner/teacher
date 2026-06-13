@@ -1,8 +1,14 @@
-import { tool } from 'ai';
+import { type UIMessage, tool } from 'ai';
 import { z } from 'zod';
 
+import type { Locale } from '@/i18n/locale';
+import { generateChapterSummary } from '@/lib/chapter-chat/complete';
+import { completeChapter } from '@/lib/server/chapters/complete';
 import { appendJourneyMemories } from '@/lib/server/journeys/appendMemories';
+import type { Journey, JourneyChapter } from '@/lib/server/journeys/get';
+import type { Style } from '@/lib/server/styles/get';
 import { syllabusSchema } from '@/lib/server/syllabus/schema';
+import { chapterPath } from '@/lib/url';
 
 /**
  * Builds an AI SDK tool that lets the model propose a full replacement of the
@@ -33,24 +39,76 @@ Rules:
   });
 }
 
+/** Parameters for building the chapter-completion tool. */
+export type CreateMarkChapterCompleteToolParams = {
+  /** Clerk user ID of the owner of the journey. */
+  userId: string;
+  /** Journey being taught — used to resolve chapter neighbours. */
+  journey: Journey;
+  /** Chapter that is being completed. */
+  chapter: JourneyChapter;
+  /** Request-side message history (pre-stream), used to generate the summary. */
+  messages: UIMessage[];
+  /** Teaching style applied to this journey. */
+  style: Style;
+  /** Locale of the current learner session. */
+  locale: Locale;
+};
+
+/** Result returned by the `markChapterComplete` tool execute. */
+export type MarkChapterCompleteOutput = {
+  /** Canonical URL of the next chapter, or `null` when there is no next. */
+  nextChapterPath: string | null;
+};
+
 /**
- * Builds an AI SDK tool that signals chapter completion. The model emits this
- * once, and the UI surfaces a "Go to next chapter" button. The actual state
- * transition happens in `completeChapterAction` when the user clicks.
+ * Builds an AI SDK tool that completes the current chapter: generates a
+ * summary, persists the completion in the database, and returns a navigation
+ * path to the next chapter.
  *
- * @returns A signal-only `markChapterComplete` tool.
+ * @param params - Owner, journey, chapter, transcript, style, and locale.
+ * @returns A request-scoped `markChapterComplete` tool.
  */
-export function createMarkChapterCompleteTool() {
+export function createMarkChapterCompleteTool({
+  userId,
+  journey,
+  chapter,
+  messages,
+  style,
+  locale,
+}: CreateMarkChapterCompleteToolParams) {
   return tool({
     description: `Signal that the current chapter is complete and the learner is ready to move on.
 
 Rules:
 - Fire this tool exactly once, when the chapter's material is fully covered AND the learner has demonstrated grasp of the key ideas. Do not fire it speculatively.
 - After firing this tool, end your message. Do not continue teaching in the same turn.
-- Never claim the chapter is complete in prose without also calling this tool — the tool call is the canonical signal the UI listens for to show the "Go to next chapter" button.
-- This tool does not move the learner forward by itself. The user clicks a button to confirm.`,
+- Never claim the chapter is complete in prose without also calling this tool — the tool call is the canonical signal the UI listens for to navigate to the next chapter automatically.`,
     inputSchema: z.object({}),
-    execute: async () => ({ ok: true }),
+    execute: async (): Promise<MarkChapterCompleteOutput> => {
+      const summary = await generateChapterSummary({
+        style,
+        locale,
+        chapter,
+        messages,
+      });
+
+      const { nextIdx } = await completeChapter({
+        userId,
+        journeyId: journey.id,
+        idx: chapter.idx,
+        summary,
+      });
+
+      if (nextIdx === null) {
+        return { nextChapterPath: null };
+      }
+
+      const next = journey.chapters.find((c) => c.idx === nextIdx) ?? null;
+      return {
+        nextChapterPath: next === null ? null : chapterPath(journey, next),
+      };
+    },
   });
 }
 

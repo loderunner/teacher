@@ -24,7 +24,7 @@ import { PRESETS } from '@/lib/server/styles/presets';
 import { ensureUser } from '@/lib/server/users/ensure';
 import {
   composeSyllabusSystemPrompt,
-  updateSyllabusDraftTool,
+  createUpdateSyllabusDraftTool,
 } from '@/lib/syllabus-chat';
 
 export const maxDuration = 60;
@@ -148,7 +148,9 @@ export async function POST(
     model: getModel(),
     system,
     messages: modelMessages,
-    tools: { updateSyllabusDraft: updateSyllabusDraftTool },
+    tools: {
+      updateSyllabusDraft: createUpdateSyllabusDraftTool({ userId, journeyId }),
+    },
     stopWhen: stepCountIs(5),
     providerOptions: {
       anthropic: {

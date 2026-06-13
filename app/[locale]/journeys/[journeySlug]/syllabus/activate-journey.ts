@@ -7,7 +7,7 @@ import { parseLocale } from '@/i18n/locale';
 import { activateJourney } from '@/lib/server/journeys/activate';
 import { getJourney } from '@/lib/server/journeys/get';
 import { getMessages } from '@/lib/server/messages';
-import { type Syllabus, syllabusSchema } from '@/lib/server/syllabus/schema';
+import { syllabusSchema } from '@/lib/server/syllabus/schema';
 import { ensureUser } from '@/lib/server/users/ensure';
 import { bootstrapJourney } from '@/lib/syllabus-chat';
 import { journeyPath } from '@/lib/url';
@@ -15,7 +15,6 @@ import { journeyPath } from '@/lib/url';
 /** Input for {@link activateJourneyAction}. */
 export type ActivateJourneyInput = {
   journeyId: string;
-  syllabus: Syllabus;
 };
 
 /** Result returned after a draft journey is activated. */
@@ -25,11 +24,12 @@ export type ActivateJourneyResult = {
 };
 
 /**
- * Finalises a draft journey: derives title and memory, then activates the row
- * and inserts chapter records. The journey row's stored `styleId` is the
- * source of truth — picker changes during drafting do not propagate.
+ * Finalises a draft journey: reads the syllabus and transcript from the DB,
+ * derives title and memory, then activates the row and inserts chapter
+ * records. The journey row's stored `styleId` is the source of truth —
+ * picker changes during drafting do not propagate.
  *
- * @param input - Journey id and syllabus.
+ * @param input - Journey id.
  * @returns URL path to the active journey root.
  * @throws Error when unauthenticated, journey is missing, or not drafting.
  */
@@ -48,7 +48,7 @@ export async function activateJourneyAction(
     throw new Error('Journey not found or not in drafting status');
   }
 
-  const syllabus = syllabusSchema.parse(input.syllabus);
+  const syllabus = syllabusSchema.parse(existing.syllabus);
   const locale = parseLocale(await getLocale());
 
   const messages = await getMessages({
