@@ -5,8 +5,6 @@ services:
       POSTGRES_DB: journey
       POSTGRES_USER: journey
       POSTGRES_PASSWORD: journey
-    ports:
-      - '5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql
     healthcheck:
