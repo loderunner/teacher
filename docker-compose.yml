@@ -8,7 +8,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U sandcastle -d sandcastle']
+      test: ['CMD-SHELL', 'pg_isready -U journey -d journey']
       interval: 5s
       timeout: 5s
       retries: 5

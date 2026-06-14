@@ -31,13 +31,11 @@
           {
             "type": "command",
             "command": "pnpm typecheck 1>&2",
-            "async": true,
             "timeout": 10
           },
           {
             "type": "command",
             "command": "pnpm test:coverage 1>&2",
-            "async": true,
             "timeout": 120
           }
         ]
