@@ -47,7 +47,7 @@ export const journeys = pgTable(
       .defaultNow()
       .$onUpdateFn(() => new Date()),
   },
-  (t) => [index('journeys_user_idx').on(t.userId)],
+  (t) => [index('journeys_user_updated_idx').on(t.userId, t.updatedAt, t.id)],
 );
 
 /** Postgres enum for the progression state of a chapter. */
