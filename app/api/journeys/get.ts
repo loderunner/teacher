@@ -226,6 +226,8 @@ export async function getJourneysPage({
     ...j,
     id: String(offset + i).padStart(10, '0'),
     updatedAt: new Date(Date.now() - (offset + i) * 3_600_000),
+    currentChapterNumber:
+      j.status === 'active' ? Math.max(1, Math.ceil(j.chapterCount / 3)) : null,
   }));
   const last = items.at(-1);
   return {

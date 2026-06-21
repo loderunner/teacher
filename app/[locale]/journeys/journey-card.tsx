@@ -12,10 +12,13 @@ type JourneyCardProps = {
   title: string;
   /** Teaching style preset ID, e.g. `"teacher"`. */
   styleId: string;
-  /** Number of chapters in the syllabus. */
+  /** Total number of chapters in the syllabus. */
   chapterCount: number;
-  /** Whether the journey is still in the drafting state. */
-  drafting: boolean;
+  /**
+   * 1-based index of the current chapter. `null` for drafting journeys that
+   * have not yet been activated.
+   */
+  currentChapterNumber: number | null;
   /** Pre-formatted relative time string, e.g. `"2 days ago"`. */
   relativeDate: string;
 };
@@ -27,14 +30,14 @@ const isStyleKey = (s: string): s is StyleKey =>
   (STYLE_KEYS as readonly string[]).includes(s);
 
 /**
- * Card displaying a single journey summary — title, style, chapter count, and
- * relative last-updated time. The entire card is a navigation link.
+ * Card displaying a single journey summary — title, style, chapter progress,
+ * and relative last-updated time. The entire card is a navigation link.
  *
  * @param href - Locale-aware URL for the journey.
  * @param title - Journey title.
  * @param styleId - Teaching style preset ID.
- * @param chapterCount - Number of chapters in the syllabus.
- * @param drafting - Whether the journey is still being drafted.
+ * @param chapterCount - Total number of chapters in the syllabus.
+ * @param currentChapterNumber - 1-based current chapter, or `null` for drafts.
  * @param relativeDate - Pre-formatted relative time (e.g. "2 days ago").
  */
 export function JourneyCard({
@@ -42,11 +45,22 @@ export function JourneyCard({
   title,
   styleId,
   chapterCount,
-  drafting,
+  currentChapterNumber,
   relativeDate,
 }: JourneyCardProps) {
   const t = useTranslations('Journeys');
   const tStyle = useTranslations('StylePicker');
+
+  const metaItems =
+    currentChapterNumber !== null
+      ? [
+          t('chapterProgress', {
+            current: currentChapterNumber,
+            total: chapterCount,
+          }),
+          relativeDate,
+        ]
+      : [t('draft'), t('chapters', { count: chapterCount }), relativeDate];
 
   return (
     <Link
@@ -58,16 +72,17 @@ export function JourneyCard({
     >
       <div className="flex items-start justify-between gap-2">
         <span className="text-sm font-medium">{title}</span>
-        <div className="flex shrink-0 items-center gap-1.5">
-          {drafting && <Badge variant="outline">{t('draftBadge')}</Badge>}
-          <Badge variant="secondary">
-            {isStyleKey(styleId) ? tStyle(styleId) : styleId}
-          </Badge>
-        </div>
+        <Badge variant="secondary">
+          {isStyleKey(styleId) ? tStyle(styleId) : styleId}
+        </Badge>
       </div>
-      <div className="text-muted-foreground mt-2 flex items-center gap-3 text-xs">
-        <span>{t('chapters', { count: chapterCount })}</span>
-        <span>{relativeDate}</span>
+      <div className="text-muted-foreground mt-2 flex items-center gap-1.5 text-xs">
+        {metaItems.map((item, i) => (
+          <span key={i} className="flex items-center gap-1.5">
+            {i > 0 && <span aria-hidden>•</span>}
+            {item}
+          </span>
+        ))}
       </div>
     </Link>
   );

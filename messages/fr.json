@@ -5,8 +5,9 @@
     "newJourney": "Nouveau parcours",
     "searchPlaceholder": "Rechercher des parcours…",
     "loadMore": "Charger plus",
+    "chapterProgress": "Chapitre {current} sur {total}",
+    "draft": "Brouillon",
     "chapters": "{count, plural, one {# chapitre} other {# chapitres}}",
-    "draftBadge": "Brouillon",
     "noResults": "Aucun parcours ne correspond à votre recherche."
   },
   "Home": {

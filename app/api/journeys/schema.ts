@@ -7,6 +7,7 @@ export const journeySummarySchema = z.object({
   styleId: z.string(),
   status: z.enum(['drafting', 'active']),
   chapterCount: z.number().int().nonnegative(),
+  currentChapterNumber: z.number().int().positive().nullable(),
   updatedAt: z.coerce.date(),
 });
 

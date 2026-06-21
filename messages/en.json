@@ -5,8 +5,9 @@
     "newJourney": "New journey",
     "searchPlaceholder": "Search journeys…",
     "loadMore": "Load more",
+    "chapterProgress": "Chapter {current} of {total}",
+    "draft": "Draft",
     "chapters": "{count, plural, one {# chapter} other {# chapters}}",
-    "draftBadge": "Draft",
     "noResults": "No journeys match your search."
   },
   "Home": {

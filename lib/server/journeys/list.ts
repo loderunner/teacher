@@ -15,6 +15,11 @@ export type JourneySummary = {
   status: 'drafting' | 'active';
   /** Number of chapters in the syllabus. */
   chapterCount: number;
+  /**
+   * 1-based index of the current chapter. `null` for drafting journeys that
+   * have not yet been activated.
+   */
+  currentChapterNumber: number | null;
   /** Timestamp of the last update. */
   updatedAt: Date;
 };
@@ -61,6 +66,11 @@ export async function listJourneys({
       styleId: journeys.styleId,
       status: journeys.status,
       chapterCount: sql<number>`jsonb_array_length(${journeys.syllabus}->'chapters')`,
+      currentChapterNumber: sql<number | null>`
+        CASE WHEN ${journeys.status} = 'active'
+          THEN ${journeys.currentChapterIndex} + 1
+          ELSE NULL
+        END`,
       updatedAt: journeys.updatedAt,
     })
     .from(journeys)

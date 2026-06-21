@@ -117,7 +117,7 @@ export function JourneysViewIsland({
             <li key={item.id}>
               <JourneyCard
                 chapterCount={item.chapterCount}
-                drafting={item.status === 'drafting'}
+                currentChapterNumber={item.currentChapterNumber}
                 href={journeyPath(item.id, item.title)}
                 relativeDate={formatRelativeDate(item.updatedAt, locale)}
                 styleId={item.styleId}
