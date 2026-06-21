@@ -50,8 +50,8 @@ export default async function LocaleLayout({
     <ThemeProvider>
       <ClerkProvider localization={localization}>
         <NextIntlClientProvider messages={messages}>
+          <div className="flex h-dvh flex-col">{children}</div>
           <TopBar />
-          {children}
         </NextIntlClientProvider>
       </ClerkProvider>
     </ThemeProvider>
