@@ -7,6 +7,8 @@ import {
   listJourneysResponseSchema,
 } from './schema';
 
+import { listJourneys } from '@/lib/server/journeys/list';
+
 export type { ListJourneysResponse };
 
 const querySchema = z.object({
@@ -86,156 +88,19 @@ type GetJourneysPageParams = {
  * @param params - The user, page size, and optional decoded cursor.
  * @returns A validated list-journeys response.
  */
-// HACK: fake journey catalogue to test search + load-more — remove when done
-const FAKE_JOURNEYS = [
-  {
-    title: 'Introduction to Calculus',
-    styleId: 'socratic',
-    status: 'active' as const,
-    chapterCount: 12,
-  },
-  {
-    title: 'Linear Algebra Fundamentals',
-    styleId: 'direct',
-    status: 'active' as const,
-    chapterCount: 8,
-  },
-  {
-    title: 'Organic Chemistry Basics',
-    styleId: 'socratic',
-    status: 'drafting' as const,
-    chapterCount: 6,
-  },
-  {
-    title: 'World History: Ancient Civilizations',
-    styleId: 'storytelling',
-    status: 'active' as const,
-    chapterCount: 15,
-  },
-  {
-    title: 'Introduction to Python Programming',
-    styleId: 'direct',
-    status: 'active' as const,
-    chapterCount: 10,
-  },
-  {
-    title: 'French for Beginners',
-    styleId: 'conversational',
-    status: 'drafting' as const,
-    chapterCount: 4,
-  },
-  {
-    title: 'Classical Music Theory',
-    styleId: 'socratic',
-    status: 'active' as const,
-    chapterCount: 9,
-  },
-  {
-    title: 'Quantum Mechanics',
-    styleId: 'direct',
-    status: 'drafting' as const,
-    chapterCount: 7,
-  },
-  {
-    title: 'Creative Writing: Short Fiction',
-    styleId: 'storytelling',
-    status: 'active' as const,
-    chapterCount: 5,
-  },
-  {
-    title: 'Macroeconomics',
-    styleId: 'direct',
-    status: 'active' as const,
-    chapterCount: 11,
-  },
-  {
-    title: 'Human Anatomy',
-    styleId: 'direct',
-    status: 'active' as const,
-    chapterCount: 14,
-  },
-  {
-    title: 'Philosophy of Mind',
-    styleId: 'socratic',
-    status: 'drafting' as const,
-    chapterCount: 6,
-  },
-  {
-    title: 'Data Structures and Algorithms',
-    styleId: 'direct',
-    status: 'active' as const,
-    chapterCount: 13,
-  },
-  {
-    title: 'Spanish Literature',
-    styleId: 'storytelling',
-    status: 'active' as const,
-    chapterCount: 8,
-  },
-  {
-    title: 'Environmental Science',
-    styleId: 'direct',
-    status: 'drafting' as const,
-    chapterCount: 5,
-  },
-  {
-    title: 'Advanced Statistics',
-    styleId: 'direct',
-    status: 'active' as const,
-    chapterCount: 10,
-  },
-  {
-    title: 'Renaissance Art History',
-    styleId: 'storytelling',
-    status: 'active' as const,
-    chapterCount: 7,
-  },
-  {
-    title: 'Molecular Biology',
-    styleId: 'socratic',
-    status: 'active' as const,
-    chapterCount: 9,
-  },
-  {
-    title: 'Constitutional Law',
-    styleId: 'socratic',
-    status: 'drafting' as const,
-    chapterCount: 6,
-  },
-  {
-    title: 'Introduction to Machine Learning',
-    styleId: 'direct',
-    status: 'active' as const,
-    chapterCount: 11,
-  },
-];
-
 export async function getJourneysPage({
+  userId,
   limit = 10,
   cursor,
 }: GetJourneysPageParams): Promise<ListJourneysResponse> {
-  const offset =
-    cursor !== undefined
-      ? FAKE_JOURNEYS.findIndex(
-          (_, i) => String(i).padStart(10, '0') === cursor.id,
-        ) + 1
-      : 0;
-  const slice = FAKE_JOURNEYS.slice(offset, offset + limit);
-  const hasMore = offset + limit < FAKE_JOURNEYS.length;
-  const items = slice.map((j, i) => ({
-    ...j,
-    id: String(offset + i).padStart(10, '0'),
-    updatedAt: new Date(Date.now() - (offset + i) * 3_600_000),
-    currentChapterNumber:
-      j.status === 'active' ? Math.max(1, Math.ceil(j.chapterCount / 3)) : null,
-  }));
+  const fetched = await listJourneys({ userId, limit: limit + 1, ...cursor });
+  const hasMore = fetched.length > limit;
+  const items = hasMore ? fetched.slice(0, limit) : fetched;
   const last = items.at(-1);
   return {
     items,
     nextPageToken:
-      hasMore && last !== undefined
-        ? encodePageToken({ updatedAt: last.updatedAt, id: last.id })
-        : undefined,
+      hasMore && last !== undefined ? encodePageToken(last) : undefined,
   };
 }
 
