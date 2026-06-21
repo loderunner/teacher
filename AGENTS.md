@@ -41,17 +41,37 @@ Modules under `lib/server/*` provide abstractions over backend entities
 (schemas, persistence, queries). They are use-case agnostic and contain no AI
 prompts, no chat orchestration, no UI-driven flows.
 
-## Use cases live in their own feature module under `lib/<feature-name>/`
+## Use cases live under `lib/<domain>/`
 
-A feature module combines entities + AI + UI orchestration to deliver a
-user-facing capability. Example: `lib/syllabus-chat/` owns the chat-driven
-syllabus-building flow — its prompts, its tool, and its bootstrap step.
+A module under `lib/<domain>/` (without the `server/` prefix) delivers a domain
+operation: assembling a paginated response, activating a journey, orchestrating
+an AI chat flow. It may span multiple entity-layer modules, apply business
+rules, or call external services. It has no HTTP concerns (`Request`,
+`Response`, status codes) and no React.
+
+Example: `lib/syllabus-chat/` owns the chat-driven syllabus-building flow — its
+prompts, its tool, and its bootstrap step.
+
+Do not create a use-case module speculatively. Keep logic in the handler until
+it earns extraction: a second caller needs it, or it contains rules worth
+testing independently of HTTP.
+
+## API handlers own the HTTP boundary
+
+An API handler's job: authenticate the request, parse and validate input, call
+into the use-case or entity layer, serialize the response. Wire format belongs
+here — pagination token encoding, HTTP status codes, response shape. Business
+logic does not.
+
+A handler may call `lib/server/*` directly for simple I/O with no domain logic.
+When a use-case module exists for a domain, call that instead.
 
 ## Multi-file modules export through a barrel
 
-When a feature module spans multiple files, expose its public API through a
-single `index.ts` barrel. Consumers import from the module directory, not from
-internal files.
+When a module spans multiple files, expose its public API through a single
+barrel. Consumers import from the module directory, not from internal files.
+
+### Feature modules (`index.ts`)
 
 ```ts
 // correct
@@ -64,6 +84,65 @@ import { JourneyChatView } from '@/lib/journey-chat/view';
 
 The barrel re-exports only what is part of the module's public contract.
 Internal helpers that are not meant for outside use are not re-exported.
+
+### API endpoints (`route.ts`)
+
+API routes follow the same barrel model, but Next.js only picks up `route.ts` as
+the entry point — not `index.ts`. Split each HTTP method into its own file; keep
+`route.ts` as a thin re-export barrel.
+
+```
+app/api/foo/
+├── route.ts       ← barrel (Next.js entry point)
+├── get.test.ts
+├── get.ts
+├── post.test.ts
+└── post.ts
+```
+
+Each method file owns its handler, request/response types, and Zod schemas.
+Clients import types from the method file (e.g. `@/app/api/foo/post`), not from
+`route.ts`.
+
+```ts
+// post.ts
+export type RequestBody = {
+  /** The name of the Foo to create */
+  name: string;
+};
+
+const requestBodySchema: z.ZodType<RequestBody> = z.object({
+  name: z.string(),
+});
+
+export type ResponseBody = {
+  /** The created Foo's ID */
+  id: string;
+  /** The created Foo's name */
+  name: string;
+};
+
+const responseBodySchema: z.ZodType<ResponseBody> = z.object({
+  id: z.string(),
+  name: z.string(),
+});
+
+export async function POST(
+  req: Request,
+  context: RouteContext,
+): Promise<NextResponse<ResponseBody>> {
+  // ...
+}
+```
+
+```ts
+// route.ts
+export { POST } from './post';
+export { GET } from './get';
+```
+
+`route.ts` re-exports only HTTP method handlers. Types, schemas, and helpers
+stay in the method files — imported explicitly by consumers and tests.
 
 ## A feature owns its AI config
 
@@ -462,10 +541,22 @@ after `JSON.parse` or `req.json()`. Run trusted output through the schema before
 `JSON.stringify` or `Response.json()` — this validates shape and strips fields
 the schema does not allow.
 
-Define schemas next to the entity they describe (e.g.
-`lib/server/syllabus/schema.ts`). Infer TypeScript types with
-`z.infer<typeof …>`; do not maintain parallel hand-written types for the same
-shape.
+Infer TypeScript types with `z.infer<typeof …>`; do not maintain parallel
+hand-written types for the same shape.
+
+### Schema ownership
+
+Who defines the schema depends on the boundary:
+
+- **API endpoints** — each method file (`get.ts`, `post.ts`, …) owns the Zod
+  schemas and exported types for its request and response bodies. Shared helpers
+  (e.g. page-token codecs) live in the method file or in colocated modules under
+  the same route directory. Clients import types from the method file; they do
+  not redefine the shape.
+- **Database JSONB columns** — the persistence module that executes the queries
+  owns the Zod schemas (e.g. `lib/server/syllabus/schema.ts` colocated with the
+  queries that read and write the column). Callers of that module import the
+  exported types; they do not parse or validate JSONB themselves.
 
 Validate all **incoming** JSON:
 
@@ -588,6 +679,78 @@ expect(str).toContain('substring');
 expect(result !== null).toBe(true);
 expect(fn.mock.calls.length).toBe(1);
 ```
+
+## Pagination
+
+List endpoints that are paginated use **cursor-based pagination** — never offset
+(`?page=` / `?offset=`).
+
+Pagination tokens are an **API concern**. Route handlers own the full token
+lifecycle: deserialize and validate incoming `pageToken` query parameters, call
+underlying `lib/server/*` functions with the decoded cursor fields, then
+serialize `nextPageToken` on the way out. Entity-layer functions never accept or
+return opaque token strings — they take plain cursor values (e.g. `updatedAt`
+and `id`) that the handler extracted from a valid token.
+
+```ts
+// route handler — owns tokens
+const decoded = decodePageToken(rawToken);
+if (decoded === null) {
+  return new Response('Bad Request', { status: 400 });
+}
+const items = await listJourneys({ userId, limit, ...decoded });
+
+// lib/server/* — owns the query, not the wire format
+type ListJourneysParams = {
+  userId: string;
+  limit: number;
+  updatedAt?: Date;
+  id?: string;
+};
+```
+
+### Naming
+
+Use Google's page token convention:
+
+- Request: `?pageToken=<token>` — omit for the first page
+- Response: `{ items: T[], nextPageToken: string | null }` — `null` signals the
+  last page
+
+Clients **never construct tokens**. They only echo back what the server placed
+in `nextPageToken`. This makes inclusiveness, sort direction, and tie-breaking
+invisible to the caller.
+
+### Cursor encoding
+
+Implement `encodePageToken` / `decodePageToken` next to the route handler (or in
+colocated modules under the same route directory). Do not put token codecs in
+`lib/server/*`.
+
+Encode cursors as a **fixed-width binary struct** serialized to `base64url` — no
+JSON, no field names, no separators. Map each cursor field to a fixed byte range
+(e.g. an `int64` for a timestamp, a fixed-length ASCII ID). Decode by reading
+the same offsets in reverse. This keeps tokens short and opaque.
+
+Example for an `(updatedAt, id)` cursor:
+
+```
+[0..7]  int64 big-endian — updatedAt milliseconds since Unix epoch
+[8..17] ASCII            — 10-char nanoid
+→ 18 bytes → 24 base64url chars
+```
+
+### Stability
+
+When the sort key can have ties, include a secondary key (e.g. the row ID) in
+both the cursor and the `WHERE` predicate:
+
+```sql
+WHERE (updated_at < $1) OR (updated_at = $1 AND id < $2)
+ORDER BY updated_at DESC, id DESC
+```
+
+The database index must cover all fields in the predicate.
 
 ## Git
 
