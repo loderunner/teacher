@@ -76,7 +76,7 @@ export function ChapterPage({ journey, chapter, initialMessages }: Props) {
 
   useEffect(
     () => () => {
-      stop();
+      void stop();
     },
     [stop],
   );
