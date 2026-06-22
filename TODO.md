@@ -125,12 +125,20 @@ We need to call `stop` on the chat hook when the user navigates away from a
 page, otherwise the model will continue generating text in the background,
 wasting tokens and money.
 
-## Pagination
+## Journey card description
 
-We should paginate get functions that return arrays of resources. Maybe just
-journeys? Chapters will always be pretty limited in a single journey. Messages,
-we may just want to make sure we always show all messages in one go? No
-"infinite scroll" or "load more" buttons.
+The journey card on the `/journeys` page currently shows title, style, chapter
+count, and last-updated time, but no description. Add a `description` column to
+the `journeys` table (migration required), populate it during syllabus
+construction, and surface it on the card as a subtitle below the title.
+
+## Full-text search in chapter messages
+
+The search bar on `/journeys` filters only the loaded journey cards by title and
+style name. Full-text search through chapter message content requires a
+`tsvector` index on the `messages` table and a server-side API endpoint. The
+current client-side filter should be replaced or supplemented with a debounced
+server call once this is implemented.
 
 ## Find a better name for the project
 
@@ -215,3 +223,8 @@ Adopt the following conventions:
   tool call traces for trajectory assertions.
 
 Add a new section to AGENTS.md for prompt testing and evaluations guidelines.
+
+## Error handling
+
+- Error toasts for async errors
+- No silent errors

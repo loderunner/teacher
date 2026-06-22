@@ -2,7 +2,13 @@
   "Journeys": {
     "title": "Your Journeys",
     "empty": "No journeys yet.",
-    "newJourney": "New journey"
+    "newJourney": "New journey",
+    "searchPlaceholder": "Search journeys…",
+    "loadMore": "Load more",
+    "chapterProgress": "Chapter {current} of {total}",
+    "draft": "Draft",
+    "chapters": "{count, plural, one {# chapter} other {# chapters}}",
+    "noResults": "No journeys match your search."
   },
   "Home": {
     "comingSoon": "Welcome — coming soon"
