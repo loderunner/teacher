@@ -10,8 +10,8 @@ export type ParsedSlug = {
 export type ParsedChapterSlug = {
   /** The 10-character nanoid of the chapter. */
   id: string;
-  /** 1-based chapter number (human-readable prefix). */
-  n: number;
+  /** 1-based chapter number (human-readable prefix). Absent for bare-ID segments. */
+  n?: number;
   /** The human-readable slug portion between the number and the id. */
   slugPart: string;
 };
@@ -118,6 +118,10 @@ export function chapterPath(
  * // → { n: 1, slugPart: 'installing-python', id: 'abc123def4' }
  */
 export function parseChapterSlug(seg: string): ParsedChapterSlug | null {
+  // bare 10-char nanoid with no number prefix or slug
+  if (seg.length === 10) {
+    return { slugPart: '', id: seg };
+  }
   // shape: <n>-<title-slug>-<10-char-nanoid>; separator before id is at -11
   if (seg.length < 12 || seg[seg.length - 11] !== '-') {
     return null;

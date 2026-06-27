@@ -183,6 +183,13 @@ describe('parseChapterSlug', () => {
       id: 'VVef8d10Tb',
     });
   });
+
+  it('accepts a bare 10-character nanoid with no number prefix or slug', () => {
+    expect(parseChapterSlug('VVef8d10Tb')).toEqual({
+      slugPart: '',
+      id: 'VVef8d10Tb',
+    });
+  });
 });
 
 describe('chapterPath and parseChapterSlug round-trip', () => {
