@@ -74,15 +74,12 @@ describe('chapterSlugSegment', () => {
     const chapter = { id: 'cid1234567', idx: 0, title: 'Installing Python' };
     const full = chapterPath(journey, chapter);
     const journeyPrefix = journeyPath(journey.id, journey.title);
-    expect(full).toBe(
-      `${journeyPrefix}/${chapterSlugSegment(journey, chapter)}`,
-    );
+    expect(full).toBe(`${journeyPrefix}/${chapterSlugSegment(chapter)}`);
   });
 
   it('produces the correct segment', () => {
-    const journey = { id: 'jid1234567', title: 'Intro to Rust' };
     const chapter = { id: 'cid1234567', idx: 2, title: 'Borrowing' };
-    expect(chapterSlugSegment(journey, chapter)).toBe('3-borrowing-cid1234567');
+    expect(chapterSlugSegment(chapter)).toBe('3-borrowing-cid1234567');
   });
 });
 

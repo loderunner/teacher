@@ -75,14 +75,14 @@ export function parseJourneySlug(seg: string): ParsedSlug | null {
  * Returns the URL segment for a chapter (the chapter-level part only,
  * without the journey prefix).
  *
- * @param journey - Journey with `id` and `title`.
  * @param chapter - Chapter with `id`, `idx` (0-based), and `title`.
  * @returns A segment such as `"1-variables-xyz9876543"`.
  */
-export function chapterSlugSegment(
-  journey: { id: string; title: string },
-  chapter: { id: string; idx: number; title: string },
-): string {
+export function chapterSlugSegment(chapter: {
+  id: string;
+  idx: number;
+  title: string;
+}): string {
   return `${chapter.idx + 1}-${slugify(chapter.title)}-${chapter.id}`;
 }
 
@@ -97,7 +97,7 @@ export function chapterPath(
   journey: { id: string; title: string },
   chapter: { id: string; idx: number; title: string },
 ): string {
-  return `${journeyPath(journey.id, journey.title)}/${chapterSlugSegment(journey, chapter)}`;
+  return `${journeyPath(journey.id, journey.title)}/${chapterSlugSegment(chapter)}`;
 }
 
 /**
