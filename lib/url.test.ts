@@ -123,8 +123,10 @@ describe('parseChapterSlug', () => {
     });
   });
 
-  it('returns only the id for multi-word slugs', () => {
+  it('parses a canonical multi-word chapter slug', () => {
     expect(parseChapterSlug('1-installing-python-abc123def4')).toEqual({
+      n: 1,
+      slugPart: 'installing-python',
       id: 'abc123def4',
     });
   });
@@ -157,7 +159,7 @@ describe('parseChapterSlug', () => {
     });
   });
 
-  it('returns only the id when n=0 (multi-word slug, no match)', () => {
+  it('returns only the id when n=0', () => {
     expect(parseChapterSlug('0-installing-python-abc123def4')).toEqual({
       id: 'abc123def4',
     });
@@ -174,9 +176,11 @@ describe('chapterSlugSegment and parseChapterSlug round-trip', () => {
     });
   });
 
-  it('recovers only the id for a multi-word title', () => {
+  it('recovers n, slug part, and id for a multi-word title', () => {
     const chapter = { id: 'abc123def4', idx: 1, title: 'Démarrage rapide' };
     expect(parseChapterSlug(chapterSlugSegment(chapter))).toEqual({
+      n: 2,
+      slugPart: 'demarrage-rapide',
       id: 'abc123def4',
     });
   });

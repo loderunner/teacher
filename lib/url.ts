@@ -123,12 +123,15 @@ export function parseChapterSlug(seg: string): ParsedChapterSlug | null {
 
   // The rest of the segment should match the pattern "<n>-<slug>-<id>"
   const rest = seg.slice(0, -10);
-  const match = rest.match(/^(\d+)-([^-]+)-$/);
+  const match = rest.match(/^(\d+)-(.+)-$/);
   if (match === null) {
     return { id };
   }
-  const [, n, slugPart] = match;
-  return { n: Number(n), slugPart, id };
+  const n = Number(match[1]);
+  if (n < 1) {
+    return { id };
+  }
+  return { n, slugPart: match[2], id };
 }
 
 /**
