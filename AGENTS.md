@@ -223,7 +223,7 @@ Never hardcode plain text strings in user-facing components.
 
 ## shadcn/ui components are vendored, not imported
 
-shadcn/ui code is copied into `components/ui/` by the CLI — it lives in this
+shadcn/ui code is copied into `lib/components/ui/` by the CLI — it lives in this
 repository like any other source file. Treat each newly added component as
 unreviewed contributor code: pass it through `pnpm lint:fix`, then review it
 against the coding standards below before using it. Typical adjustments are the
@@ -248,9 +248,9 @@ app/[locale]/journeys/[journeySlug]/[chapterSlug]/
 └── set-journey-style.ts     ← colocated server action
 ```
 
-Move a file to `components/` (root-level) only when it is used by two or more
+Move a file under a `lib/` subdirectory only when it is used by two or more
 unrelated routes. Do not create intermediate shared directories; if genuine
-sharing appears, lift directly to the root.
+sharing appears, lift directly to `lib/`.
 
 ## Testing
 
@@ -442,6 +442,12 @@ Organize files around feature concerns, not code categories. Prefer directories
 named after what the code _does_ (`auth/`, `billing/`) over what it _is_
 (`components/`, `hooks/`, `adapters/`).
 
+### Source directory boundary
+
+No source files live outside `app/` or `lib/`. Config and setup files
+(`*.config.ts`, `proxy.ts`, etc.) may remain at the repository root, but all
+application source belongs under one of the two canonical directories.
+
 ## Documentation
 
 Document exported TypeScript symbols with JSDoc. Document properties
@@ -509,8 +515,8 @@ return <div>{panel}</div>;
 `'use client'` marks a boundary in the React module graph — everything in its
 import subtree becomes part of the client bundle. Place it **only on files
 inside `app/`** (pages, layouts, and route-colocated components). Reusable files
-under `lib/` and `components/` do not carry `'use client'` because they cannot
-know whether a caller will place them at a server/client boundary.
+under `lib/` do not carry `'use client'` because they cannot know whether a
+caller will place them at a server/client boundary.
 
 Reusable files that require client-only capabilities instead import the
 [`client-only`](https://www.npmjs.com/package/client-only) package, which

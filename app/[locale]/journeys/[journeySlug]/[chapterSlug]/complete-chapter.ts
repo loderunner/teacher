@@ -5,7 +5,7 @@ import { type UIMessage, generateText } from 'ai';
 import { getLocale } from 'next-intl/server';
 import { z } from 'zod';
 
-import { type Locale, parseLocale } from '@/i18n/locale';
+import { type Locale, parseLocale } from '@/lib/i18n/locale';
 import { getModel } from '@/lib/ai/model';
 import { completeChapter } from '@/lib/chapters/complete';
 import { type JourneyChapter, getJourney } from '@/lib/journeys/get';

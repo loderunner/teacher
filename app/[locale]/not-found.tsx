@@ -1,7 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 
-import { buttonVariants } from '@/components/ui/button';
-import { Link } from '@/i18n/navigation';
+import { buttonVariants } from '@/lib/components/ui/button';
+import { Link } from '@/lib/i18n/navigation';
 
 /** 404 page rendered within the locale layout when notFound() is called. */
 export default async function NotFound() {

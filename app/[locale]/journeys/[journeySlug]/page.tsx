@@ -1,7 +1,7 @@
 import { auth } from '@clerk/nextjs/server';
 import { notFound } from 'next/navigation';
 
-import { permanentRedirect, redirect } from '@/i18n/navigation';
+import { permanentRedirect, redirect } from '@/lib/i18n/navigation';
 import { getJourney } from '@/lib/journeys/get';
 import { chapterPath, journeyPath, parseJourneySlug } from '@/lib/url';
 import { ensureUser } from '@/lib/users/ensure';

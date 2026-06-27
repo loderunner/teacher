@@ -1,4 +1,4 @@
-import type { Locale } from '@/i18n/locale';
+import type { Locale } from '@/lib/i18n/locale';
 import type { Style } from '@/lib/styles/get';
 
 const syllabusPhase: Record<Locale, string> = {

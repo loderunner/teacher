@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 
-import { buttonVariants } from '@/components/ui/button';
+import { buttonVariants } from '@/lib/components/ui/button';
 
 /** Root 404 page for URLs that don't match any route. */
 export default async function NotFound() {

@@ -23,7 +23,7 @@ type BodyProps = {
  * {@link Body}.
  *
  * @example
- * import { SidebarSection } from '@/components/journey';
+ * import { SidebarSection } from '@/lib/components/journey';
  *
  * <SidebarSection.Root>
  *   <SidebarSection.Header>Syllabus</SidebarSection.Header>

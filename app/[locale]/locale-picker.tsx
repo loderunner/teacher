@@ -8,10 +8,10 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { parseLocale } from '@/i18n/locale';
-import { usePathname, useRouter } from '@/i18n/navigation';
-import { routing } from '@/i18n/routing';
+} from '@/lib/components/ui/dropdown-menu';
+import { parseLocale } from '@/lib/i18n/locale';
+import { usePathname, useRouter } from '@/lib/i18n/navigation';
+import { routing } from '@/lib/i18n/routing';
 
 const localeLabels: Record<string, string> = {
   en: '🇬🇧 English',

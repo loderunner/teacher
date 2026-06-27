@@ -2,8 +2,8 @@
 
 import { useTranslations } from 'next-intl';
 
-import { Button, buttonVariants } from '@/components/ui/button';
-import { Link } from '@/i18n/navigation';
+import { Button, buttonVariants } from '@/lib/components/ui/button';
+import { Link } from '@/lib/i18n/navigation';
 
 /** Props for {@link Error}. */
 type Props = {

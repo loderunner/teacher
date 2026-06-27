@@ -1,7 +1,7 @@
 import { type UIMessage } from 'ai';
 import { z } from 'zod';
 
-import type { Locale } from '@/i18n/locale';
+import type { Locale } from '@/lib/i18n/locale';
 
 /**
  * Request body for `POST /api/journeys/[journeyId]/syllabus/chat`.

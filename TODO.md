@@ -23,19 +23,6 @@ persisted and client-only. Now that every message and tool use is persisted, we
 can refactor the tools to actually do something, affect the back or frontend,
 and respond with an actual tool use result or error.
 
-## No source outside app/ or lib/
-
-No source should be outside the app/ or lib/ directories. All source should be
-within these directories. This does not include config or setup files, or
-Next.js files in standard locations like proxy.ts.
-
-`components/`, `i18n`, `messages/` all belong in the `app/` or `lib/`
-directories.
-
-Add this rule to AGENTS.md, and simplify the tsconfig.json include to only point
-to those directories. Then fix the ESLint `allowDefaultProject` rule to include
-relevant files at the root of the repo.
-
 ## Show a "diff" of the syllabus draft when the model updates it
 
 When the model updates the syllabus draft, it should show a "diff" of the

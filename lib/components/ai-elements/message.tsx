@@ -18,14 +18,14 @@ import {
 } from 'react';
 import { Streamdown } from 'streamdown';
 
-import { Button } from '@/components/ui/button';
-import { ButtonGroup, ButtonGroupText } from '@/components/ui/button-group';
+import { Button } from '@/lib/components/ui/button';
+import { ButtonGroup, ButtonGroupText } from '@/lib/components/ui/button-group';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '@/components/ui/tooltip';
+} from '@/lib/components/ui/tooltip';
 import { streamdownPlugins } from '@/lib/streamdown';
 import { cn } from '@/lib/tailwind';
 
