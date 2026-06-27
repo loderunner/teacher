@@ -33,11 +33,11 @@ vi.mock('@/lib/users/ensure', () => ({
   ensureUser: vi.fn(),
 }));
 
-vi.mock('@/lib/chapter-teaching/prompts', () => ({
+vi.mock('./prompts', () => ({
   composeChapterSystemPrompt: vi.fn(() => 'chapter system prompt'),
 }));
 
-vi.mock('@/lib/chapter-teaching/tools', () => ({
+vi.mock('./tools', () => ({
   createAppendMemoriesTool: vi.fn(() => ({})),
   createMarkChapterCompleteTool: vi.fn(() => ({})),
   createProposeSyllabusChangeTool: vi.fn(() => ({})),

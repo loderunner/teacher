@@ -1,5 +1,3 @@
-import type { UIMessage } from 'ai';
-
 import type { Locale } from '@/i18n/locale';
 import type { Journey, JourneyChapter } from '@/lib/journeys/get';
 import type { Style } from '@/lib/styles/get';
@@ -32,63 +30,6 @@ Vous disposez d'un outil \`proposeSyllabusChange\`. Utilisez-le uniquement lorsq
 
 La réflexion étendue ajoute de la latence et ne doit être utilisée que lorsqu'elle améliore significativement la qualité de la réponse. En cas de doute, répondez directement.`,
 };
-
-const summaryInstructions: Record<Locale, string> = {
-  en: `Summarise what was actually taught in this chapter and what the learner demonstrated. Write in the second person ("You learned…, you explored…, you practised…").
-
-Aim for a summary that would fill roughly a quarter of an A4 page — around 150 to 400 words. Use bullet points where they help list concepts or skills. Stick to facts visible in the transcript — do not invent material that was not discussed.
-
-Output only the summary. No introduction, no label, no commentary — just the summary text itself.`,
-  fr: `Résumez ce qui a réellement été enseigné dans ce chapitre et ce que l'apprenant a démontré. Rédigez à la deuxième personne (« Vous avez appris…, vous avez exploré…, vous avez pratiqué… »).
-
-Visez un résumé qui remplirait environ un quart d'une page A4 — entre 150 et 400 mots. Utilisez des puces pour lister les concepts ou compétences. Tenez-vous-en aux faits visibles dans la transcription — n'inventez pas de contenu qui n'a pas été abordé.
-
-Produisez uniquement le résumé. Aucune introduction, aucun titre, aucun commentaire — seulement le texte du résumé.`,
-};
-
-/** Parameters for composing the chapter summary prompt. */
-export type ComposeChapterSummaryPromptParams = {
-  /** Teaching style whose fragment frames the summary voice. */
-  style: Style;
-  /** Locale used to select the correct language variant. */
-  locale: Locale;
-  /** The current chapter being summarised. */
-  chapter: JourneyChapter;
-  /** Chat transcript over the chapter (text parts only). */
-  messages: UIMessage[];
-};
-
-/**
- * Builds the prompt used to generate a chapter summary.
- *
- * @param params - Style, locale, chapter, and chat transcript.
- * @returns Full prompt string suitable for `generateText`.
- */
-export function composeChapterSummaryPrompt({
-  style,
-  locale,
-  chapter,
-  messages,
-}: ComposeChapterSummaryPromptParams): string {
-  const transcript = messages
-    .map((m) => {
-      const text = m.parts
-        .filter((p) => p.type === 'text')
-        .map((p) => ('text' in p ? p.text : ''))
-        .join(' ');
-      return `${m.role}: ${text}`;
-    })
-    .join('\n');
-
-  return `${style.systemPromptFragments[locale]}
-
-${summaryInstructions[locale]}
-
-Chapter: ${chapter.title}
-
-Transcript:
-${transcript}`;
-}
 
 /** Parameters for composing the chapter-phase system prompt. */
 export type ComposeChapterSystemPromptParams = {

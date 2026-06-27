@@ -1,15 +1,16 @@
 'use server';
 
 import { auth } from '@clerk/nextjs/server';
+import { type UIMessage, generateText } from 'ai';
 import { getLocale } from 'next-intl/server';
 import { z } from 'zod';
 
-import { parseLocale } from '@/i18n/locale';
-import { generateChapterSummary } from '@/lib/chapter-teaching/complete';
+import { type Locale, parseLocale } from '@/i18n/locale';
+import { getModel } from '@/lib/ai/model';
 import { completeChapter } from '@/lib/chapters/complete';
-import { getJourney } from '@/lib/journeys/get';
+import { type JourneyChapter, getJourney } from '@/lib/journeys/get';
 import { getMessages } from '@/lib/messages';
-import { getStyle } from '@/lib/styles/get';
+import { type Style, getStyle } from '@/lib/styles/get';
 import { chapterPath } from '@/lib/url';
 
 /** Input for the {@link completeChapterAction} server action. */
@@ -30,6 +31,77 @@ const inputSchema = z.object({
   journeyId: z.string().min(1),
   chapterIdx: z.number().int().min(0),
 });
+
+const summaryInstructions: Record<Locale, string> = {
+  en: `Summarise what was actually taught in this chapter and what the learner demonstrated. Write in the second person ("You learned…, you explored…, you practised…").
+
+Aim for a summary that would fill roughly a quarter of an A4 page — around 150 to 400 words. Use bullet points where they help list concepts or skills. Stick to facts visible in the transcript — do not invent material that was not discussed.
+
+Output only the summary. No introduction, no label, no commentary — just the summary text itself.`,
+  fr: `Résumez ce qui a réellement été enseigné dans ce chapitre et ce que l'apprenant a démontré. Rédigez à la deuxième personne (« Vous avez appris…, vous avez exploré…, vous avez pratiqué… »).
+
+Visez un résumé qui remplirait environ un quart d'une page A4 — entre 150 et 400 mots. Utilisez des puces pour lister les concepts ou compétences. Tenez-vous-en aux faits visibles dans la transcription — n'inventez pas de contenu qui n'a pas été abordé.
+
+Produisez uniquement le résumé. Aucune introduction, aucun titre, aucun commentaire — seulement le texte du résumé.`,
+};
+
+const composeChapterSummaryPrompt = ({
+  style,
+  locale,
+  chapter,
+  messages,
+}: {
+  style: Style;
+  locale: Locale;
+  chapter: JourneyChapter;
+  messages: UIMessage[];
+}): string => {
+  const transcript = messages
+    .map((m) => {
+      const text = m.parts
+        .filter((p) => p.type === 'text')
+        .map((p) => ('text' in p ? p.text : ''))
+        .join(' ');
+      return `${m.role}: ${text}`;
+    })
+    .join('\n');
+
+  return `${style.systemPromptFragments[locale]}
+
+${summaryInstructions[locale]}
+
+Chapter: ${chapter.title}
+
+Transcript:
+${transcript}`;
+};
+
+const generateChapterSummary = async ({
+  style,
+  locale,
+  chapter,
+  messages,
+}: {
+  style: Style;
+  locale: Locale;
+  chapter: JourneyChapter;
+  messages: UIMessage[];
+}): Promise<string> => {
+  const prompt = composeChapterSummaryPrompt({
+    style,
+    locale,
+    chapter,
+    messages,
+  });
+  const { text } = await generateText({
+    model: getModel(),
+    prompt,
+    providerOptions: {
+      anthropic: { thinking: { type: 'adaptive' }, effort: 'low' },
+    },
+  });
+  return text;
+};
 
 /**
  * Server action that finalises a chapter: generates a summary, persists it,
