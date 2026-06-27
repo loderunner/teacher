@@ -5,8 +5,8 @@ import { nanoid } from 'nanoid';
 
 import { createDraftJourney } from '@/lib/journeys/create';
 import { saveMessages } from '@/lib/messages';
+import { journeyPath } from '@/lib/url';
 import { ensureUser } from '@/lib/users/ensure';
-import { canonicalPath } from '@/app/[locale]/journeys/[journeySlug]/url';
 
 /** Input for {@link createDraftJourneyAction}. */
 export type CreateDraftJourneyInput = {
@@ -65,5 +65,5 @@ export async function createDraftJourneyAction(
     ],
   });
 
-  return { id: journey.id, path: canonicalPath(journey) };
+  return { id: journey.id, path: journeyPath(journey) };
 }

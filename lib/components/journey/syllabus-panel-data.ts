@@ -2,7 +2,7 @@ import { type DeepPartial } from 'ai';
 
 import type { Journey } from '@/lib/journeys/get';
 import type { Chapter, Syllabus } from '@/lib/syllabus/schema';
-import { canonicalPath as chapterCanonicalPath } from '@/app/[locale]/journeys/[journeySlug]/[chapterSlug]/url';
+import { chapterPath } from '@/lib/url';
 
 /** Normalized chapter row used by {@link SyllabusPanel} for rendering. */
 export type DisplayChapter = {
@@ -50,7 +50,7 @@ export function buildActivatedChapters(journey: Journey): DisplayChapter[] {
       status: chapter.status,
       href:
         chapter.status !== 'locked'
-          ? chapterCanonicalPath(journey, chapter)
+          ? chapterPath(journey, chapter)
           : undefined,
     };
   });

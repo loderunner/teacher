@@ -8,9 +8,8 @@ import { permanentRedirect } from '@/lib/i18n/navigation';
 import { getJourney } from '@/lib/journeys/get';
 import { getMessages } from '@/lib/messages';
 import { listPresets } from '@/lib/styles/get';
-import { parseJourneySlug } from '@/lib/url';
+import { parseJourneySlug, syllabusPath } from '@/lib/url';
 import { ensureUser } from '@/lib/users/ensure';
-import { canonicalPath } from './url';
 
 export default async function Page({
   params,
@@ -31,8 +30,8 @@ export default async function Page({
     notFound();
   }
 
-  if (`/journeys/${journeySlug}/syllabus` !== canonicalPath(journey)) {
-    permanentRedirect({ href: canonicalPath(journey), locale });
+  if (`/journeys/${journeySlug}/syllabus` !== syllabusPath(journey)) {
+    permanentRedirect({ href: syllabusPath(journey), locale });
   }
 
   const messages = await getMessages({

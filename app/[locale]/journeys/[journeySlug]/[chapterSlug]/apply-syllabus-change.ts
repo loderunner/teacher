@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { applySyllabusChange } from '@/lib/chapters/applySyllabusChange';
 import { getJourney } from '@/lib/journeys/get';
 import { syllabusSchema } from '@/lib/syllabus/schema';
-import { canonicalPath } from './url';
+import { chapterPath } from '@/lib/url';
 
 /** Input for the {@link applySyllabusChangeAction} server action. */
 export type ApplySyllabusChangeInput = {
@@ -65,6 +65,6 @@ export async function applySyllabusChangeAction(
   }
 
   return {
-    chapterPath: canonicalPath(journey, active),
+    chapterPath: chapterPath(journey, active),
   };
 }

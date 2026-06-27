@@ -3,11 +3,8 @@ import { notFound } from 'next/navigation';
 
 import { permanentRedirect, redirect } from '@/lib/i18n/navigation';
 import { getJourney } from '@/lib/journeys/get';
-import { parseJourneySlug } from '@/lib/url';
+import { chapterPath, journeyPath, parseJourneySlug, syllabusPath } from '@/lib/url';
 import { ensureUser } from '@/lib/users/ensure';
-import { canonicalPath } from './url';
-import { canonicalPath as syllabusCanonicalPath } from './syllabus/url';
-import { canonicalPath as chapterCanonicalPath } from './[chapterSlug]/url';
 
 export default async function Page({
   params,
@@ -28,12 +25,12 @@ export default async function Page({
     notFound();
   }
 
-  if (`/journeys/${journeySlug}` !== canonicalPath(journey)) {
-    permanentRedirect({ href: canonicalPath(journey), locale });
+  if (`/journeys/${journeySlug}` !== journeyPath(journey)) {
+    permanentRedirect({ href: journeyPath(journey), locale });
   }
 
   if (journey.status === 'drafting' || journey.chapters.length === 0) {
-    redirect({ href: syllabusCanonicalPath(journey), locale });
+    redirect({ href: syllabusPath(journey), locale });
   }
 
   const target =
@@ -41,5 +38,5 @@ export default async function Page({
     [...journey.chapters].reverse().find((c) => c.status === 'done') ??
     journey.chapters[0];
 
-  redirect({ href: chapterCanonicalPath(journey, target), locale });
+  redirect({ href: chapterPath(journey, target), locale });
 }

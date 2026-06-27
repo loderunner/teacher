@@ -119,3 +119,37 @@ export function parseChapterSlug(seg: string): ParsedChapterSlug | null {
   }
   return { slugPart: head, id };
 }
+
+/**
+ * Returns the canonical URL path for a journey.
+ *
+ * @param journey - Journey with `id` and `title`.
+ * @returns A path such as `"/journeys/intro-to-rust-abc1234567"`.
+ */
+export function journeyPath(journey: { id: string; title: string }): string {
+  return `/journeys/${journeySlugSegment(journey)}`;
+}
+
+/**
+ * Returns the canonical URL path for a journey's syllabus chat.
+ *
+ * @param journey - Journey with `id` and `title`.
+ * @returns A path such as `"/journeys/intro-to-rust-abc1234567/syllabus"`.
+ */
+export function syllabusPath(journey: { id: string; title: string }): string {
+  return `${journeyPath(journey)}/syllabus`;
+}
+
+/**
+ * Returns the canonical URL path for a chapter.
+ *
+ * @param journey - Journey with `id` and `title`.
+ * @param chapter - Chapter with `id`, `idx` (0-based), and `title`.
+ * @returns A path such as `"/journeys/intro-to-rust-abc1234567/1-variables-xyz9876543"`.
+ */
+export function chapterPath(
+  journey: { id: string; title: string },
+  chapter: { id: string; idx: number; title: string },
+): string {
+  return `${journeyPath(journey)}/${chapterSlugSegment(chapter)}`;
+}

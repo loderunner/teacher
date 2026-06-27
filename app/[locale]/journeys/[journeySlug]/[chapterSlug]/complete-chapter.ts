@@ -11,7 +11,7 @@ import { completeChapter } from '@/lib/chapters/complete';
 import { type JourneyChapter, getJourney } from '@/lib/journeys/get';
 import { getMessages } from '@/lib/messages';
 import { type Style, getStyle } from '@/lib/styles/get';
-import { canonicalPath } from './url';
+import { chapterPath } from '@/lib/url';
 
 /** Input for the {@link completeChapterAction} server action. */
 export type CompleteChapterInput = {
@@ -137,7 +137,7 @@ export async function completeChapterAction(
     const nextIdx = parsed.chapterIdx + 1;
     const next = journey.chapters.find((c) => c.idx === nextIdx) ?? null;
     return {
-      nextChapterPath: next === null ? null : canonicalPath(journey, next),
+      nextChapterPath: next === null ? null : chapterPath(journey, next),
     };
   }
 
@@ -177,6 +177,6 @@ export async function completeChapterAction(
   }
 
   return {
-    nextChapterPath: canonicalPath(journey, nextChapter),
+    nextChapterPath: chapterPath(journey, nextChapter),
   };
 }

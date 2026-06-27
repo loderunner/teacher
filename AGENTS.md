@@ -252,47 +252,28 @@ Move a file under a `lib/` subdirectory only when it is used by two or more
 unrelated routes. Do not create intermediate shared directories; if genuine
 sharing appears, lift directly to `lib/`.
 
-## Route `url.ts` — canonical path helpers
+## Canonical path helpers — `lib/url.ts`
 
-Any route that validates or redirects its own URL slug(s) must have a colocated
-`url.ts` that exports a single `canonicalPath` function. The function accepts
-only the data needed to produce the path — no `Request`, no params — and returns
-the full canonical path string for that route.
+`lib/url.ts` exports three path-building functions. Use them everywhere a URL
+path for a journey, syllabus, or chapter is needed — in pages, server actions,
+and components alike. Never inline path templates.
 
 ```ts
-// app/[locale]/journeys/[journeySlug]/[chapterSlug]/url.ts
-import { chapterSlugSegment, journeySlugSegment } from '@/lib/url';
+import { chapterPath, journeyPath, syllabusPath } from '@/lib/url';
 
-export function canonicalPath(
-  journey: { id: string; title: string },
-  chapter: { id: string; idx: number; title: string },
-): string {
-  return `/journeys/${journeySlugSegment(journey)}/${chapterSlugSegment(chapter)}`;
+journeyPath(journey)           // "/journeys/intro-to-rust-abc1234567"
+syllabusPath(journey)          // "/journeys/intro-to-rust-abc1234567/syllabus"
+chapterPath(journey, chapter)  // "/journeys/intro-to-rust-abc1234567/1-variables-xyz9876543"
+```
+
+A page that validates its own URL slug uses the same helpers for both the
+comparison and the redirect target:
+
+```ts
+if (`/journeys/${journeySlug}/${chapterSlug}` !== chapterPath(journey, chapter)) {
+  permanentRedirect({ href: chapterPath(journey, chapter), locale });
 }
 ```
-
-The page component uses `canonicalPath` to both check the incoming slug and
-produce the redirect target:
-
-```ts
-if (`/journeys/${journeySlug}/${chapterSlug}` !== canonicalPath(journey, chapter)) {
-  permanentRedirect({ href: canonicalPath(journey, chapter), locale });
-}
-```
-
-Other files that need to link to this route — server actions, components,
-sibling pages — import `canonicalPath` from the route's `url.ts` rather than
-assembling the path inline. When a file needs `canonicalPath` from more than one
-route, alias the imports to avoid name collisions:
-
-```ts
-import { canonicalPath } from './url';
-import { canonicalPath as syllabusCanonicalPath } from './syllabus/url';
-import { canonicalPath as chapterCanonicalPath } from './[chapterSlug]/url';
-```
-
-**What belongs in `url.ts`:** only `canonicalPath`. Do not add parse helpers,
-redirect logic, or anything else — those stay in `page.tsx` or `lib/url.ts`.
 
 ## Testing
 
