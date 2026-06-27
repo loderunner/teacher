@@ -77,8 +77,16 @@ describe('getJourney', () => {
   it('returns a journey with multiple chapters in order', async () => {
     const syllabus = {
       chapters: [
-        { title: 'Chapter One', summary: 'First chapter.' },
-        { title: 'Chapter Two', summary: 'Second chapter.' },
+        {
+          title: 'Chapter One',
+          summary: 'First chapter.',
+          sections: ['Overview'],
+        },
+        {
+          title: 'Chapter Two',
+          summary: 'Second chapter.',
+          sections: ['Overview'],
+        },
       ],
     };
 

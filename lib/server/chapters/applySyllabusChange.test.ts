@@ -17,6 +17,13 @@ const existingChapters = [
   { id: 'ch-locked-1', idx: 1, title: 'Locked Chapter', status: 'locked' },
 ];
 
+/** Builds a proposal chapter with the required summary and sections fields. */
+const ch = (opts: { id?: string; title: string }) => ({
+  summary: '' as const,
+  sections: ['Overview'],
+  ...opts,
+});
+
 /** Sets up a transaction mock that returns the given journey and chapter rows. */
 const setupTx = (
   journeyRows: { id: string }[],
@@ -45,7 +52,7 @@ describe('applySyllabusChange', () => {
           userId: 'user-1',
           journeyId: 'journey-1',
           newSyllabus: {
-            chapters: [{ id: 'ch-active-0', title: 'Active Chapter' }],
+            chapters: [ch({ id: 'ch-active-0', title: 'Active Chapter' })],
           },
         }),
       ).rejects.toThrow('Journey not found');
@@ -62,7 +69,7 @@ describe('applySyllabusChange', () => {
           userId: 'user-1',
           journeyId: 'journey-1',
           newSyllabus: {
-            chapters: [{ id: 'ch-locked-0', title: 'Locked' }],
+            chapters: [ch({ id: 'ch-locked-0', title: 'Locked' })],
           },
         }),
       ).rejects.toThrow('Invalid journey state: no active chapter');
@@ -77,8 +84,8 @@ describe('applySyllabusChange', () => {
           journeyId: 'journey-1',
           newSyllabus: {
             chapters: [
-              { id: 'ch-active-0', title: 'Active Chapter' },
-              { id: 'ch-unknown-id', title: 'Ghost Chapter' },
+              ch({ id: 'ch-active-0', title: 'Active Chapter' }),
+              ch({ id: 'ch-unknown-id', title: 'Ghost Chapter' }),
             ],
           },
         }),
@@ -107,7 +114,7 @@ describe('applySyllabusChange', () => {
           journeyId: 'journey-1',
           newSyllabus: {
             // ch-done-0 is intentionally omitted — should be rejected
-            chapters: [{ id: 'ch-active-1', title: 'Active Chapter' }],
+            chapters: [ch({ id: 'ch-active-1', title: 'Active Chapter' })],
           },
         }),
       ).rejects.toThrow('Proposal would remove 1 done/active chapter(s)');
@@ -122,7 +129,7 @@ describe('applySyllabusChange', () => {
           journeyId: 'journey-1',
           newSyllabus: {
             // ch-active-0 omitted — should be rejected
-            chapters: [{ id: 'ch-locked-1', title: 'Locked Chapter' }],
+            chapters: [ch({ id: 'ch-locked-1', title: 'Locked Chapter' })],
           },
         }),
       ).rejects.toThrow('Proposal would remove 1 done/active chapter(s)');
@@ -150,8 +157,8 @@ describe('applySyllabusChange', () => {
           journeyId: 'journey-1',
           newSyllabus: {
             chapters: [
-              { title: 'Brand New Chapter' }, // no id → insert
-              { id: 'ch-active-0', title: 'Active Chapter' },
+              ch({ title: 'Brand New Chapter' }), // no id → insert
+              ch({ id: 'ch-active-0', title: 'Active Chapter' }),
             ],
           },
         }),
@@ -181,10 +188,10 @@ describe('applySyllabusChange', () => {
           journeyId: 'journey-1',
           newSyllabus: {
             chapters: [
-              { id: 'ch-done-0', title: 'Done One' },
-              { title: 'Inserted Chapter' }, // no id → insert, ends up at idx 1
-              { id: 'ch-done-1', title: 'Done Two' },
-              { id: 'ch-active-2', title: 'Active Chapter' },
+              ch({ id: 'ch-done-0', title: 'Done One' }),
+              ch({ title: 'Inserted Chapter' }), // no id → insert, ends up at idx 1
+              ch({ id: 'ch-done-1', title: 'Done Two' }),
+              ch({ id: 'ch-active-2', title: 'Active Chapter' }),
             ],
           },
         }),
@@ -200,9 +207,9 @@ describe('applySyllabusChange', () => {
           journeyId: 'journey-1',
           newSyllabus: {
             chapters: [
-              { id: 'ch-active-0', title: 'Active Chapter' },
-              { id: 'ch-locked-1', title: 'Locked Chapter' },
-              { title: 'Brand New Chapter' }, // insert after active → ok
+              ch({ id: 'ch-active-0', title: 'Active Chapter' }),
+              ch({ id: 'ch-locked-1', title: 'Locked Chapter' }),
+              ch({ title: 'Brand New Chapter' }), // insert after active → ok
             ],
           },
         }),
@@ -235,8 +242,8 @@ describe('applySyllabusChange', () => {
         journeyId: 'journey-1',
         newSyllabus: {
           chapters: [
-            { id: 'ch-done-0', title: 'Renamed Done Title' }, // rename attempt
-            { id: 'ch-active-1', title: 'Active Chapter' },
+            ch({ id: 'ch-done-0', title: 'Renamed Done Title' }), // rename attempt
+            ch({ id: 'ch-active-1', title: 'Active Chapter' }),
           ],
         },
       });
@@ -261,8 +268,8 @@ describe('applySyllabusChange', () => {
         journeyId: 'journey-1',
         newSyllabus: {
           chapters: [
-            { id: 'ch-active-0', title: 'Active Chapter' },
-            { id: 'ch-locked-1', title: 'Locked Renamed' },
+            ch({ id: 'ch-active-0', title: 'Active Chapter' }),
+            ch({ id: 'ch-locked-1', title: 'Locked Renamed' }),
           ],
         },
       });
@@ -287,8 +294,8 @@ describe('applySyllabusChange', () => {
         journeyId: 'journey-1',
         newSyllabus: {
           chapters: [
-            { id: 'ch-active-0', title: 'Active Chapter' },
-            { id: 'ch-locked-1', title: 'Locked Chapter' },
+            ch({ id: 'ch-active-0', title: 'Active Chapter' }),
+            ch({ id: 'ch-locked-1', title: 'Locked Chapter' }),
           ],
         },
       });
@@ -306,8 +313,8 @@ describe('applySyllabusChange', () => {
         journeyId: 'journey-1',
         newSyllabus: {
           chapters: [
-            { id: 'ch-locked-1', title: 'Locked Chapter' },
-            { id: 'ch-active-0', title: 'Active Chapter' },
+            ch({ id: 'ch-locked-1', title: 'Locked Chapter' }),
+            ch({ id: 'ch-active-0', title: 'Active Chapter' }),
           ],
         },
       });
@@ -325,8 +332,8 @@ describe('applySyllabusChange', () => {
         journeyId: 'journey-1',
         newSyllabus: {
           chapters: [
-            { id: 'ch-active-0', title: 'Renamed Active Chapter' },
-            { id: 'ch-locked-1', title: 'Locked Chapter' },
+            ch({ id: 'ch-active-0', title: 'Renamed Active Chapter' }),
+            ch({ id: 'ch-locked-1', title: 'Locked Chapter' }),
           ],
         },
       });
@@ -343,7 +350,7 @@ describe('applySyllabusChange', () => {
         userId: 'user-1',
         journeyId: 'journey-1',
         newSyllabus: {
-          chapters: [{ id: 'ch-active-0', title: 'Active Chapter' }],
+          chapters: [ch({ id: 'ch-active-0', title: 'Active Chapter' })],
         },
       });
 
@@ -358,7 +365,7 @@ describe('applySyllabusChange', () => {
         journeyId: 'journey-1',
         newSyllabus: {
           // ch-locked-1 is intentionally omitted — it should be deleted
-          chapters: [{ id: 'ch-active-0', title: 'Active Chapter' }],
+          chapters: [ch({ id: 'ch-active-0', title: 'Active Chapter' })],
         },
       });
 
@@ -373,8 +380,8 @@ describe('applySyllabusChange', () => {
         journeyId: 'journey-1',
         newSyllabus: {
           chapters: [
-            { id: 'ch-active-0', title: 'Active Chapter' },
-            { id: 'ch-locked-1', title: 'Locked Chapter' },
+            ch({ id: 'ch-active-0', title: 'Active Chapter' }),
+            ch({ id: 'ch-locked-1', title: 'Locked Chapter' }),
           ],
         },
       });

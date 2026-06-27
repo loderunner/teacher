@@ -21,7 +21,7 @@ const baseJourney: Journey = {
         summary: 'Adv summary',
         sections: ['Sec B', 'Sec C'],
       },
-      { title: 'Wrap up', summary: undefined, sections: undefined },
+      { title: 'Wrap up', summary: '', sections: ['Sec C'] },
     ],
   },
   chapters: [

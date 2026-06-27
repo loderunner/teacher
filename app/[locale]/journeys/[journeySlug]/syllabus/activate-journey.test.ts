@@ -26,7 +26,9 @@ const mockBootstrap = vi.mocked(bootstrapJourney);
 const mockActivate = vi.mocked(activateJourney);
 const mockEnsureUser = vi.mocked(ensureUser);
 
-const validSyllabus = { chapters: [{ title: 'One' }] };
+const validSyllabus = {
+  chapters: [{ title: 'One', summary: '', sections: ['Overview'] as string[] }],
+};
 
 describe('activateJourneyAction', () => {
   beforeEach(() => {

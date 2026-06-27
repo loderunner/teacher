@@ -73,7 +73,9 @@ const activeJourney = {
   styleId: 'teacher',
   memory: [],
   status: 'active' as const,
-  syllabus: { chapters: [{ title: 'Chapter 1' }] },
+  syllabus: {
+    chapters: [{ title: 'Chapter 1', summary: '', sections: ['Overview'] }],
+  },
   chapters: [
     {
       id: 'chapter1',

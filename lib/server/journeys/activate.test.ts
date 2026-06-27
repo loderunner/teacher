@@ -57,7 +57,10 @@ describe('activateJourney', () => {
       title: 'Final Title',
       memory: ['M'],
       syllabus: {
-        chapters: [{ title: 'A' }, { title: 'B' }],
+        chapters: [
+          { title: 'A', summary: '', sections: ['Overview'] },
+          { title: 'B', summary: '', sections: ['Overview'] },
+        ],
       },
     });
 

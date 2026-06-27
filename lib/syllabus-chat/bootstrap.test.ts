@@ -98,7 +98,7 @@ describe('bootstrapJourney', () => {
       { role: 'user', parts: [{ type: 'text', text: 'Hi' }] } as UIMessage,
     ];
     const draft = {
-      chapters: [{ title: 'Intro', sections: ['Overview'] }],
+      chapters: [{ title: 'Intro', summary: '', sections: ['Overview'] }],
     };
 
     await bootstrapJourney({ draft, messages, locale: 'en' });

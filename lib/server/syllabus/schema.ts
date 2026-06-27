@@ -18,7 +18,6 @@ export const chapterSchema = z.object({
   summary: z
     .string()
     .max(800)
-    .optional()
     .describe(
       'One-paragraph overview of what the chapter covers. Omit if not yet known.',
     ),
@@ -29,8 +28,8 @@ export const chapterSchema = z.object({
         .max(200)
         .describe('Short label for a topic covered in this chapter'),
     )
+    .min(1)
     .max(20)
-    .optional()
     .describe(
       'Optional ordered list of sub-topics or learning objectives within this chapter.',
     ),
@@ -40,7 +39,7 @@ export const chapterSchema = z.object({
 export const syllabusSchema = z.object({
   chapters: z
     .array(chapterSchema)
-    .min(0)
+    .min(1)
     .max(30)
     .describe(
       'Ordered list of chapters that form the complete learning journey. ' +
