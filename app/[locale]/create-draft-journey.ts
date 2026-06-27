@@ -5,7 +5,7 @@ import { nanoid } from 'nanoid';
 
 import { createDraftJourney } from '@/lib/journeys/create';
 import { saveMessages } from '@/lib/messages';
-import { journeyPath } from '@/lib/url';
+import { journeySlugSegment } from '@/lib/url';
 import { ensureUser } from '@/lib/users/ensure';
 
 /** Input for {@link createDraftJourneyAction}. */
@@ -65,5 +65,5 @@ export async function createDraftJourneyAction(
     ],
   });
 
-  return { id: journey.id, path: journeyPath(journey.id, journey.title) };
+  return { id: journey.id, path: `/journeys/${journeySlugSegment(journey)}` };
 }

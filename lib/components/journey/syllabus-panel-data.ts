@@ -2,7 +2,7 @@ import { type DeepPartial } from 'ai';
 
 import type { Journey } from '@/lib/journeys/get';
 import type { Chapter, Syllabus } from '@/lib/syllabus/schema';
-import { chapterPath } from '@/lib/url';
+import { chapterSlugSegment, journeySlugSegment } from '@/lib/url';
 
 /** Normalized chapter row used by {@link SyllabusPanel} for rendering. */
 export type DisplayChapter = {
@@ -49,7 +49,9 @@ export function buildActivatedChapters(journey: Journey): DisplayChapter[] {
       sections: syllabusChapter?.sections,
       status: chapter.status,
       href:
-        chapter.status !== 'locked' ? chapterPath(journey, chapter) : undefined,
+        chapter.status !== 'locked'
+          ? `/journeys/${journeySlugSegment(journey)}/${chapterSlugSegment(chapter)}`
+          : undefined,
     };
   });
 }

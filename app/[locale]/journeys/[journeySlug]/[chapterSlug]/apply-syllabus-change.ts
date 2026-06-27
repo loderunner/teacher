@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { applySyllabusChange } from '@/lib/chapters/applySyllabusChange';
 import { getJourney } from '@/lib/journeys/get';
 import { syllabusSchema } from '@/lib/syllabus/schema';
-import { chapterPath } from '@/lib/url';
+import { chapterSlugSegment, journeySlugSegment } from '@/lib/url';
 
 /** Input for the {@link applySyllabusChangeAction} server action. */
 export type ApplySyllabusChangeInput = {
@@ -64,5 +64,5 @@ export async function applySyllabusChangeAction(
     throw new Error('Invalid journey state after apply');
   }
 
-  return { chapterPath: chapterPath(journey, active) };
+  return { chapterPath: `/journeys/${journeySlugSegment(journey)}/${chapterSlugSegment(active)}` };
 }

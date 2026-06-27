@@ -4,8 +4,7 @@ import { notFound } from 'next/navigation';
 import { permanentRedirect, redirect } from '@/lib/i18n/navigation';
 import { getJourney } from '@/lib/journeys/get';
 import {
-  chapterPath,
-  journeyPath,
+  chapterSlugSegment,
   journeySlugSegment,
   parseJourneySlug,
 } from '@/lib/url';
@@ -30,14 +29,13 @@ export default async function Page({
     notFound();
   }
 
-  const canonicalJourney = journeyPath(journey.id, journey.title);
-  if (journeySlug !== journeySlugSegment(journey)) {
-    permanentRedirect({ href: canonicalJourney, locale });
+  const canonicalJourneySlug = journeySlugSegment(journey);
+  if (journeySlug !== canonicalJourneySlug) {
+    permanentRedirect({ href: `/journeys/${canonicalJourneySlug}`, locale });
   }
 
   if (journey.status === 'drafting' || journey.chapters.length === 0) {
-    const syllabusHref = `${canonicalJourney}/syllabus`;
-    redirect({ href: syllabusHref, locale });
+    redirect({ href: `/journeys/${canonicalJourneySlug}/syllabus`, locale });
   }
 
   const target =
@@ -45,6 +43,8 @@ export default async function Page({
     [...journey.chapters].reverse().find((c) => c.status === 'done') ??
     journey.chapters[0];
 
-  const chapterHref = chapterPath(journey, target);
-  redirect({ href: chapterHref, locale });
+  redirect({
+    href: `/journeys/${canonicalJourneySlug}/${chapterSlugSegment(target)}`,
+    locale,
+  });
 }
