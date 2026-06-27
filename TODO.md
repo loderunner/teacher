@@ -15,14 +15,6 @@ it, copying the style of the `Confirmation` component.
 We will also need to apply the same pattern to any "user elicitaion" tool, like
 the `proposeSyllabusChange` tool and others if required.
 
-## Rewrite "no-op" tools for persistence
-
-Most of the tools are "no-ops". They don't have any meaningful code in
-`execute`. This is an artifact from when the messages and syllabus were not
-persisted and client-only. Now that every message and tool use is persisted, we
-can refactor the tools to actually do something, affect the back or frontend,
-and respond with an actual tool use result or error.
-
 ## Show a "diff" of the syllabus draft when the model updates it
 
 When the model updates the syllabus draft, it should show a "diff" of the
