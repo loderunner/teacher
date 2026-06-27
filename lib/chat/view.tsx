@@ -303,7 +303,9 @@ export function JourneyChatView({
             />
           ) : (
             <>
-              <MessageResponse>{text}</MessageResponse>
+              <MessageContent>
+                <MessageResponse>{text}</MessageResponse>
+              </MessageContent>
               {onEditUserMessage !== undefined && !streaming && !readOnly && (
                 <MessageActions className="justify-end transition-opacity focus-within:opacity-100 sm:opacity-0 sm:group-hover:opacity-100">
                   <MessageAction
