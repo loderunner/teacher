@@ -22,7 +22,14 @@ const eslintConfig = defineConfig([
         projectService: {
           // *.config.ts is in tsconfig already; .mjs/.cjs files are not — allow only the
           // latter to avoid "found in both project service and allowDefaultProject" errors.
-          allowDefaultProject: ['*.config.{mjs,cjs}'],
+          allowDefaultProject: [
+            '*.config.{ts,mjs,cjs}',
+            'proxy.ts',
+            'vitest-env.d.ts',
+            'env.ts',
+            'vitest.setup.ts',
+          ],
+          maximumDefaultProjectFileMatchCount_THIS_WILL_SLOW_DOWN_LINTING: 12,
         },
       },
     },

@@ -12,9 +12,9 @@ import {
   type PromptInputMessage,
   PromptInputSubmit,
   PromptInputTextarea,
-} from '@/components/ai-elements/prompt-input';
-import { StylePicker } from '@/components/journey';
-import { useRouter } from '@/i18n/navigation';
+} from '@/lib/components/ai-elements/prompt-input';
+import { StylePicker } from '@/lib/components/journey';
+import { useRouter } from '@/lib/i18n/navigation';
 import type { Style } from '@/lib/styles/get';
 
 /** Props for {@link Hero}. */

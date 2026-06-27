@@ -19,7 +19,7 @@ import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from '@/components/ui/collapsible';
+} from '@/lib/components/ui/collapsible';
 import { streamdownPlugins } from '@/lib/streamdown';
 import { cn } from '@/lib/tailwind';
 

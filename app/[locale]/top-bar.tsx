@@ -3,7 +3,7 @@ import { ClerkLoaded, ClerkLoading, Show, UserButton } from '@clerk/nextjs';
 import { LocalePicker } from './locale-picker';
 import { ThemeToggle } from './theme-toggle';
 
-import { Link } from '@/i18n/navigation';
+import { Link } from '@/lib/i18n/navigation';
 
 export default function TopBar() {
   return (

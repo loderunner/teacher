@@ -29,7 +29,7 @@ import {
   Conversation,
   ConversationContent,
   ConversationScrollButton,
-} from '@/components/ai-elements/conversation';
+} from '@/lib/components/ai-elements/conversation';
 import {
   Message,
   MessageAction,
@@ -45,20 +45,20 @@ import {
   MessageIndicator,
   MessageResponse,
   MessageToolbar,
-} from '@/components/ai-elements/message';
+} from '@/lib/components/ai-elements/message';
 import {
   PromptInput,
   PromptInputFooter,
   type PromptInputMessage,
   PromptInputSubmit,
   PromptInputTextarea,
-} from '@/components/ai-elements/prompt-input';
+} from '@/lib/components/ai-elements/prompt-input';
 import {
   Reasoning,
   ReasoningContent,
   ReasoningTrigger,
-} from '@/components/ai-elements/reasoning';
-import { Shimmer } from '@/components/ai-elements/shimmer';
+} from '@/lib/components/ai-elements/reasoning';
+import { Shimmer } from '@/lib/components/ai-elements/shimmer';
 
 // Internal context holding the current tool part being rendered by JourneyChatView.
 const ToolPartContext = createContext<unknown>(null);

@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import { SyllabusChat } from './syllabus-chat';
 import { SyllabusView } from './syllabus-view';
 
-import { permanentRedirect } from '@/i18n/navigation';
+import { permanentRedirect } from '@/lib/i18n/navigation';
 import { getJourney } from '@/lib/journeys/get';
 import { getMessages } from '@/lib/messages';
 import { listPresets } from '@/lib/styles/get';

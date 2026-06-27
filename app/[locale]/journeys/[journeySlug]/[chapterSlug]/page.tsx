@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import { ChapterPage } from './chapter-page';
 import { LockedChapterPage } from './locked-chapter-page';
 
-import { permanentRedirect } from '@/i18n/navigation';
+import { permanentRedirect } from '@/lib/i18n/navigation';
 import { getJourney } from '@/lib/journeys/get';
 import { getMessages } from '@/lib/messages';
 import { chapterPath, parseChapterSlug, parseJourneySlug } from '@/lib/url';

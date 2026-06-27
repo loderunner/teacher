@@ -8,8 +8,8 @@ import { getMessages, getTranslations } from 'next-intl/server';
 import { ThemeProvider } from './theme-provider';
 import TopBar from './top-bar';
 
-import { hasLocale } from '@/i18n/locale';
-import { routing } from '@/i18n/routing';
+import { hasLocale } from '@/lib/i18n/locale';
+import { routing } from '@/lib/i18n/routing';
 
 export async function generateMetadata({
   params,

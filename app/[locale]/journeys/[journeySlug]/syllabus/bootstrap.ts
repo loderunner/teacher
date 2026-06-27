@@ -1,7 +1,7 @@
 import { Output, type UIMessage, generateText } from 'ai';
 import { z } from 'zod';
 
-import type { Locale } from '@/i18n/locale';
+import type { Locale } from '@/lib/i18n/locale';
 import { getModel } from '@/lib/ai/model';
 import type { Syllabus } from '@/lib/syllabus/schema';
 

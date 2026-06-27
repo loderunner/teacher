@@ -17,8 +17,8 @@ import {
   AccordionHeader,
   AccordionItem,
   AccordionTrigger,
-} from '@/components/ui/accordion';
-import { Link } from '@/i18n/navigation';
+} from '@/lib/components/ui/accordion';
+import { Link } from '@/lib/i18n/navigation';
 import type { Journey } from '@/lib/journeys/get';
 import type { Syllabus } from '@/lib/syllabus/schema';
 import { cn } from '@/lib/tailwind';

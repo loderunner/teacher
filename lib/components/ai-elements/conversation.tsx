@@ -5,7 +5,7 @@ import type { UIMessage } from 'ai';
 import { type ComponentProps, type ReactNode } from 'react';
 import { StickToBottom, useStickToBottomContext } from 'use-stick-to-bottom';
 
-import { Button } from '@/components/ui/button';
+import { Button } from '@/lib/components/ui/button';
 import { cn } from '@/lib/tailwind';
 
 /** Props for the {@link Conversation} scroll container. */

@@ -1,7 +1,7 @@
 import { useTranslations } from 'next-intl';
 
-import { Badge } from '@/components/ui/badge';
-import { Link } from '@/i18n/navigation';
+import { Badge } from '@/lib/components/ui/badge';
+import { Link } from '@/lib/i18n/navigation';
 import { cn } from '@/lib/tailwind';
 
 /** Props for {@link JourneyCard}. */

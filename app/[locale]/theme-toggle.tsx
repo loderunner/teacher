@@ -10,7 +10,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@/lib/components/ui/dropdown-menu';
 
 // useSyncExternalStore: server snapshot → false, client snapshot → true.
 // Gives React a stable hydration boundary without useEffect + setState.

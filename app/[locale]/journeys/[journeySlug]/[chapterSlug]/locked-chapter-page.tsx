@@ -1,8 +1,8 @@
 import { useTranslations } from 'next-intl';
 
-import { ChatPageShell, Title } from '@/components/chat-page';
-import { StyleLabel, SyllabusPanel } from '@/components/journey';
-import { Link } from '@/i18n/navigation';
+import { ChatPageShell, Title } from '@/lib/components/chat-page';
+import { StyleLabel, SyllabusPanel } from '@/lib/components/journey';
+import { Link } from '@/lib/i18n/navigation';
 import type { Journey, JourneyChapter } from '@/lib/journeys/get';
 
 /** Props for {@link LockedChapterPage}. */

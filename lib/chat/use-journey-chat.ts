@@ -6,8 +6,8 @@ import { useLocale } from 'next-intl';
 
 import { type ChatMessageMetadata, isChatMessageMetadata } from './metadata';
 
-import type { PromptInputMessage } from '@/components/ai-elements/prompt-input';
-import { parseLocale } from '@/i18n/locale';
+import type { PromptInputMessage } from '@/lib/components/ai-elements/prompt-input';
+import { parseLocale } from '@/lib/i18n/locale';
 
 type JourneyChatMessage = UIMessage<ChatMessageMetadata>;
 

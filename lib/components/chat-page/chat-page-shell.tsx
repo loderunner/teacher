@@ -58,7 +58,7 @@ type SidebarProps = {
  * as direct children.
  *
  * @example
- * import { ChatPageShell } from '@/components/chat-page';
+ * import { ChatPageShell } from '@/lib/components/chat-page';
  *
  * <ChatPageShell.Root>
  *   <ChatPageShell.Content>

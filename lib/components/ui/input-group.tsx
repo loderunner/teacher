@@ -3,9 +3,9 @@
 import { type VariantProps, cva } from 'class-variance-authority';
 import type * as React from 'react';
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/lib/components/ui/button';
+import { Input } from '@/lib/components/ui/input';
+import { Textarea } from '@/lib/components/ui/textarea';
 import { cn } from '@/lib/tailwind';
 
 /** Wraps an input (or textarea) with inline or block addons into a unified bordered group. */
