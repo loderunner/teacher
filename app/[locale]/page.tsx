@@ -2,8 +2,8 @@ import { auth } from '@clerk/nextjs/server';
 
 import { Hero } from './hero';
 
-import { listPresets } from '@/lib/server/styles/get';
-import { ensureUser } from '@/lib/server/users/ensure';
+import { listPresets } from '@/lib/styles/get';
+import { ensureUser } from '@/lib/users/ensure';
 
 export default async function Home() {
   const { userId } = await auth();

@@ -3,14 +3,15 @@
 import { auth } from '@clerk/nextjs/server';
 import { getLocale } from 'next-intl/server';
 
+import { bootstrapJourney } from './bootstrap';
+
 import { parseLocale } from '@/i18n/locale';
-import { activateJourney } from '@/lib/server/journeys/activate';
-import { getJourney } from '@/lib/server/journeys/get';
-import { getMessages } from '@/lib/server/messages';
-import { type Syllabus, syllabusSchema } from '@/lib/server/syllabus/schema';
-import { ensureUser } from '@/lib/server/users/ensure';
-import { bootstrapJourney } from '@/lib/syllabus-chat';
+import { activateJourney } from '@/lib/journeys/activate';
+import { getJourney } from '@/lib/journeys/get';
+import { getMessages } from '@/lib/messages';
+import { type Syllabus, syllabusSchema } from '@/lib/syllabus/schema';
 import { journeyPath } from '@/lib/url';
+import { ensureUser } from '@/lib/users/ensure';
 
 /** Input for {@link activateJourneyAction}. */
 export type ActivateJourneyInput = {

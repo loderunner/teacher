@@ -5,7 +5,7 @@ import {
   buildDraftChapters,
 } from './syllabus-panel-data';
 
-import type { Journey } from '@/lib/server/journeys/get';
+import type { Journey } from '@/lib/journeys/get';
 
 const baseJourney: Journey = {
   id: 'journey123456',

@@ -2,7 +2,7 @@
 
 import { createContext, useContext } from 'react';
 
-import type { Journey } from '@/lib/server/journeys/get';
+import type { Journey } from '@/lib/journeys/get';
 
 /** State provided to {@link SyllabusChangeCard} from the chapter page. */
 type SyllabusChangeContextValue = {

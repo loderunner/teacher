@@ -3,10 +3,10 @@
 import { auth } from '@clerk/nextjs/server';
 import { nanoid } from 'nanoid';
 
-import { createDraftJourney } from '@/lib/server/journeys/create';
-import { saveMessages } from '@/lib/server/messages';
-import { ensureUser } from '@/lib/server/users/ensure';
+import { createDraftJourney } from '@/lib/journeys/create';
+import { saveMessages } from '@/lib/messages';
 import { journeyPath } from '@/lib/url';
+import { ensureUser } from '@/lib/users/ensure';
 
 /** Input for {@link createDraftJourneyAction}. */
 export type CreateDraftJourneyInput = {

@@ -21,8 +21,8 @@ import {
   type ChatMessageMetadata,
   JourneyChatView,
   useJourneyChat,
-} from '@/lib/journey-chat';
-import type { Journey, JourneyChapter } from '@/lib/server/journeys/get';
+} from '@/lib/chat';
+import type { Journey, JourneyChapter } from '@/lib/journeys/get';
 
 const CHAPTER_TOOLS: Record<string, ComponentType> = {
   'tool-proposeSyllabusChange': SyllabusChangeCard,

@@ -5,10 +5,10 @@ import { ChapterPage } from './chapter-page';
 import { LockedChapterPage } from './locked-chapter-page';
 
 import { permanentRedirect } from '@/i18n/navigation';
-import { getJourney } from '@/lib/server/journeys/get';
-import { getMessages } from '@/lib/server/messages';
-import { ensureUser } from '@/lib/server/users/ensure';
+import { getJourney } from '@/lib/journeys/get';
+import { getMessages } from '@/lib/messages';
 import { chapterPath, parseChapterSlug, parseJourneySlug } from '@/lib/url';
+import { ensureUser } from '@/lib/users/ensure';
 
 export default async function Page({
   params,

@@ -1,5 +1,5 @@
-import type { Journey } from '@/lib/server/journeys/get';
-import type { Syllabus } from '@/lib/server/syllabus/schema';
+import type { Journey } from '@/lib/journeys/get';
+import type { Syllabus } from '@/lib/syllabus/schema';
 
 /** Result of comparing the current chapter set against a proposal. */
 export type SyllabusDiff = {

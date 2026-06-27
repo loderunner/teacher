@@ -1,7 +1,7 @@
 import { type DeepPartial } from 'ai';
 
-import type { Journey } from '@/lib/server/journeys/get';
-import type { Chapter, Syllabus } from '@/lib/server/syllabus/schema';
+import type { Journey } from '@/lib/journeys/get';
+import type { Chapter, Syllabus } from '@/lib/syllabus/schema';
 import { chapterPath } from '@/lib/url';
 
 /** Normalized chapter row used by {@link SyllabusPanel} for rendering. */

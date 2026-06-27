@@ -7,7 +7,7 @@ import { SyllabusDraftDisplay } from './syllabus-draft-display';
 
 import { ChatPageShell, Title } from '@/components/chat-page';
 import { StyleLabel, SyllabusPanel } from '@/components/journey';
-import type { Journey } from '@/lib/server/journeys/get';
+import type { Journey } from '@/lib/journeys/get';
 
 const SYLLABUS_TOOLS: Record<string, ComponentType> = {
   'tool-updateSyllabusDraft': SyllabusDraftDisplay,

@@ -1,6 +1,6 @@
 import { useTranslations } from 'next-intl';
 
-import { getStyle } from '@/lib/server/styles/get';
+import { getStyle } from '@/lib/styles/get';
 
 /** Props for {@link StyleLabel}. */
 type Props = {

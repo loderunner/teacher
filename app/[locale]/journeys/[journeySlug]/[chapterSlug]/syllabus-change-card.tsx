@@ -12,9 +12,9 @@ import { diffSyllabus } from './syllabus-diff';
 
 import { Button } from '@/components/ui/button';
 import { useRouter } from '@/i18n/navigation';
-import { useToolPartContext } from '@/lib/journey-chat';
-import { syllabusSchema } from '@/lib/server/syllabus/schema';
+import { useToolPartContext } from '@/lib/chat';
 import { streamdownPlugins } from '@/lib/streamdown';
+import { syllabusSchema } from '@/lib/syllabus/schema';
 
 const proposalInputSchema = z.object({
   reason: z.string(),

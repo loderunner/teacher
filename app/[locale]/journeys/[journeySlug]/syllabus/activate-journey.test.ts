@@ -1,23 +1,23 @@
 import { auth } from '@clerk/nextjs/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { activateJourneyAction } from './activate-journey';
-
 vi.mock('@clerk/nextjs/server', () => ({ auth: vi.fn() }));
 vi.mock('next-intl/server', () => ({
   getLocale: vi.fn(() => Promise.resolve('en')),
 }));
-vi.mock('@/lib/server/journeys/activate', () => ({ activateJourney: vi.fn() }));
-vi.mock('@/lib/server/journeys/get', () => ({ getJourney: vi.fn() }));
-vi.mock('@/lib/server/messages', () => ({ getMessages: vi.fn() }));
-vi.mock('@/lib/server/users/ensure', () => ({ ensureUser: vi.fn() }));
-vi.mock('@/lib/syllabus-chat', () => ({ bootstrapJourney: vi.fn() }));
+vi.mock('@/lib/journeys/activate', () => ({ activateJourney: vi.fn() }));
+vi.mock('@/lib/journeys/get', () => ({ getJourney: vi.fn() }));
+vi.mock('@/lib/messages', () => ({ getMessages: vi.fn() }));
+vi.mock('@/lib/users/ensure', () => ({ ensureUser: vi.fn() }));
+vi.mock('./bootstrap', () => ({ bootstrapJourney: vi.fn() }));
 
-import { activateJourney } from '@/lib/server/journeys/activate';
-import { getJourney } from '@/lib/server/journeys/get';
-import { getMessages } from '@/lib/server/messages';
-import { ensureUser } from '@/lib/server/users/ensure';
-import { bootstrapJourney } from '@/lib/syllabus-chat';
+import { activateJourneyAction } from './activate-journey';
+import { bootstrapJourney } from './bootstrap';
+
+import { activateJourney } from '@/lib/journeys/activate';
+import { getJourney } from '@/lib/journeys/get';
+import { getMessages } from '@/lib/messages';
+import { ensureUser } from '@/lib/users/ensure';
 
 const mockAuth = vi.mocked(auth);
 const mockGetJourney = vi.mocked(getJourney);
