@@ -41,6 +41,61 @@ Modules under `lib/server/*` provide abstractions over backend entities
 (schemas, persistence, queries). They are use-case agnostic and contain no AI
 prompts, no chat orchestration, no UI-driven flows.
 
+## `lib/api/` — wire-format layer
+
+Modules under `lib/api/` own the Zod schemas and TypeScript types for HTTP
+request and response bodies. They contain **no server-only imports, no business
+logic, and no HTTP concerns** — making them safe to import from anywhere,
+including client components.
+
+**Grouping rule:** organise by the **resource** a schema affects, not by route
+path. Chat endpoints are RPC-style operations that act on messages — a
+cross-cutting concern not specific to a single REST resource — so they live
+under `lib/api/chat/`.
+
+**Import rule:** client components **never** import from `app/api/`; they import
+wire-format types from `lib/api/`.
+
+**Import rule:** handlers import their own schemas from `lib/api/`, not the
+other way around.
+
+**What stays in the handler:** token codecs (`encodePageToken` /
+`decodePageToken`), server auth (`auth()`, `currentUser()`), query/path param
+schemas, business orchestration.
+
+**Type authoring rule:** define types explicitly with JSDoc; type schemas as
+`z.ZodType<T>` so TypeScript enforces the schema matches the type; use
+`z.strictObject` instead of `z.object` for all object schemas; match
+`.describe()` strings to the JSDoc property comments.
+
+Example:
+
+```ts
+// lib/api/journeys/list.ts
+
+/** Summary of a journey as returned by `GET /api/journeys`. */
+export type JourneySummary = {
+  /** Unique journey identifier. */
+  id: string;
+  /** Display title of the journey. */
+  title: string;
+};
+
+export const journeySummarySchema: z.ZodType<JourneySummary> = z.strictObject({
+  id: z.string().describe('Unique journey identifier.'),
+  title: z.string().describe('Display title of the journey.'),
+});
+
+// app/api/journeys/get.ts (handler)
+import { type JourneySummary, journeySummarySchema } from '@/lib/api/journeys';
+
+// app/[locale]/journeys/journeys-view-island.tsx (client component)
+import {
+  type JourneySummary,
+  listJourneysResponseSchema,
+} from '@/lib/api/journeys';
+```
+
 ## Use cases live under `lib/<domain>/`
 
 A module under `lib/<domain>/` (without the `server/` prefix) delivers a domain

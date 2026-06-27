@@ -5,8 +5,7 @@ import { z } from 'zod';
 import {
   type ListJourneysResponse,
   listJourneysResponseSchema,
-} from './schema';
-
+} from '@/lib/api/journeys';
 import { listJourneys } from '@/lib/server/journeys/list';
 
 export type { ListJourneysResponse };

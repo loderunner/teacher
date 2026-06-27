@@ -5,11 +5,13 @@ import { useState } from 'react';
 
 import { JourneyCard } from './journey-card';
 
-import { listJourneysResponseSchema } from '@/app/api/journeys/schema';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Link } from '@/i18n/navigation';
-import type { JourneySummary } from '@/lib/server/journeys/list';
+import {
+  type JourneySummary,
+  listJourneysResponseSchema,
+} from '@/lib/api/journeys';
 import { journeyPath } from '@/lib/url';
 
 /** Props for {@link JourneysViewIsland}. */
