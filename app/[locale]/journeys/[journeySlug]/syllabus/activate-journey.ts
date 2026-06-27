@@ -3,12 +3,13 @@
 import { auth } from '@clerk/nextjs/server';
 import { getLocale } from 'next-intl/server';
 
+import { bootstrapJourney } from './bootstrap';
+
 import { parseLocale } from '@/i18n/locale';
 import { activateJourney } from '@/lib/journeys/activate';
 import { getJourney } from '@/lib/journeys/get';
 import { getMessages } from '@/lib/messages';
 import { type Syllabus, syllabusSchema } from '@/lib/syllabus/schema';
-import { bootstrapJourney } from '@/lib/syllabus-draft';
 import { journeyPath } from '@/lib/url';
 import { ensureUser } from '@/lib/users/ensure';
 

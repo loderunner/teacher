@@ -33,7 +33,8 @@ vi.mock('@/lib/users/ensure', () => ({
   ensureUser: vi.fn(),
 }));
 
-vi.mock('@/lib/syllabus-draft', () => ({
+vi.mock('./prompts', () => ({ composeSyllabusSystemPrompt: vi.fn() }));
+vi.mock('./tool', () => ({
   composeSyllabusSystemPrompt: vi.fn(() => 'system prompt'),
   createUpdateSyllabusDraftTool: vi.fn(() => ({
     description: 'tool',

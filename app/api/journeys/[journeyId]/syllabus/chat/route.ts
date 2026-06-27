@@ -10,6 +10,9 @@ import {
   validateUIMessages,
 } from 'ai';
 
+import { composeSyllabusSystemPrompt } from './prompts';
+import { createUpdateSyllabusDraftTool } from './tool';
+
 import { getModel } from '@/lib/ai/model';
 import {
   type SyllabusChatRequest,
@@ -19,10 +22,6 @@ import { getJourney } from '@/lib/journeys/get';
 import { deleteMessagesFrom, getMessages, saveMessages } from '@/lib/messages';
 import { getStyle } from '@/lib/styles/get';
 import { PRESETS } from '@/lib/styles/presets';
-import {
-  composeSyllabusSystemPrompt,
-  createUpdateSyllabusDraftTool,
-} from '@/lib/syllabus-draft';
 import { ensureUser } from '@/lib/users/ensure';
 
 export const maxDuration = 60;
