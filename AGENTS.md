@@ -51,7 +51,7 @@ including client components.
 **Grouping rule:** organise by the **resource** a schema affects, not by route
 path. Chat endpoints are RPC-style operations that act on messages — a
 cross-cutting concern not specific to a single REST resource — so they live
-under `lib/api/chat/`, separate from `lib/api/journeys/`.
+under `lib/api/chat/`.
 
 **Import rule:** client components **never** import from `app/api/`; they import
 wire-format types from `lib/api/`.
