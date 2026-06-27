@@ -12,7 +12,6 @@ import {
 } from 'react';
 
 import { activateJourneyAction } from './activate-journey';
-import { deriveSyllabusDraftsFromMessages } from './derive-syllabus-draft';
 import { SyllabusDraftDisplay } from './syllabus-draft-display';
 
 import { Button, ChatPageShell } from '@/components/chat-page';
@@ -21,10 +20,32 @@ import { useRouter } from '@/i18n/navigation';
 import { JourneyChatView, useJourneyChat } from '@/lib/journey-chat';
 import type { Journey } from '@/lib/server/journeys/get';
 import type { Style } from '@/lib/server/styles/get';
+import { syllabusSchema } from '@/lib/server/syllabus/schema';
 
 const SYLLABUS_TOOLS: Record<string, ComponentType> = {
   'tool-updateSyllabusDraft': SyllabusDraftDisplay,
 };
+
+const partialSyllabusSchema = syllabusSchema.partial();
+
+function derivePartialSyllabusDraft(messages: UIMessage[]) {
+  const last = messages.at(-1);
+  if (last?.role !== 'assistant') {
+    return null;
+  }
+  for (let j = last.parts.length - 1; j >= 0; j--) {
+    const part = last.parts[j];
+    if (part.type !== 'tool-updateSyllabusDraft') {
+      continue;
+    }
+    if (part.state !== 'input-streaming') {
+      return null;
+    }
+    const parsed = partialSyllabusSchema.safeParse(part.input);
+    return parsed.success ? parsed.data : null;
+  }
+  return null;
+}
 
 /** Props for {@link SyllabusChat}. */
 type Props = {
@@ -88,19 +109,27 @@ export function SyllabusChat({ journey, initialMessages, presets }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const { draft, partialDraft } = deriveSyllabusDraftsFromMessages(messages);
+  const draft = journey.syllabus;
+
+  const partialDraft = derivePartialSyllabusDraft(messages);
+
+  useEffect(() => {
+    if (!streaming) {
+      router.refresh();
+    }
+  }, [streaming, router]);
+
   const started = messages.length > 0;
-  const startable = draft !== null && draft.chapters.length > 0;
+  const startable = draft.chapters.length > 0 && !streaming;
 
   const handleStartJourney = () => {
     if (!startable) {
       return;
     }
-    const syllabus = draft;
     startTransition(async () => {
       const result = await activateJourneyAction({
         journeyId: journey.id,
-        syllabus,
+        syllabus: draft,
       });
       router.push(result.path);
     });
@@ -136,7 +165,7 @@ export function SyllabusChat({ journey, initialMessages, presets }: Props) {
 
       {started && (
         <ChatPageShell.Sidebar>
-          <SyllabusPanel draft={partialDraft} mode="draft" />
+          <SyllabusPanel draft={partialDraft ?? draft} mode="draft" />
           <StylePicker
             presets={presets}
             value={styleId}
