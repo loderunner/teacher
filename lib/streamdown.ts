@@ -3,8 +3,8 @@ import { code } from '@streamdown/code';
 import { createMathPlugin } from '@streamdown/math';
 import { mermaid } from '@streamdown/mermaid';
 
-/** Math plugin with single-dollar inline math enabled. */
-export const math = createMathPlugin({ singleDollarTextMath: true });
+/** Math plugin — only `$$` blocks trigger rendering, not `$`. */
+export const math = createMathPlugin({ singleDollarTextMath: false });
 
 /** Full Streamdown plugin set used across the application. */
 export const streamdownPlugins = { cjk, code, math, mermaid };
