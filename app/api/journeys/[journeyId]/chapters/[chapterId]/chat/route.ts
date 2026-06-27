@@ -14,21 +14,17 @@ import {
   type ChapterChatRequest,
   chapterChatRequestSchema,
 } from '@/lib/api/chat/chapter';
-import { composeChapterSystemPrompt } from '@/lib/chapter-chat/prompts';
+import { composeChapterSystemPrompt } from '@/lib/chapter-teaching/prompts';
 import {
   createAppendMemoriesTool,
   createMarkChapterCompleteTool,
   createProposeSyllabusChangeTool,
-} from '@/lib/chapter-chat/tools';
-import type { ChatMessageMetadata } from '@/lib/journey-chat';
-import { getJourney } from '@/lib/server/journeys/get';
-import {
-  deleteMessagesFrom,
-  getMessages,
-  saveMessages,
-} from '@/lib/server/messages';
-import { getStyle } from '@/lib/server/styles/get';
-import { ensureUser } from '@/lib/server/users/ensure';
+} from '@/lib/chapter-teaching/tools';
+import type { ChatMessageMetadata } from '@/lib/chat';
+import { getJourney } from '@/lib/journeys/get';
+import { deleteMessagesFrom, getMessages, saveMessages } from '@/lib/messages';
+import { getStyle } from '@/lib/styles/get';
+import { ensureUser } from '@/lib/users/ensure';
 
 export const maxDuration = 60;
 

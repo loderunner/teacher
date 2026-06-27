@@ -35,11 +35,12 @@ notices.
 
 # Architecture
 
-## `lib/server/*` is the entity layer
+## Entity layer (`lib/db/`, `lib/journeys/`, `lib/chapters/`, …)
 
-Modules under `lib/server/*` provide abstractions over backend entities
-(schemas, persistence, queries). They are use-case agnostic and contain no AI
-prompts, no chat orchestration, no UI-driven flows.
+Modules like `lib/db/`, `lib/journeys/`, `lib/chapters/`, `lib/messages/`,
+`lib/syllabus/`, `lib/styles/`, and `lib/users/` provide abstractions over
+backend entities (schemas, persistence, queries). They are use-case agnostic and
+contain no AI prompts, no chat orchestration, no UI-driven flows.
 
 ## `lib/api/` — wire-format layer
 
@@ -104,8 +105,10 @@ an AI chat flow. It may span multiple entity-layer modules, apply business
 rules, or call external services. It has no HTTP concerns (`Request`,
 `Response`, status codes) and no React.
 
-Example: `lib/syllabus-chat/` owns the chat-driven syllabus-building flow — its
-prompts, its tool, and its bootstrap step.
+Example: `lib/syllabus-draft/` owns the chat-driven syllabus-building flow — its
+prompts, its tool, and its bootstrap step. `lib/chapter-teaching/` owns the
+chapter teaching phase. `lib/chat/` provides the shared client-side chat UI
+primitives (hook, view, metadata).
 
 Do not create a use-case module speculatively. Keep logic in the handler until
 it earns extraction: a second caller needs it, or it contains rules worth
@@ -118,8 +121,9 @@ into the use-case or entity layer, serialize the response. Wire format belongs
 here — pagination token encoding, HTTP status codes, response shape. Business
 logic does not.
 
-A handler may call `lib/server/*` directly for simple I/O with no domain logic.
-When a use-case module exists for a domain, call that instead.
+A handler may call the entity layer (`lib/journeys/`, `lib/db/`, etc.) directly
+for simple I/O with no domain logic. When a use-case module exists for a domain,
+call that instead.
 
 ## Multi-file modules export through a barrel
 
@@ -130,11 +134,11 @@ barrel. Consumers import from the module directory, not from internal files.
 
 ```ts
 // correct
-import { useJourneyChat, JourneyChatView } from '@/lib/journey-chat';
+import { useChatMessages, ChatView } from '@/lib/chat';
 
 // incorrect — leaks internal file structure to consumers
-import { useJourneyChat } from '@/lib/journey-chat/use-journey-chat';
-import { JourneyChatView } from '@/lib/journey-chat/view';
+import { useChatMessages } from '@/lib/chat/use-chat-messages';
+import { ChatView } from '@/lib/chat/view';
 ```
 
 The barrel re-exports only what is part of the module's public contract.
@@ -539,16 +543,16 @@ When a server-rendered page needs a small interactive island, create a thin
 the boundary; the reusable components it imports are guarded by `client-only`.
 
 Name the wrapper after the component it wraps with an `Island` suffix:
-`JourneyChatViewIsland` wraps `JourneyChatView`, lives in
-`journey-chat-view-island.tsx`. This makes it immediately obvious the file is a
-boundary shim, not a semantic component.
+`ChatViewIsland` wraps `ChatView`, lives in `journey-chat-view-island.tsx`. This
+makes it immediately obvious the file is a boundary shim, not a semantic
+component.
 
 ```
 app/[locale]/journeys/[journeySlug]/syllabus/
 ├── syllabus-view.tsx            ← Server Component
 └── journey-chat-view-island.tsx ← 'use client' thin wrapper (the boundary)
 
-lib/journey-chat/
+lib/chat/
 └── view.tsx                     ← import 'client-only'; no 'use client'
 ```
 
@@ -609,9 +613,9 @@ Who defines the schema depends on the boundary:
   the same route directory. Clients import types from the method file; they do
   not redefine the shape.
 - **Database JSONB columns** — the persistence module that executes the queries
-  owns the Zod schemas (e.g. `lib/server/syllabus/schema.ts` colocated with the
-  queries that read and write the column). Callers of that module import the
-  exported types; they do not parse or validate JSONB themselves.
+  owns the Zod schemas (e.g. `lib/syllabus/schema.ts` colocated with the queries
+  that read and write the column). Callers of that module import the exported
+  types; they do not parse or validate JSONB themselves.
 
 Validate all **incoming** JSON:
 
@@ -742,10 +746,11 @@ List endpoints that are paginated use **cursor-based pagination** — never offs
 
 Pagination tokens are an **API concern**. Route handlers own the full token
 lifecycle: deserialize and validate incoming `pageToken` query parameters, call
-underlying `lib/server/*` functions with the decoded cursor fields, then
-serialize `nextPageToken` on the way out. Entity-layer functions never accept or
-return opaque token strings — they take plain cursor values (e.g. `updatedAt`
-and `id`) that the handler extracted from a valid token.
+underlying the entity layer (`lib/journeys/`, `lib/db/`, etc.) functions with
+the decoded cursor fields, then serialize `nextPageToken` on the way out.
+Entity-layer functions never accept or return opaque token strings — they take
+plain cursor values (e.g. `updatedAt` and `id`) that the handler extracted from
+a valid token.
 
 ```ts
 // route handler — owns tokens
@@ -755,7 +760,7 @@ if (decoded === null) {
 }
 const items = await listJourneys({ userId, limit, ...decoded });
 
-// lib/server/* — owns the query, not the wire format
+// entity layer — owns the query, not the wire format
 type ListJourneysParams = {
   userId: string;
   limit: number;
@@ -780,7 +785,7 @@ invisible to the caller.
 
 Implement `encodePageToken` / `decodePageToken` next to the route handler (or in
 colocated modules under the same route directory). Do not put token codecs in
-`lib/server/*`.
+the entity layer (`lib/journeys/`, `lib/db/`, etc.).
 
 Encode cursors as a **fixed-width binary struct** serialized to `base64url` — no
 JSON, no field names, no separators. Map each cursor field to a fixed byte range

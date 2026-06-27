@@ -4,7 +4,7 @@ import { CheckIcon } from '@phosphor-icons/react';
 import type { DynamicToolUIPart } from 'ai';
 import { useTranslations } from 'next-intl';
 
-import { useToolPartContext } from '@/lib/journey-chat';
+import { useToolPartContext } from '@/lib/chat';
 
 /** Renders `tool-updateSyllabusDraft` parts inline in the conversation. */
 export function SyllabusDraftDisplay() {

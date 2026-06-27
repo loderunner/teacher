@@ -3,9 +3,9 @@
 import { auth } from '@clerk/nextjs/server';
 import { z } from 'zod';
 
-import { applySyllabusChange } from '@/lib/server/chapters/applySyllabusChange';
-import { getJourney } from '@/lib/server/journeys/get';
-import { syllabusSchema } from '@/lib/server/syllabus/schema';
+import { applySyllabusChange } from '@/lib/chapters/applySyllabusChange';
+import { getJourney } from '@/lib/journeys/get';
+import { syllabusSchema } from '@/lib/syllabus/schema';
 import { chapterPath } from '@/lib/url';
 
 /** Input for the {@link applySyllabusChangeAction} server action. */

@@ -3,7 +3,7 @@ import { auth } from '@clerk/nextjs/server';
 import { JourneysViewIsland } from './journeys-view-island';
 
 import { getJourneysPage } from '@/app/api/journeys/get';
-import { ensureUser } from '@/lib/server/users/ensure';
+import { ensureUser } from '@/lib/users/ensure';
 
 const PAGE_LIMIT = 10;
 

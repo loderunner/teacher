@@ -19,8 +19,8 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { Link } from '@/i18n/navigation';
-import type { Journey } from '@/lib/server/journeys/get';
-import type { Syllabus } from '@/lib/server/syllabus/schema';
+import type { Journey } from '@/lib/journeys/get';
+import type { Syllabus } from '@/lib/syllabus/schema';
 import { cn } from '@/lib/tailwind';
 import { journeyPath } from '@/lib/url';
 

@@ -4,40 +4,36 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { POST } from './route';
 
-import { getJourney } from '@/lib/server/journeys/get';
-import {
-  deleteMessagesFrom,
-  getMessages,
-  saveMessages,
-} from '@/lib/server/messages';
-import { ensureUser } from '@/lib/server/users/ensure';
+import { getJourney } from '@/lib/journeys/get';
+import { deleteMessagesFrom, getMessages, saveMessages } from '@/lib/messages';
+import { ensureUser } from '@/lib/users/ensure';
 
 vi.mock('@clerk/nextjs/server', () => ({
   auth: vi.fn(),
 }));
 
-vi.mock('@/lib/server/journeys/get', () => ({
+vi.mock('@/lib/journeys/get', () => ({
   getJourney: vi.fn(),
 }));
 
-vi.mock('@/lib/server/messages', () => ({
+vi.mock('@/lib/messages', () => ({
   deleteMessagesFrom: vi.fn(),
   getMessages: vi.fn(),
   saveMessages: vi.fn(),
 }));
 
-vi.mock('@/lib/server/styles/get', () => ({
+vi.mock('@/lib/styles/get', () => ({
   getStyle: vi.fn(() => ({
     id: 'teacher',
     systemPromptFragments: { en: 'x', fr: 'y' },
   })),
 }));
 
-vi.mock('@/lib/server/users/ensure', () => ({
+vi.mock('@/lib/users/ensure', () => ({
   ensureUser: vi.fn(),
 }));
 
-vi.mock('@/lib/syllabus-chat', () => ({
+vi.mock('@/lib/syllabus-draft', () => ({
   composeSyllabusSystemPrompt: vi.fn(() => 'system prompt'),
   createUpdateSyllabusDraftTool: vi.fn(() => ({
     description: 'tool',

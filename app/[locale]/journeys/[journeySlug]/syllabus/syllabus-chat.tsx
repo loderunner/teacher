@@ -17,10 +17,10 @@ import { SyllabusDraftDisplay } from './syllabus-draft-display';
 import { Button, ChatPageShell } from '@/components/chat-page';
 import { StylePicker, SyllabusPanel } from '@/components/journey';
 import { useRouter } from '@/i18n/navigation';
-import { JourneyChatView, useJourneyChat } from '@/lib/journey-chat';
-import type { Journey } from '@/lib/server/journeys/get';
-import type { Style } from '@/lib/server/styles/get';
-import { syllabusSchema } from '@/lib/server/syllabus/schema';
+import { JourneyChatView, useJourneyChat } from '@/lib/chat';
+import type { Journey } from '@/lib/journeys/get';
+import type { Style } from '@/lib/styles/get';
+import { syllabusSchema } from '@/lib/syllabus/schema';
 
 const SYLLABUS_TOOLS: Record<string, ComponentType> = {
   'tool-updateSyllabusDraft': SyllabusDraftDisplay,

@@ -6,8 +6,8 @@ loadEnv();
 
 export default defineConfig({
   dialect: 'postgresql',
-  schema: './lib/server/db/schema.ts',
-  out: './lib/server/db/migrations',
+  schema: './lib/db/schema.ts',
+  out: './lib/db/migrations',
   dbCredentials: {
     url: process.env.DATABASE_URL!,
   },

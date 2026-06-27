@@ -6,7 +6,7 @@ import {
   type ListJourneysResponse,
   listJourneysResponseSchema,
 } from '@/lib/api/journeys';
-import { listJourneys } from '@/lib/server/journeys/list';
+import { listJourneys } from '@/lib/journeys/list';
 
 export type { ListJourneysResponse };
 

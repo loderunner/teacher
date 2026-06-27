@@ -2,9 +2,9 @@ import { auth } from '@clerk/nextjs/server';
 import { notFound } from 'next/navigation';
 
 import { permanentRedirect, redirect } from '@/i18n/navigation';
-import { getJourney } from '@/lib/server/journeys/get';
-import { ensureUser } from '@/lib/server/users/ensure';
+import { getJourney } from '@/lib/journeys/get';
 import { chapterPath, journeyPath, parseJourneySlug } from '@/lib/url';
+import { ensureUser } from '@/lib/users/ensure';
 
 export default async function Page({
   params,

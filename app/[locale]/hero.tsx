@@ -15,7 +15,7 @@ import {
 } from '@/components/ai-elements/prompt-input';
 import { StylePicker } from '@/components/journey';
 import { useRouter } from '@/i18n/navigation';
-import type { Style } from '@/lib/server/styles/get';
+import type { Style } from '@/lib/styles/get';
 
 /** Props for {@link Hero}. */
 type Props = {

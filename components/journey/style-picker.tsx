@@ -1,6 +1,6 @@
 import { useTranslations } from 'next-intl';
 
-import type { Style } from '@/lib/server/styles/get';
+import type { Style } from '@/lib/styles/get';
 import { cn } from '@/lib/tailwind';
 
 /** Props for {@link StylePicker}. */

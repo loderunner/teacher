@@ -5,11 +5,11 @@ import { SyllabusChat } from './syllabus-chat';
 import { SyllabusView } from './syllabus-view';
 
 import { permanentRedirect } from '@/i18n/navigation';
-import { getJourney } from '@/lib/server/journeys/get';
-import { getMessages } from '@/lib/server/messages';
-import { listPresets } from '@/lib/server/styles/get';
-import { ensureUser } from '@/lib/server/users/ensure';
+import { getJourney } from '@/lib/journeys/get';
+import { getMessages } from '@/lib/messages';
+import { listPresets } from '@/lib/styles/get';
 import { journeyPath, parseJourneySlug } from '@/lib/url';
+import { ensureUser } from '@/lib/users/ensure';
 
 export default async function Page({
   params,

@@ -3,7 +3,7 @@
 import type { UIMessage } from 'ai';
 import type { ComponentType } from 'react';
 
-import { JourneyChatView } from '@/lib/journey-chat';
+import { JourneyChatView } from '@/lib/chat';
 
 type JourneyChatViewIslandProps = {
   messages: UIMessage[];

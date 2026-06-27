@@ -4,15 +4,15 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createDraftJourneyAction } from './create-draft-journey';
 
 vi.mock('@clerk/nextjs/server', () => ({ auth: vi.fn() }));
-vi.mock('@/lib/server/journeys/create', () => ({
+vi.mock('@/lib/journeys/create', () => ({
   createDraftJourney: vi.fn(),
 }));
-vi.mock('@/lib/server/messages', () => ({ saveMessages: vi.fn() }));
-vi.mock('@/lib/server/users/ensure', () => ({ ensureUser: vi.fn() }));
+vi.mock('@/lib/messages', () => ({ saveMessages: vi.fn() }));
+vi.mock('@/lib/users/ensure', () => ({ ensureUser: vi.fn() }));
 
-import { createDraftJourney } from '@/lib/server/journeys/create';
-import { saveMessages } from '@/lib/server/messages';
-import { ensureUser } from '@/lib/server/users/ensure';
+import { createDraftJourney } from '@/lib/journeys/create';
+import { saveMessages } from '@/lib/messages';
+import { ensureUser } from '@/lib/users/ensure';
 
 const mockAuth = vi.mocked(auth);
 const mockCreateDraftJourney = vi.mocked(createDraftJourney);

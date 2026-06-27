@@ -5,11 +5,11 @@ import { getLocale } from 'next-intl/server';
 import { z } from 'zod';
 
 import { parseLocale } from '@/i18n/locale';
-import { generateChapterSummary } from '@/lib/chapter-chat/complete';
-import { completeChapter } from '@/lib/server/chapters/complete';
-import { getJourney } from '@/lib/server/journeys/get';
-import { getMessages } from '@/lib/server/messages';
-import { getStyle } from '@/lib/server/styles/get';
+import { generateChapterSummary } from '@/lib/chapter-teaching/complete';
+import { completeChapter } from '@/lib/chapters/complete';
+import { getJourney } from '@/lib/journeys/get';
+import { getMessages } from '@/lib/messages';
+import { getStyle } from '@/lib/styles/get';
 import { chapterPath } from '@/lib/url';
 
 /** Input for the {@link completeChapterAction} server action. */

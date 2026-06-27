@@ -15,19 +15,15 @@ import {
   type SyllabusChatRequest,
   syllabusChatRequestSchema,
 } from '@/lib/api/chat/syllabus';
-import { getJourney } from '@/lib/server/journeys/get';
-import {
-  deleteMessagesFrom,
-  getMessages,
-  saveMessages,
-} from '@/lib/server/messages';
-import { getStyle } from '@/lib/server/styles/get';
-import { PRESETS } from '@/lib/server/styles/presets';
-import { ensureUser } from '@/lib/server/users/ensure';
+import { getJourney } from '@/lib/journeys/get';
+import { deleteMessagesFrom, getMessages, saveMessages } from '@/lib/messages';
+import { getStyle } from '@/lib/styles/get';
+import { PRESETS } from '@/lib/styles/presets';
 import {
   composeSyllabusSystemPrompt,
   createUpdateSyllabusDraftTool,
-} from '@/lib/syllabus-chat';
+} from '@/lib/syllabus-draft';
+import { ensureUser } from '@/lib/users/ensure';
 
 export const maxDuration = 60;
 
