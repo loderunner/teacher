@@ -8,7 +8,7 @@ import { permanentRedirect } from '@/lib/i18n/navigation';
 import { getJourney } from '@/lib/journeys/get';
 import { getMessages } from '@/lib/messages';
 import { listPresets } from '@/lib/styles/get';
-import { parseJourneySlug, syllabusPath } from '@/lib/url';
+import { journeySlugSegment, parseJourneySlug, syllabusPath } from '@/lib/url';
 import { ensureUser } from '@/lib/users/ensure';
 
 export default async function Page({
@@ -30,7 +30,7 @@ export default async function Page({
     notFound();
   }
 
-  if (`/journeys/${journeySlug}/syllabus` !== syllabusPath(journey)) {
+  if (journeySlug !== journeySlugSegment(journey)) {
     permanentRedirect({ href: syllabusPath(journey), locale });
   }
 

@@ -6,6 +6,7 @@ import { getJourney } from '@/lib/journeys/get';
 import {
   chapterPath,
   journeyPath,
+  journeySlugSegment,
   parseJourneySlug,
   syllabusPath,
 } from '@/lib/url';
@@ -30,7 +31,7 @@ export default async function Page({
     notFound();
   }
 
-  if (`/journeys/${journeySlug}` !== journeyPath(journey)) {
+  if (journeySlug !== journeySlugSegment(journey)) {
     permanentRedirect({ href: journeyPath(journey), locale });
   }
 
