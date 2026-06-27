@@ -31,7 +31,7 @@ export default async function Page({
   }
 
   const canonicalJourney = journeyPath(journey.id, journey.title);
-  if (journeySlug !== journeySlugSegment(journey.id, journey.title)) {
+  if (journeySlug !== journeySlugSegment(journey)) {
     permanentRedirect({ href: canonicalJourney, locale });
   }
 

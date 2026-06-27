@@ -41,8 +41,8 @@ export function slugify(text: string): string {
  * @param title - The journey title, used to build the human-readable slug.
  * @returns A segment such as `"intro-to-rust-abc1234567"`.
  */
-export function journeySlugSegment(id: string, title: string): string {
-  return `${slugify(title)}-${id}`;
+export function journeySlugSegment(journey: { id: string; title: string }): string {
+  return `${slugify(journey.title)}-${journey.id}`;
 }
 
 /**
@@ -53,7 +53,7 @@ export function journeySlugSegment(id: string, title: string): string {
  * @returns A path such as `/journeys/intro-to-rust-abc1234567`.
  */
 export function journeyPath(id: string, title: string): string {
-  return `/journeys/${journeySlugSegment(id, title)}`;
+  return `/journeys/${journeySlugSegment({ id, title })}`;
 }
 
 /**

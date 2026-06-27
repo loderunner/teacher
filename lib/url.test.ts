@@ -57,12 +57,12 @@ describe('journeySlugSegment', () => {
     const id = 'abc1234567';
     const title = 'Intro to Rust';
     expect(journeyPath(id, title)).toBe(
-      `/journeys/${journeySlugSegment(id, title)}`,
+      `/journeys/${journeySlugSegment({ id, title })}`,
     );
   });
 
   it('produces a segment matching the journeyPath output', () => {
-    expect(journeySlugSegment('abc1234567', 'Intro to Rust')).toBe(
+    expect(journeySlugSegment({ id: 'abc1234567', title: 'Intro to Rust' })).toBe(
       'intro-to-rust-abc1234567',
     );
   });

@@ -52,7 +52,7 @@ export default async function Page({
 
   const canonical = chapterPath(journey, chapter);
   if (
-    journeySlug !== journeySlugSegment(journey.id, journey.title) ||
+    journeySlug !== journeySlugSegment(journey) ||
     chapterSlug !== chapterSlugSegment(chapter)
   ) {
     permanentRedirect({ href: canonical, locale });
