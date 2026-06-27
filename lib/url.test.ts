@@ -21,13 +21,16 @@ describe('journeySlugSegment', () => {
   });
 
   it('collapses multiple spaces into a single dash', () => {
-    expect(journeySlugSegment({ id: 'abc1234567', title: 'Hello   World' })).toBe(
-      'hello-world-abc1234567',
-    );
+    expect(
+      journeySlugSegment({ id: 'abc1234567', title: 'Hello   World' }),
+    ).toBe('hello-world-abc1234567');
   });
 
   it('truncates slugs longer than 80 characters', () => {
-    const segment = journeySlugSegment({ id: 'abc1234567', title: 'A'.repeat(100) });
+    const segment = journeySlugSegment({
+      id: 'abc1234567',
+      title: 'A'.repeat(100),
+    });
     const slugPart = segment.slice(0, -'-abc1234567'.length);
     expect(slugPart.length).toBeLessThanOrEqual(80);
   });
@@ -64,28 +67,26 @@ describe('chapterSlugSegment', () => {
 });
 
 describe('parseJourneySlug', () => {
-  it('parses a valid journey slug', () => {
+  it('parses a canonical journey slug', () => {
     expect(parseJourneySlug('intro-to-rust-abc1234567')).toEqual({
       id: 'abc1234567',
       slugPart: 'intro-to-rust',
     });
   });
 
-  it('returns null when the separator is missing', () => {
-    expect(parseJourneySlug('nohyphenabc1234567')).toBeNull();
+  it('accepts a segment with no separator dash — treats everything before the ID as slugPart', () => {
+    expect(parseJourneySlug('nohyphenabc1234567')).toEqual({
+      id: 'abc1234567',
+      slugPart: 'nohyphen',
+    });
   });
 
-  it('returns null for a segment that is too short', () => {
+  it('returns null only when the segment is shorter than 10 characters', () => {
     expect(parseJourneySlug('short')).toBeNull();
     expect(parseJourneySlug('')).toBeNull();
   });
 
-  it('handles a segment that is exactly 11 characters with a dash at position 0', () => {
-    const result = parseJourneySlug('-abc1234567');
-    expect(result).toEqual({ id: 'abc1234567', slugPart: '' });
-  });
-
-  it('accepts a bare 10-character nanoid with no slug prefix', () => {
+  it('accepts a bare 10-character nanoid', () => {
     expect(parseJourneySlug('VVef8d10Tb')).toEqual({
       id: 'VVef8d10Tb',
       slugPart: '',
@@ -116,7 +117,7 @@ describe('journeySlugSegment and parseJourneySlug round-trip', () => {
 });
 
 describe('parseChapterSlug', () => {
-  it('parses a valid chapter slug', () => {
+  it('parses a canonical chapter slug', () => {
     expect(parseChapterSlug('1-installing-python-abc123def4')).toEqual({
       n: 1,
       slugPart: 'installing-python',
@@ -124,23 +125,26 @@ describe('parseChapterSlug', () => {
     });
   });
 
-  it('returns null when segment is too short', () => {
+  it('returns null only when the segment is shorter than 10 characters', () => {
     expect(parseChapterSlug('foo-bar')).toBeNull();
   });
 
-  it('returns null when n is zero', () => {
-    expect(parseChapterSlug('0-installing-python-abc123def4')).toBeNull();
+  it('accepts a segment with no separator dash — treats everything before the ID as slugPart', () => {
+    expect(parseChapterSlug('1-installing-pythonabc123def4')).toEqual({
+      n: 1,
+      slugPart: 'installing-python',
+      id: 'abc123def4',
+    });
   });
 
-  it('returns null when separator before id is missing', () => {
-    expect(parseChapterSlug('1-installing-pythonabc123def4')).toBeNull();
+  it('accepts a segment with no numeric prefix — n is absent', () => {
+    expect(parseChapterSlug('abc-installing-python-abc123def4')).toEqual({
+      slugPart: 'abc-installing-python',
+      id: 'abc123def4',
+    });
   });
 
-  it('returns null when head has no numeric prefix', () => {
-    expect(parseChapterSlug('abc-installing-python-abc123def4')).toBeNull();
-  });
-
-  it('accepts a bare "<n>-<id>" segment with no title slug', () => {
+  it('accepts a "<n>-<id>" segment with no title slug', () => {
     expect(parseChapterSlug('3-VVef8d10Tb')).toEqual({
       n: 3,
       slugPart: '',
@@ -148,10 +152,17 @@ describe('parseChapterSlug', () => {
     });
   });
 
-  it('accepts a bare 10-character nanoid with no number prefix or slug', () => {
+  it('accepts a bare 10-character nanoid', () => {
     expect(parseChapterSlug('VVef8d10Tb')).toEqual({
       slugPart: '',
       id: 'VVef8d10Tb',
+    });
+  });
+
+  it('treats n=0 as absent — falls through to slugPart only', () => {
+    expect(parseChapterSlug('0-installing-python-abc123def4')).toEqual({
+      slugPart: '0-installing-python',
+      id: 'abc123def4',
     });
   });
 });

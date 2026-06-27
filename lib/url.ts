@@ -51,20 +51,23 @@ export function journeySlugSegment(journey: {
 /**
  * Parses a journey URL segment into its ID and slug parts.
  *
+ * The last 10 characters are always treated as the ID. Everything before is
+ * the slug part, with the separator dash at position -11 stripped when present.
+ * Returns `null` only when the segment is shorter than 10 characters.
+ *
  * @param seg - The raw URL segment, e.g. `"intro-to-rust-abc1234567"`.
- * @returns The parsed slug, or `null` if the segment format is invalid.
+ * @returns The parsed slug, or `null` if the segment is too short.
  */
 export function parseJourneySlug(seg: string): ParsedSlug | null {
-  // bare 10-char nanoid with no slug prefix
-  if (seg.length === 10) {
-    return { id: seg, slugPart: '' };
-  }
-  // segment is "<slug>-<10-char-nanoid>", separator is the char at position -11
-  if (seg.length < 11 || seg[seg.length - 11] !== '-') {
+  if (seg.length < 10) {
     return null;
   }
-  const id = seg.slice(seg.length - 10);
-  return { id, slugPart: seg.slice(0, seg.length - 11) };
+  const id = seg.slice(-10);
+  if (seg.length === 10) {
+    return { id, slugPart: '' };
+  }
+  const hasSeparator = seg[seg.length - 11] === '-';
+  return { id, slugPart: hasSeparator ? seg.slice(0, -11) : seg.slice(0, -10) };
 }
 
 /**
@@ -85,43 +88,34 @@ export function chapterSlugSegment(chapter: {
 /**
  * Parses a chapter URL segment into its number, slug, and ID parts.
  *
- * Expected format: `<n>-<title-slug>-<10-char-nanoid>`.
- * The separator before the ID is fixed at position -11.
+ * The last 10 characters are always treated as the ID. Everything before is
+ * parsed loosely: the separator dash at position -11 is stripped when present,
+ * and a leading numeric prefix becomes `n`. Returns `null` only when the
+ * segment is shorter than 10 characters.
  *
  * @param seg - The raw URL segment, e.g. `"1-installing-python-abc123def4"`.
- * @returns The parsed chapter slug, or `null` if the format is invalid.
+ * @returns The parsed chapter slug, or `null` if the segment is too short.
  *
  * @example
  * parseChapterSlug('1-installing-python-abc123def4')
  * // → { n: 1, slugPart: 'installing-python', id: 'abc123def4' }
  */
 export function parseChapterSlug(seg: string): ParsedChapterSlug | null {
-  // bare 10-char nanoid with no number prefix or slug
-  if (seg.length === 10) {
-    return { slugPart: '', id: seg };
-  }
-  // shape: <n>-<title-slug>-<10-char-nanoid>; separator before id is at -11
-  if (seg.length < 12 || seg[seg.length - 11] !== '-') {
+  if (seg.length < 10) {
     return null;
   }
   const id = seg.slice(-10);
-  const head = seg.slice(0, -11);
-  // bare "<n>-<id>" with no title slug — head is just the number
-  const bareMatch = head.match(/^(\d+)$/);
-  if (bareMatch !== null) {
-    const n = Number(bareMatch[1]);
-    if (!Number.isInteger(n) || n < 1) {
-      return null;
+  if (seg.length === 10) {
+    return { slugPart: '', id };
+  }
+  const hasSeparator = seg[seg.length - 11] === '-';
+  const head = hasSeparator ? seg.slice(0, -11) : seg.slice(0, -10);
+  const withN = head.match(/^(\d+)-?(.*)$/);
+  if (withN !== null) {
+    const n = Number(withN[1]);
+    if (Number.isInteger(n) && n >= 1) {
+      return { n, slugPart: withN[2], id };
     }
-    return { n, slugPart: '', id };
   }
-  const match = head.match(/^(\d+)-(.*)$/);
-  if (match === null) {
-    return null;
-  }
-  const n = Number(match[1]);
-  if (!Number.isInteger(n) || n < 1) {
-    return null;
-  }
-  return { n, slugPart: match[2], id };
+  return { slugPart: head, id };
 }
