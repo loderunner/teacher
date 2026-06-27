@@ -120,7 +120,7 @@ export function JourneysViewIsland({
               <JourneyCard
                 chapterCount={item.chapterCount}
                 currentChapterNumber={item.currentChapterNumber}
-                href={journeyPath(item.id, item.title)}
+                href={journeyPath(item)}
                 relativeDate={formatRelativeDate(item.updatedAt, locale)}
                 styleId={item.styleId}
                 title={item.title}

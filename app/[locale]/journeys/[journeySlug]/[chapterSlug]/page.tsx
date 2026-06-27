@@ -7,7 +7,13 @@ import { LockedChapterPage } from './locked-chapter-page';
 import { permanentRedirect } from '@/lib/i18n/navigation';
 import { getJourney } from '@/lib/journeys/get';
 import { getMessages } from '@/lib/messages';
-import { chapterPath, parseChapterSlug, parseJourneySlug } from '@/lib/url';
+import {
+  chapterPath,
+  chapterSlugSegment,
+  journeySlugSegment,
+  parseChapterSlug,
+  parseJourneySlug,
+} from '@/lib/url';
 import { ensureUser } from '@/lib/users/ensure';
 
 export default async function Page({
@@ -44,9 +50,11 @@ export default async function Page({
     notFound();
   }
 
-  const canonical = chapterPath(journey, chapter);
-  if (`/journeys/${journeySlug}/${chapterSlug}` !== canonical) {
-    permanentRedirect({ href: canonical, locale });
+  if (
+    journeySlug !== journeySlugSegment(journey) ||
+    chapterSlug !== chapterSlugSegment(chapter)
+  ) {
+    permanentRedirect({ href: chapterPath(journey, chapter), locale });
   }
 
   if (chapter.status === 'locked') {

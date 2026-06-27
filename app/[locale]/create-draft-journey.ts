@@ -65,5 +65,5 @@ export async function createDraftJourneyAction(
     ],
   });
 
-  return { id: journey.id, path: journeyPath(journey.id, journey.title) };
+  return { id: journey.id, path: journeyPath(journey) };
 }

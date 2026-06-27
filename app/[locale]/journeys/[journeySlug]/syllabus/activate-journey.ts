@@ -71,5 +71,5 @@ export async function activateJourneyAction(
     syllabus,
   });
 
-  return { path: journeyPath(activated.id, activated.title) };
+  return { path: journeyPath(activated) };
 }

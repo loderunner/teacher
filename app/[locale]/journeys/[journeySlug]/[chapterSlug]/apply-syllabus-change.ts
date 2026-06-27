@@ -64,5 +64,7 @@ export async function applySyllabusChangeAction(
     throw new Error('Invalid journey state after apply');
   }
 
-  return { chapterPath: chapterPath(journey, active) };
+  return {
+    chapterPath: chapterPath(journey, active),
+  };
 }

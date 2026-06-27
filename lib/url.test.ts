@@ -1,83 +1,102 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  chapterPath,
-  journeyPath,
+  chapterSlugSegment,
+  journeySlugSegment,
   parseChapterSlug,
   parseJourneySlug,
 } from './url';
 
-describe('journeyPath', () => {
-  it('builds a path for a simple ASCII title', () => {
-    expect(journeyPath('abc1234567', 'Intro to Rust')).toBe(
-      '/journeys/intro-to-rust-abc1234567',
-    );
+describe('journeySlugSegment', () => {
+  it('produces the correct segment for a simple ASCII title', () => {
+    expect(
+      journeySlugSegment({ id: 'abc1234567', title: 'Intro to Rust' }),
+    ).toBe('intro-to-rust-abc1234567');
   });
 
-  it('builds a path for an accented French title', () => {
-    expect(journeyPath('abc1234567', 'Démarrage rapide')).toBe(
-      '/journeys/demarrage-rapide-abc1234567',
-    );
+  it('produces the correct segment for an accented French title', () => {
+    expect(
+      journeySlugSegment({ id: 'abc1234567', title: 'Démarrage rapide' }),
+    ).toBe('demarrage-rapide-abc1234567');
   });
 
   it('collapses multiple spaces into a single dash', () => {
-    expect(journeyPath('abc1234567', 'Hello   World')).toBe(
-      '/journeys/hello-world-abc1234567',
-    );
+    expect(
+      journeySlugSegment({ id: 'abc1234567', title: 'Hello   World' }),
+    ).toBe('hello-world-abc1234567');
   });
 
   it('truncates slugs longer than 80 characters', () => {
-    const longTitle = 'A'.repeat(100);
-    const result = journeyPath('abc1234567', longTitle);
-    const slug = result.slice('/journeys/'.length, -'-abc1234567'.length);
-    expect(slug.length).toBeLessThanOrEqual(80);
+    const segment = journeySlugSegment({
+      id: 'abc1234567',
+      title: 'A'.repeat(100),
+    });
+    const slugPart = segment.slice(0, -'-abc1234567'.length);
+    expect(slugPart.length).toBeLessThanOrEqual(80);
   });
 
   it('falls back to "journey" when title is an empty string', () => {
-    expect(journeyPath('abc1234567', '')).toBe('/journeys/journey-abc1234567');
-  });
-
-  it('replaces special characters with dashes', () => {
-    expect(journeyPath('abc1234567', 'C++ & Rust!')).toBe(
-      '/journeys/c-rust-abc1234567',
+    expect(journeySlugSegment({ id: 'abc1234567', title: '' })).toBe(
+      'journey-abc1234567',
     );
   });
 
-  it('strips leading and trailing dashes from the slug', () => {
-    expect(journeyPath('abc1234567', '---hello---')).toBe(
-      '/journeys/hello-abc1234567',
+  it('replaces special characters with dashes', () => {
+    expect(journeySlugSegment({ id: 'abc1234567', title: 'C++ & Rust!' })).toBe(
+      'c-rust-abc1234567',
+    );
+  });
+
+  it('strips leading and trailing dashes from the slug part', () => {
+    expect(journeySlugSegment({ id: 'abc1234567', title: '---hello---' })).toBe(
+      'hello-abc1234567',
     );
   });
 });
 
+describe('chapterSlugSegment', () => {
+  it('produces the correct segment', () => {
+    const chapter = { id: 'cid1234567', idx: 2, title: 'Borrowing' };
+    expect(chapterSlugSegment(chapter)).toBe('3-borrowing-cid1234567');
+  });
+
+  it('uses 1-based chapter number', () => {
+    const chapter = { id: 'cid1234567', idx: 4, title: 'Advanced Topics' };
+    expect(chapterSlugSegment(chapter)).toMatch(/^5-advanced-topics-/);
+  });
+});
+
 describe('parseJourneySlug', () => {
-  it('parses a valid journey slug', () => {
+  it('parses a canonical journey slug', () => {
     expect(parseJourneySlug('intro-to-rust-abc1234567')).toEqual({
       id: 'abc1234567',
       slugPart: 'intro-to-rust',
     });
   });
 
-  it('returns null when the separator is missing', () => {
-    expect(parseJourneySlug('nohyphenabc1234567')).toBeNull();
+  it('returns only the id when there is no separator dash at the expected position', () => {
+    expect(parseJourneySlug('nohyphenabc1234567')).toEqual({
+      id: 'abc1234567',
+    });
   });
 
-  it('returns null for a segment that is too short', () => {
+  it('returns null only when the segment is shorter than 10 characters', () => {
     expect(parseJourneySlug('short')).toBeNull();
     expect(parseJourneySlug('')).toBeNull();
   });
 
-  it('handles a segment that is exactly 11 characters with a dash at position 0', () => {
-    const result = parseJourneySlug('-abc1234567');
-    expect(result).toEqual({ id: 'abc1234567', slugPart: '' });
+  it('accepts a bare 10-character nanoid', () => {
+    expect(parseJourneySlug('VVef8d10Tb')).toEqual({
+      id: 'VVef8d10Tb',
+    });
   });
 });
 
-describe('journeyPath and parseJourneySlug round-trip', () => {
+describe('journeySlugSegment and parseJourneySlug round-trip', () => {
   it('recovers id and slug part from a simple ASCII title', () => {
     const id = 'abc1234567';
     const title = 'Intro to Rust';
-    const segment = journeyPath(id, title).replace(/^\/journeys\//, '');
+    const segment = journeySlugSegment({ id, title });
     expect(parseJourneySlug(segment)).toEqual({
       id,
       slugPart: 'intro-to-rust',
@@ -87,7 +106,7 @@ describe('journeyPath and parseJourneySlug round-trip', () => {
   it('recovers id and slug part from an accented French title', () => {
     const id = 'abc1234567';
     const title = 'Démarrage rapide';
-    const segment = journeyPath(id, title).replace(/^\/journeys\//, '');
+    const segment = journeySlugSegment({ id, title });
     expect(parseJourneySlug(segment)).toEqual({
       id,
       slugPart: 'demarrage-rapide',
@@ -95,24 +114,16 @@ describe('journeyPath and parseJourneySlug round-trip', () => {
   });
 });
 
-describe('chapterPath', () => {
-  it('produces the correct path shape', () => {
-    const journey = { id: 'jid1234567', title: 'Intro to Rust' };
-    const chapter = { id: 'cid1234567', idx: 0, title: 'Installing Python' };
-    expect(chapterPath(journey, chapter)).toBe(
-      '/journeys/intro-to-rust-jid1234567/1-installing-python-cid1234567',
-    );
-  });
-
-  it('uses 1-based chapter number in URL', () => {
-    const journey = { id: 'jid1234567', title: 'Journey' };
-    const chapter = { id: 'cid1234567', idx: 4, title: 'Advanced Topics' };
-    expect(chapterPath(journey, chapter)).toMatch(/\/5-advanced-topics-/);
-  });
-});
-
 describe('parseChapterSlug', () => {
-  it('parses a valid chapter slug', () => {
+  it('parses a canonical single-word chapter slug', () => {
+    expect(parseChapterSlug('1-variables-abc123def4')).toEqual({
+      n: 1,
+      slugPart: 'variables',
+      id: 'abc123def4',
+    });
+  });
+
+  it('parses a canonical multi-word chapter slug', () => {
     expect(parseChapterSlug('1-installing-python-abc123def4')).toEqual({
       n: 1,
       slugPart: 'installing-python',
@@ -120,50 +131,54 @@ describe('parseChapterSlug', () => {
     });
   });
 
-  it('returns null when segment is too short', () => {
+  it('returns null only when the segment is shorter than 10 characters', () => {
     expect(parseChapterSlug('foo-bar')).toBeNull();
   });
 
-  it('returns null when n is zero', () => {
-    expect(parseChapterSlug('0-installing-python-abc123def4')).toBeNull();
+  it('returns only the id when there is no separator dash before the id', () => {
+    expect(parseChapterSlug('1-installing-pythonabc123def4')).toEqual({
+      id: 'abc123def4',
+    });
   });
 
-  it('returns null when separator before id is missing', () => {
-    expect(parseChapterSlug('1-installing-pythonabc123def4')).toBeNull();
+  it('returns only the id when there is no numeric prefix', () => {
+    expect(parseChapterSlug('abc-installing-python-abc123def4')).toEqual({
+      id: 'abc123def4',
+    });
   });
 
-  it('returns null when head has no numeric prefix', () => {
-    expect(parseChapterSlug('abc-installing-python-abc123def4')).toBeNull();
+  it('returns only the id for a "<n>-<id>" segment with no title slug', () => {
+    expect(parseChapterSlug('3-VVef8d10Tb')).toEqual({
+      id: 'VVef8d10Tb',
+    });
+  });
+
+  it('accepts a bare 10-character nanoid', () => {
+    expect(parseChapterSlug('VVef8d10Tb')).toEqual({
+      id: 'VVef8d10Tb',
+    });
+  });
+
+  it('returns only the id when n=0', () => {
+    expect(parseChapterSlug('0-installing-python-abc123def4')).toEqual({
+      id: 'abc123def4',
+    });
   });
 });
 
-describe('chapterPath and parseChapterSlug round-trip', () => {
-  it('recovers n, slug part, and id from a built chapter URL', () => {
-    const journey = { id: 'jid1234567', title: 'Intro to Rust' };
-    const chapter = { id: 'cid1234567', idx: 0, title: 'Installing Python' };
-    const fullPath = chapterPath(journey, chapter);
-    const segment = fullPath.split('/').pop();
-    expect(segment).toBeDefined();
-    if (segment === undefined) {
-      throw new Error('expected chapter segment in path');
-    }
-    expect(parseChapterSlug(segment)).toEqual({
+describe('chapterSlugSegment and parseChapterSlug round-trip', () => {
+  it('recovers n, slug part, and id for a single-word title', () => {
+    const chapter = { id: 'cid1234567', idx: 0, title: 'Variables' };
+    expect(parseChapterSlug(chapterSlugSegment(chapter))).toEqual({
       n: 1,
-      slugPart: 'installing-python',
+      slugPart: 'variables',
       id: 'cid1234567',
     });
   });
 
-  it('recovers from a chapter path with an accented French title', () => {
-    const journey = { id: 'jid1234567', title: 'Parcours' };
+  it('recovers n, slug part, and id for a multi-word title', () => {
     const chapter = { id: 'abc123def4', idx: 1, title: 'Démarrage rapide' };
-    const fullPath = chapterPath(journey, chapter);
-    const segment = fullPath.split('/').pop();
-    expect(segment).toBeDefined();
-    if (segment === undefined) {
-      throw new Error('expected chapter segment in path');
-    }
-    expect(parseChapterSlug(segment)).toEqual({
+    expect(parseChapterSlug(chapterSlugSegment(chapter))).toEqual({
       n: 2,
       slugPart: 'demarrage-rapide',
       id: 'abc123def4',

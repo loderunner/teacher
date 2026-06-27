@@ -176,5 +176,7 @@ export async function completeChapterAction(
     return { nextChapterPath: null };
   }
 
-  return { nextChapterPath: chapterPath(journey, nextChapter) };
+  return {
+    nextChapterPath: chapterPath(journey, nextChapter),
+  };
 }
