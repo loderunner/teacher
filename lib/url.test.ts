@@ -74,10 +74,9 @@ describe('parseJourneySlug', () => {
     });
   });
 
-  it('accepts a segment with no separator dash — treats everything before the ID as slugPart', () => {
+  it('returns only the id when there is no separator dash at the expected position', () => {
     expect(parseJourneySlug('nohyphenabc1234567')).toEqual({
       id: 'abc1234567',
-      slugPart: 'nohyphen',
     });
   });
 
@@ -89,7 +88,6 @@ describe('parseJourneySlug', () => {
   it('accepts a bare 10-character nanoid', () => {
     expect(parseJourneySlug('VVef8d10Tb')).toEqual({
       id: 'VVef8d10Tb',
-      slugPart: '',
     });
   });
 });
@@ -117,10 +115,16 @@ describe('journeySlugSegment and parseJourneySlug round-trip', () => {
 });
 
 describe('parseChapterSlug', () => {
-  it('parses a canonical chapter slug', () => {
-    expect(parseChapterSlug('1-installing-python-abc123def4')).toEqual({
+  it('parses a canonical single-word chapter slug', () => {
+    expect(parseChapterSlug('1-variables-abc123def4')).toEqual({
       n: 1,
-      slugPart: 'installing-python',
+      slugPart: 'variables',
+      id: 'abc123def4',
+    });
+  });
+
+  it('returns only the id for multi-word slugs', () => {
+    expect(parseChapterSlug('1-installing-python-abc123def4')).toEqual({
       id: 'abc123def4',
     });
   });
@@ -129,59 +133,50 @@ describe('parseChapterSlug', () => {
     expect(parseChapterSlug('foo-bar')).toBeNull();
   });
 
-  it('accepts a segment with no separator dash — treats everything before the ID as slugPart', () => {
+  it('returns only the id when there is no separator dash before the id', () => {
     expect(parseChapterSlug('1-installing-pythonabc123def4')).toEqual({
-      n: 1,
-      slugPart: 'installing-python',
       id: 'abc123def4',
     });
   });
 
-  it('accepts a segment with no numeric prefix — n is absent', () => {
+  it('returns only the id when there is no numeric prefix', () => {
     expect(parseChapterSlug('abc-installing-python-abc123def4')).toEqual({
-      slugPart: 'abc-installing-python',
       id: 'abc123def4',
     });
   });
 
-  it('accepts a "<n>-<id>" segment with no title slug', () => {
+  it('returns only the id for a "<n>-<id>" segment with no title slug', () => {
     expect(parseChapterSlug('3-VVef8d10Tb')).toEqual({
-      n: 3,
-      slugPart: '',
       id: 'VVef8d10Tb',
     });
   });
 
   it('accepts a bare 10-character nanoid', () => {
     expect(parseChapterSlug('VVef8d10Tb')).toEqual({
-      slugPart: '',
       id: 'VVef8d10Tb',
     });
   });
 
-  it('treats n=0 as absent — falls through to slugPart only', () => {
+  it('returns only the id when n=0 (multi-word slug, no match)', () => {
     expect(parseChapterSlug('0-installing-python-abc123def4')).toEqual({
-      slugPart: '0-installing-python',
       id: 'abc123def4',
     });
   });
 });
 
 describe('chapterSlugSegment and parseChapterSlug round-trip', () => {
-  it('recovers n, slug part, and id', () => {
-    const chapter = { id: 'cid1234567', idx: 0, title: 'Installing Python' };
+  it('recovers n, slug part, and id for a single-word title', () => {
+    const chapter = { id: 'cid1234567', idx: 0, title: 'Variables' };
     expect(parseChapterSlug(chapterSlugSegment(chapter))).toEqual({
       n: 1,
-      slugPart: 'installing-python',
+      slugPart: 'variables',
       id: 'cid1234567',
     });
   });
 
-  it('recovers from an accented French title', () => {
+  it('recovers only the id for a multi-word title', () => {
     const chapter = { id: 'abc123def4', idx: 1, title: 'Démarrage rapide' };
     expect(parseChapterSlug(chapterSlugSegment(chapter))).toEqual({
-      n: 2,
-      slugPart: 'demarrage-rapide',
       id: 'abc123def4',
     });
   });

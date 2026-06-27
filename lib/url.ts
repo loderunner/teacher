@@ -3,7 +3,7 @@ export type ParsedSlug = {
   /** The 10-character nanoid of the journey. */
   id: string;
   /** The human-readable slug portion (without the trailing `-<id>`). */
-  slugPart: string;
+  slugPart?: string;
 };
 
 /** The decoded parts of a chapter URL segment. */
@@ -13,7 +13,7 @@ export type ParsedChapterSlug = {
   /** 1-based chapter number (human-readable prefix). Absent for bare-ID segments. */
   n?: number;
   /** The human-readable slug portion between the number and the id. */
-  slugPart: string;
+  slugPart?: string;
 };
 
 /**
@@ -59,15 +59,24 @@ export function journeySlugSegment(journey: {
  * @returns The parsed slug, or `null` if the segment is too short.
  */
 export function parseJourneySlug(seg: string): ParsedSlug | null {
+  // Too short to be a valid journey slug - not even a nanoid
   if (seg.length < 10) {
     return null;
   }
+  // The last 10 characters are always the nanoid
   const id = seg.slice(-10);
+  // If the segment is exactly 10 characters long, it's a bare nanoid - no slug\
+  // part
   if (seg.length === 10) {
-    return { id, slugPart: '' };
+    return { id };
   }
-  const hasSeparator = seg[seg.length - 11] === '-';
-  return { id, slugPart: hasSeparator ? seg.slice(0, -11) : seg.slice(0, -10) };
+  // If the segment has a separator dash at position -11, the slug part is
+  // everything before it
+  if (seg[seg.length - 11] === '-') {
+    return { id, slugPart: seg.slice(0, -11) };
+  }
+  // Otherwise, the slug part is invalid
+  return { id };
 }
 
 /**
@@ -101,23 +110,25 @@ export function chapterSlugSegment(chapter: {
  * // → { n: 1, slugPart: 'installing-python', id: 'abc123def4' }
  */
 export function parseChapterSlug(seg: string): ParsedChapterSlug | null {
+  // Too short to be a valid chapter slug - not even a nanoid
   if (seg.length < 10) {
     return null;
   }
+  // The last 10 characters are always the nanoid
   const id = seg.slice(-10);
+  // If the segment is exactly 10 characters long, it's a bare nanoid
   if (seg.length === 10) {
-    return { slugPart: '', id };
+    return { id };
   }
-  const hasSeparator = seg[seg.length - 11] === '-';
-  const head = hasSeparator ? seg.slice(0, -11) : seg.slice(0, -10);
-  const withN = head.match(/^(\d+)-?(.*)$/);
-  if (withN !== null) {
-    const n = Number(withN[1]);
-    if (Number.isInteger(n) && n >= 1) {
-      return { n, slugPart: withN[2], id };
-    }
+
+  // The rest of the segment should match the pattern "<n>-<slug>-<id>"
+  const rest = seg.slice(0, -10);
+  const match = rest.match(/^(\d+)-([^-]+)-$/);
+  if (match === null) {
+    return { id };
   }
-  return { slugPart: head, id };
+  const [, n, slugPart] = match;
+  return { n: Number(n), slugPart, id };
 }
 
 /**
