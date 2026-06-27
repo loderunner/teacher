@@ -63,6 +63,10 @@ export function journeyPath(id: string, title: string): string {
  * @returns The parsed slug, or `null` if the segment format is invalid.
  */
 export function parseJourneySlug(seg: string): ParsedSlug | null {
+  // bare 10-char nanoid with no slug prefix
+  if (seg.length === 10) {
+    return { id: seg, slugPart: '' };
+  }
   // segment is "<slug>-<10-char-nanoid>", separator is the char at position -11
   if (seg.length < 11 || seg[seg.length - 11] !== '-') {
     return null;
@@ -115,11 +119,20 @@ export function chapterPath(
  */
 export function parseChapterSlug(seg: string): ParsedChapterSlug | null {
   // shape: <n>-<title-slug>-<10-char-nanoid>; separator before id is at -11
-  if (seg.length < 13 || seg[seg.length - 11] !== '-') {
+  if (seg.length < 12 || seg[seg.length - 11] !== '-') {
     return null;
   }
   const id = seg.slice(-10);
   const head = seg.slice(0, -11);
+  // bare "<n>-<id>" with no title slug — head is just the number
+  const bareMatch = head.match(/^(\d+)$/);
+  if (bareMatch !== null) {
+    const n = Number(bareMatch[1]);
+    if (!Number.isInteger(n) || n < 1) {
+      return null;
+    }
+    return { n, slugPart: '', id };
+  }
   const match = head.match(/^(\d+)-(.*)$/);
   if (match === null) {
     return null;

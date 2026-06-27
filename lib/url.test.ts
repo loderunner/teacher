@@ -104,6 +104,13 @@ describe('parseJourneySlug', () => {
     const result = parseJourneySlug('-abc1234567');
     expect(result).toEqual({ id: 'abc1234567', slugPart: '' });
   });
+
+  it('accepts a bare 10-character nanoid with no slug prefix', () => {
+    expect(parseJourneySlug('VVef8d10Tb')).toEqual({
+      id: 'VVef8d10Tb',
+      slugPart: '',
+    });
+  });
 });
 
 describe('journeyPath and parseJourneySlug round-trip', () => {
@@ -167,6 +174,14 @@ describe('parseChapterSlug', () => {
 
   it('returns null when head has no numeric prefix', () => {
     expect(parseChapterSlug('abc-installing-python-abc123def4')).toBeNull();
+  });
+
+  it('accepts a bare "<n>-<id>" segment with no title slug', () => {
+    expect(parseChapterSlug('3-VVef8d10Tb')).toEqual({
+      n: 3,
+      slugPart: '',
+      id: 'VVef8d10Tb',
+    });
   });
 });
 
