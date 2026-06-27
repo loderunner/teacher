@@ -81,14 +81,6 @@ to the user.
 setup Neon Oauth, and row-level security so that an authenticated user cannot
 access a journey or any related row (chapter or message)
 
-## Refactor the "canonical path" logic
-
-The "canonical path" logic is a bit messy. It has global functions for
-generating the paths, but nothing to compare an existing slug. Right now we're
-comparing constructed strings to the journey's root canonical path. We should
-make it easy, using shared primitives, for a page server component to quickly
-check its slug or slugs against the canonical slug, and redirect if necessary.
-
 ## Accordion visual glitches
 
 - The first syllabus item in the syllabus panel, the one that links to the
