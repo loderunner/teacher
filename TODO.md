@@ -68,15 +68,6 @@ Approach sketch:
 See `.claude/skills/vercel-react-view-transitions/SKILL.md` for the React 19
 `<ViewTransition>` and `addTransitionType` APIs.
 
-## Restructure server packages
-
-Right now we have one `lib/server` package which basically only has `db/` and
-then each entity package. It's not any more `server` than the other packages in
-`lib/`. And then we have 3 `*-chat` packages, with unclear boundaries between
-journey and syllabus.
-
-We should restructure this to make more sense. What do you propose?
-
 ## Abuse guardrails
 
 We should guard against the user abusing the LLM to generate inappropriate
