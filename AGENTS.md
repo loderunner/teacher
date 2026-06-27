@@ -261,16 +261,18 @@ and components alike. Never inline path templates.
 ```ts
 import { chapterPath, journeyPath, syllabusPath } from '@/lib/url';
 
-journeyPath(journey)           // "/journeys/intro-to-rust-abc1234567"
-syllabusPath(journey)          // "/journeys/intro-to-rust-abc1234567/syllabus"
-chapterPath(journey, chapter)  // "/journeys/intro-to-rust-abc1234567/1-variables-xyz9876543"
+journeyPath(journey); // "/journeys/intro-to-rust-abc1234567"
+syllabusPath(journey); // "/journeys/intro-to-rust-abc1234567/syllabus"
+chapterPath(journey, chapter); // "/journeys/intro-to-rust-abc1234567/1-variables-xyz9876543"
 ```
 
 A page that validates its own URL slug uses the same helpers for both the
 comparison and the redirect target:
 
 ```ts
-if (`/journeys/${journeySlug}/${chapterSlug}` !== chapterPath(journey, chapter)) {
+if (
+  `/journeys/${journeySlug}/${chapterSlug}` !== chapterPath(journey, chapter)
+) {
   permanentRedirect({ href: chapterPath(journey, chapter), locale });
 }
 ```

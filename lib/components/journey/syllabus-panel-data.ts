@@ -49,9 +49,7 @@ export function buildActivatedChapters(journey: Journey): DisplayChapter[] {
       sections: syllabusChapter?.sections,
       status: chapter.status,
       href:
-        chapter.status !== 'locked'
-          ? chapterPath(journey, chapter)
-          : undefined,
+        chapter.status !== 'locked' ? chapterPath(journey, chapter) : undefined,
     };
   });
 }

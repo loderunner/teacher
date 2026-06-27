@@ -45,8 +45,7 @@ export default async function Page({
   }
 
   if (
-    `/journeys/${journeySlug}/${chapterSlug}` !==
-    chapterPath(journey, chapter)
+    `/journeys/${journeySlug}/${chapterSlug}` !== chapterPath(journey, chapter)
   ) {
     permanentRedirect({ href: chapterPath(journey, chapter), locale });
   }

@@ -3,7 +3,12 @@ import { notFound } from 'next/navigation';
 
 import { permanentRedirect, redirect } from '@/lib/i18n/navigation';
 import { getJourney } from '@/lib/journeys/get';
-import { chapterPath, journeyPath, parseJourneySlug, syllabusPath } from '@/lib/url';
+import {
+  chapterPath,
+  journeyPath,
+  parseJourneySlug,
+  syllabusPath,
+} from '@/lib/url';
 import { ensureUser } from '@/lib/users/ensure';
 
 export default async function Page({
