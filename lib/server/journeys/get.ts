@@ -32,8 +32,8 @@ export type Journey = {
   memory: string[];
   /** Drafting journeys have no chapters until activation. */
   status: 'drafting' | 'active';
-  /** Structured syllabus for the journey. */
-  syllabus: Syllabus;
+  /** Structured syllabus for the journey. `null` while the journey is still being drafted. */
+  syllabus: Syllabus | null;
   /** Ordered list of chapters. */
   chapters: JourneyChapter[];
 };
@@ -68,7 +68,13 @@ export async function getJourney({
   }
 
   const row = rows[0];
-  const syllabus = syllabusSchema.parse(row.syllabus);
+  let syllabus: Syllabus | null = null;
+  if (row.syllabus !== null) {
+    const parsed = syllabusSchema.safeParse(row.syllabus);
+    if (parsed.success) {
+      syllabus = parsed.data;
+    }
+  }
 
   const chapterRows = await db
     .select({

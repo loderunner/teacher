@@ -37,7 +37,7 @@ export const journeys = pgTable(
       .references(() => users.id, { onDelete: 'cascade' }),
     title: text('title').notNull(),
     styleId: text('style_id').notNull(),
-    syllabus: jsonb('syllabus').$type<Syllabus>().notNull(),
+    syllabus: jsonb('syllabus').$type<Syllabus | null>(),
     memory: jsonb('memory').$type<string[]>().notNull().default([]),
     status: journeyStatusEnum('status').notNull().default('active'),
     currentChapterIndex: integer('current_chapter_index').notNull().default(0),

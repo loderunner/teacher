@@ -120,10 +120,10 @@ export function SyllabusChat({ journey, initialMessages, presets }: Props) {
   }, [streaming, router]);
 
   const started = messages.length > 0;
-  const startable = draft.chapters.length > 0 && !streaming;
+  const startable = draft !== null && draft.chapters.length > 0 && !streaming;
 
   const handleStartJourney = () => {
-    if (!startable) {
+    if (draft === null || !startable) {
       return;
     }
     startTransition(async () => {

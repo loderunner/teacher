@@ -118,13 +118,16 @@ export function composeChapterSystemPrompt({
   const syllabusOutline = journey.chapters
     .map((c) => `${c.idx + 1}. [${c.id}] ${c.title}`)
     .join('\n');
+  if (journey.syllabus === null) {
+    throw new Error('Cannot compose chapter prompt: journey has no syllabus');
+  }
   const fullChapter = journey.syllabus.chapters[chapter.idx];
   const sections =
-    fullChapter.sections !== undefined && fullChapter.sections.length > 0
+    fullChapter.sections.length > 0
       ? `\nSections:\n${fullChapter.sections.map((s) => `- ${s}`).join('\n')}`
       : '';
   const summary =
-    fullChapter.summary !== undefined ? `\n\n${fullChapter.summary}` : '';
+    fullChapter.summary.length > 0 ? `\n\n${fullChapter.summary}` : '';
 
   return `${styleFragment}
 

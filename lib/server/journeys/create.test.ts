@@ -15,7 +15,7 @@ describe('createDraftJourney', () => {
     mockDb.mockReset();
   });
 
-  it('inserts a drafting journey with an empty syllabus and memory', async () => {
+  it('inserts a drafting journey with a null syllabus and empty memory', async () => {
     mockDb.insert.values.returning.mockResolvedValueOnce([
       { id: 'draft-id', title: 'Learn Rust' },
     ]);
@@ -33,7 +33,6 @@ describe('createDraftJourney', () => {
       title: 'Learn Rust',
       styleId: 'teacher',
       status: 'drafting',
-      syllabus: { chapters: [] },
       memory: [],
     });
     expect(mockDb.insert.values.returning).toHaveBeenCalledExactlyOnceWith({

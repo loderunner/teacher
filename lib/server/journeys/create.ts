@@ -33,7 +33,6 @@ export async function createDraftJourney({
       title,
       styleId,
       status: 'drafting',
-      syllabus: { chapters: [] },
       memory: [],
     })
     .returning({ id: journeys.id, title: journeys.title });

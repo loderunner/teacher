@@ -40,7 +40,7 @@ export function buildDraftChapters(
 export function buildActivatedChapters(journey: Journey): DisplayChapter[] {
   return journey.chapters.map((chapter, i) => {
     const syllabusChapter =
-      i < journey.syllabus.chapters.length
+      journey.syllabus !== null && i < journey.syllabus.chapters.length
         ? journey.syllabus.chapters[i]
         : undefined;
     return {

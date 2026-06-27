@@ -65,7 +65,7 @@ export async function listJourneys({
       title: journeys.title,
       styleId: journeys.styleId,
       status: journeys.status,
-      chapterCount: sql<number>`jsonb_array_length(${journeys.syllabus}->'chapters')`,
+      chapterCount: sql<number>`COALESCE(jsonb_array_length(${journeys.syllabus}->'chapters'), 0)`,
       currentChapterNumber: sql<number | null>`
         CASE WHEN ${journeys.status} = 'active'
           THEN ${journeys.currentChapterIndex} + 1

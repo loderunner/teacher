@@ -66,6 +66,44 @@ describe('getJourney', () => {
     });
   });
 
+  it('returns a journey with null syllabus when the column is null', async () => {
+    mockDb.select.from.where.mockResolvedValueOnce([
+      {
+        id: '123',
+        title: 'Draft Journey',
+        styleId: 'teacher',
+        memory: [],
+        syllabus: null,
+        status: 'drafting',
+      },
+    ]);
+    mockDb.select.from.where.orderBy.mockResolvedValueOnce([]);
+
+    const journey = await getJourney({ userId: '789', id: '123' });
+
+    expect(journey).not.toBeNull();
+    expect(journey!.syllabus).toBeNull();
+  });
+
+  it('returns a journey with null syllabus when the column fails validation', async () => {
+    mockDb.select.from.where.mockResolvedValueOnce([
+      {
+        id: '123',
+        title: 'Draft Journey',
+        styleId: 'teacher',
+        memory: [],
+        syllabus: { chapters: [] },
+        status: 'drafting',
+      },
+    ]);
+    mockDb.select.from.where.orderBy.mockResolvedValueOnce([]);
+
+    const journey = await getJourney({ userId: '789', id: '123' });
+
+    expect(journey).not.toBeNull();
+    expect(journey!.syllabus).toBeNull();
+  });
+
   it('returns null when the journey rows array is empty', async () => {
     mockDb.select.from.where.mockResolvedValueOnce([]);
 
