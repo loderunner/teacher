@@ -252,31 +252,6 @@ Move a file under a `lib/` subdirectory only when it is used by two or more
 unrelated routes. Do not create intermediate shared directories; if genuine
 sharing appears, lift directly to `lib/`.
 
-## Canonical path helpers — `lib/url.ts`
-
-`lib/url.ts` exports three path-building functions. Use them everywhere a URL
-path for a journey, syllabus, or chapter is needed — in pages, server actions,
-and components alike. Never inline path templates.
-
-```ts
-import { chapterPath, journeyPath, syllabusPath } from '@/lib/url';
-
-journeyPath(journey); // "/journeys/intro-to-rust-abc1234567"
-syllabusPath(journey); // "/journeys/intro-to-rust-abc1234567/syllabus"
-chapterPath(journey, chapter); // "/journeys/intro-to-rust-abc1234567/1-variables-xyz9876543"
-```
-
-A page that validates its own URL slug uses the same helpers for both the
-comparison and the redirect target:
-
-```ts
-if (
-  `/journeys/${journeySlug}/${chapterSlug}` !== chapterPath(journey, chapter)
-) {
-  permanentRedirect({ href: chapterPath(journey, chapter), locale });
-}
-```
-
 ## Testing
 
 Tests live alongside the source files they exercise. A module `lib/foo/bar.ts`
