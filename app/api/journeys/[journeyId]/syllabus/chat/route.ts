@@ -9,10 +9,12 @@ import {
   streamText,
   validateUIMessages,
 } from 'ai';
-import { z } from 'zod';
 
-import type { Locale } from '@/i18n/locale';
 import { getModel } from '@/lib/ai/model';
+import {
+  type SyllabusChatRequest,
+  syllabusChatRequestSchema,
+} from '@/lib/api/chat/syllabus';
 import { getJourney } from '@/lib/server/journeys/get';
 import {
   deleteMessagesFrom,
@@ -33,25 +35,6 @@ type RouteContext = {
   params: Promise<{ journeyId: string }>;
 };
 
-/**
- * Request body for `POST /api/journeys/[journeyId]/syllabus/chat`.
- * Exported so callers can type-check their fetch body.
- */
-export type RequestBody = {
-  /** New or edited user message. Absent for regenerations. */
-  message?: UIMessage;
-  /** Assistant message id to replace. Present for regenerations only. */
-  regenerateFromMessageId?: string;
-  /** Locale for selecting the correct system prompt language. */
-  locale: Locale;
-};
-
-const requestBodySchema: z.ZodType<RequestBody> = z.object({
-  message: z.custom<UIMessage>().optional(),
-  regenerateFromMessageId: z.string().min(1).optional(),
-  locale: z.union([z.literal('en'), z.literal('fr')]),
-});
-
 const ephemeralCache = {
   anthropic: { cacheControl: { type: 'ephemeral' } },
 };
@@ -67,9 +50,9 @@ export async function POST(
 
   const { journeyId } = await context.params;
 
-  let parsed: RequestBody;
+  let parsed: SyllabusChatRequest;
   try {
-    parsed = requestBodySchema.parse(await req.json());
+    parsed = syllabusChatRequestSchema.parse(await req.json());
   } catch {
     return new Response('Bad Request', { status: 400 });
   }

@@ -8,10 +8,12 @@ import {
   streamText,
   validateUIMessages,
 } from 'ai';
-import { z } from 'zod';
 
-import type { Locale } from '@/i18n/locale';
 import { getModel } from '@/lib/ai/model';
+import {
+  type ChapterChatRequest,
+  chapterChatRequestSchema,
+} from '@/lib/api/chat/chapter';
 import { composeChapterSystemPrompt } from '@/lib/chapter-chat/prompts';
 import {
   createAppendMemoriesTool,
@@ -29,25 +31,6 @@ import { getStyle } from '@/lib/server/styles/get';
 import { ensureUser } from '@/lib/server/users/ensure';
 
 export const maxDuration = 60;
-
-/**
- * Request body for `POST /api/journeys/[id]/chapters/[chapterId]/chat`.
- * Exported so callers can type-check their fetch body.
- */
-export type RequestBody = {
-  /** New or edited user message. Absent for regenerations and the start signal. */
-  message?: UIMessage<ChatMessageMetadata>;
-  /** Assistant message id to replace. Present for regenerations only. */
-  regenerateFromMessageId?: string;
-  /** Locale for selecting the correct system prompt language. */
-  locale: Locale;
-};
-
-const requestBodySchema: z.ZodType<RequestBody> = z.object({
-  message: z.custom<UIMessage<ChatMessageMetadata>>().optional(),
-  regenerateFromMessageId: z.string().min(1).optional(),
-  locale: z.union([z.literal('en'), z.literal('fr')]),
-});
 
 const ephemeralCache = { anthropic: { cacheControl: { type: 'ephemeral' } } };
 
@@ -80,9 +63,9 @@ export async function POST(
 
   const { journeyId, chapterId } = await context.params;
 
-  let parsed: RequestBody;
+  let parsed: ChapterChatRequest;
   try {
-    parsed = requestBodySchema.parse(await req.json());
+    parsed = chapterChatRequestSchema.parse(await req.json());
   } catch {
     return new Response('Bad Request', { status: 400 });
   }
