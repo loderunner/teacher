@@ -3,7 +3,12 @@ import { notFound } from 'next/navigation';
 
 import { permanentRedirect, redirect } from '@/lib/i18n/navigation';
 import { getJourney } from '@/lib/journeys/get';
-import { chapterPath, journeyPath, parseJourneySlug } from '@/lib/url';
+import {
+  chapterPath,
+  journeyPath,
+  journeySlugSegment,
+  parseJourneySlug,
+} from '@/lib/url';
 import { ensureUser } from '@/lib/users/ensure';
 
 export default async function Page({
@@ -26,7 +31,7 @@ export default async function Page({
   }
 
   const canonicalJourney = journeyPath(journey.id, journey.title);
-  if (`/journeys/${journeySlug}` !== canonicalJourney) {
+  if (journeySlug !== journeySlugSegment(journey.id, journey.title)) {
     permanentRedirect({ href: canonicalJourney, locale });
   }
 

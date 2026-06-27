@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 
 import {
   chapterPath,
+  chapterSlugSegment,
   journeyPath,
+  journeySlugSegment,
   parseChapterSlug,
   parseJourneySlug,
 } from './url';
@@ -47,6 +49,40 @@ describe('journeyPath', () => {
     expect(journeyPath('abc1234567', '---hello---')).toBe(
       '/journeys/hello-abc1234567',
     );
+  });
+});
+
+describe('journeySlugSegment', () => {
+  it('returns the segment that journeyPath appends after /journeys/', () => {
+    const id = 'abc1234567';
+    const title = 'Intro to Rust';
+    expect(journeyPath(id, title)).toBe(
+      `/journeys/${journeySlugSegment(id, title)}`,
+    );
+  });
+
+  it('produces a segment matching the journeyPath output', () => {
+    expect(journeySlugSegment('abc1234567', 'Intro to Rust')).toBe(
+      'intro-to-rust-abc1234567',
+    );
+  });
+});
+
+describe('chapterSlugSegment', () => {
+  it('returns the chapter segment that chapterPath appends after the journey path', () => {
+    const journey = { id: 'jid1234567', title: 'Intro to Rust' };
+    const chapter = { id: 'cid1234567', idx: 0, title: 'Installing Python' };
+    const full = chapterPath(journey, chapter);
+    const journeyPrefix = journeyPath(journey.id, journey.title);
+    expect(full).toBe(
+      `${journeyPrefix}/${chapterSlugSegment(journey, chapter)}`,
+    );
+  });
+
+  it('produces the correct segment', () => {
+    const journey = { id: 'jid1234567', title: 'Intro to Rust' };
+    const chapter = { id: 'cid1234567', idx: 2, title: 'Borrowing' };
+    expect(chapterSlugSegment(journey, chapter)).toBe('3-borrowing-cid1234567');
   });
 });
 
