@@ -22,7 +22,7 @@ import { Link } from '@/lib/i18n/navigation';
 import type { Journey } from '@/lib/journeys/get';
 import type { Syllabus } from '@/lib/syllabus/schema';
 import { cn } from '@/lib/tailwind';
-import { journeySlugSegment } from '@/lib/url';
+import { canonicalPath as syllabusCanonicalPath } from '@/app/[locale]/journeys/[journeySlug]/syllabus/url';
 
 /** Identifies which item in the panel is currently active (activated mode only). */
 export type Current = { type: 'syllabus' } | { type: 'chapter'; idx: number };
@@ -119,7 +119,7 @@ function SyllabusItem({ journey, current }: SyllabusItemProps) {
             current && 'bg-muted rounded px-2 font-medium',
             !current && 'text-muted-foreground',
           )}
-          href={`/journeys/${journeySlugSegment(journey)}/syllabus`}
+          href={syllabusCanonicalPath(journey)}
         >
           {t('syllabusChat')}
         </Link>

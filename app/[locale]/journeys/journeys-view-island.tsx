@@ -12,7 +12,7 @@ import {
 import { Button } from '@/lib/components/ui/button';
 import { Input } from '@/lib/components/ui/input';
 import { Link } from '@/lib/i18n/navigation';
-import { journeySlugSegment } from '@/lib/url';
+import { canonicalPath } from '@/app/[locale]/journeys/[journeySlug]/url';
 
 /** Props for {@link JourneysViewIsland}. */
 type JourneysViewIslandProps = {
@@ -120,7 +120,7 @@ export function JourneysViewIsland({
               <JourneyCard
                 chapterCount={item.chapterCount}
                 currentChapterNumber={item.currentChapterNumber}
-                href={`/journeys/${journeySlugSegment(item)}`}
+                href={canonicalPath(item)}
                 relativeDate={formatRelativeDate(item.updatedAt, locale)}
                 styleId={item.styleId}
                 title={item.title}

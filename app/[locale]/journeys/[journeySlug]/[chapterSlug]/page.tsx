@@ -7,13 +7,9 @@ import { LockedChapterPage } from './locked-chapter-page';
 import { permanentRedirect } from '@/lib/i18n/navigation';
 import { getJourney } from '@/lib/journeys/get';
 import { getMessages } from '@/lib/messages';
-import {
-  chapterSlugSegment,
-  journeySlugSegment,
-  parseChapterSlug,
-  parseJourneySlug,
-} from '@/lib/url';
+import { parseChapterSlug, parseJourneySlug } from '@/lib/url';
 import { ensureUser } from '@/lib/users/ensure';
+import { canonicalPath } from './url';
 
 export default async function Page({
   params,
@@ -49,20 +45,15 @@ export default async function Page({
     notFound();
   }
 
-  const canonicalJourneySlug = journeySlugSegment(journey);
-  const canonicalChapterSlug = chapterSlugSegment(chapter);
-  if (journeySlug !== canonicalJourneySlug || chapterSlug !== canonicalChapterSlug) {
-    permanentRedirect({
-      href: `/journeys/${canonicalJourneySlug}/${canonicalChapterSlug}`,
-      locale,
-    });
+  if (`/journeys/${journeySlug}/${chapterSlug}` !== canonicalPath(journey, chapter)) {
+    permanentRedirect({ href: canonicalPath(journey, chapter), locale });
   }
 
   if (chapter.status === 'locked') {
     const activeChapter = journey.chapters.find((c) => c.status === 'active');
     const activeChapterPath =
       activeChapter !== undefined
-        ? `/journeys/${canonicalJourneySlug}/${chapterSlugSegment(activeChapter)}`
+        ? canonicalPath(journey, activeChapter)
         : undefined;
     return (
       <LockedChapterPage

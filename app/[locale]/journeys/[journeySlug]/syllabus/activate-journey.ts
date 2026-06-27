@@ -10,8 +10,8 @@ import { activateJourney } from '@/lib/journeys/activate';
 import { getJourney } from '@/lib/journeys/get';
 import { getMessages } from '@/lib/messages';
 import { type Syllabus, syllabusSchema } from '@/lib/syllabus/schema';
-import { journeySlugSegment } from '@/lib/url';
 import { ensureUser } from '@/lib/users/ensure';
+import { canonicalPath } from '../url';
 
 /** Input for {@link activateJourneyAction}. */
 export type ActivateJourneyInput = {
@@ -71,5 +71,5 @@ export async function activateJourneyAction(
     syllabus,
   });
 
-  return { path: `/journeys/${journeySlugSegment(activated)}` };
+  return { path: canonicalPath(activated) };
 }
