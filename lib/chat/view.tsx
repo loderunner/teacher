@@ -426,11 +426,15 @@ export function JourneyChatView({
     <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-end gap-4 overflow-hidden px-1 pb-1">
       {messages.length > 0 && (
         <Conversation className="flex-1">
-          <ConversationContent>{messageItems}</ConversationContent>
+          <ConversationContent>
+            {messageItems}
+            {showLoadingIndicator && !readOnly && (
+              <MessageIndicator type="loading" />
+            )}
+          </ConversationContent>
           <ConversationScrollButton />
         </Conversation>
       )}
-      {showLoadingIndicator && !readOnly && <MessageIndicator type="loading" />}
       {!readOnly && (
         <PromptInput onSubmit={onSubmit}>
           <PromptInputTextarea disabled={streaming} placeholder={placeholder} />
