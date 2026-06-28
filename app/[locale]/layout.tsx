@@ -51,7 +51,7 @@ export default async function LocaleLayout({
       <ClerkProvider localization={localization}>
         <NextIntlClientProvider messages={messages}>
           <TopBar />
-          <div className="flex h-dvh flex-col">{children}</div>
+          <div className="flex min-h-0 flex-1 flex-col">{children}</div>
         </NextIntlClientProvider>
       </ClerkProvider>
     </ThemeProvider>
