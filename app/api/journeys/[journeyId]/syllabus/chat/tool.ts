@@ -33,7 +33,24 @@ Rules:
 - Always pass ALL chapters, even ones that have not changed — this is a full replace, not a patch.
 - Call this tool immediately whenever the outline changes; do not narrate changes in prose instead.
 - Use concise chapter titles (noun phrases, ≤ 120 chars). Add a short summary only when it adds clarity.
-- Order chapters from foundational to advanced.`,
+- Order chapters from foundational to advanced.
+- Each chapter's \`sections\` is an array of plain strings (section title labels), not objects. Must have at least one entry.
+
+Example input:
+{
+  "chapters": [
+    {
+      "title": "Introduction to the Roman Empire",
+      "summary": "Geographic and political foundations of Rome's rise.",
+      "sections": ["Geography and early settlements", "The founding myths"]
+    },
+    {
+      "title": "The Republic",
+      "summary": "Rome's republican system, its political tensions, and expansion through conflict.",
+      "sections": ["Senate and governance", "Conflict with Carthage"]
+    }
+  ]
+}`,
     inputSchema: syllabusSchema,
     execute: async (syllabus) => {
       await updateSyllabusDraft({ userId, journeyId, syllabus });
