@@ -76,11 +76,12 @@ const routeContext = {
   params: Promise.resolve({ journeyId: 'journey1' }),
 };
 
-const makeRequest = (body: unknown) =>
+const makeRequest = (body: unknown, signal?: AbortSignal) =>
   new Request('http://localhost/api/journeys/journey1/syllabus/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
+    signal,
   });
 
 const userMessage = {
@@ -214,12 +215,14 @@ describe('POST /api/journeys/[journeyId]/syllabus/chat', () => {
             responseMessage: typeof assistantMessage;
             messages: never[];
             isContinuation: boolean;
+            isAborted: boolean;
           }) => Promise<void> | void;
         }) => {
           void opts.onFinish?.({
             responseMessage: assistantMessage,
             messages: [],
             isContinuation: false,
+            isAborted: false,
           });
           return new Response(null, { status: 200 });
         },
@@ -238,5 +241,58 @@ describe('POST /api/journeys/[journeyId]/syllabus/chat', () => {
         messages: [assistantMessage],
       }),
     );
+  });
+
+  it('forwards req.signal to streamText', async () => {
+    const controller = new AbortController();
+    const req = makeRequest(
+      { message: userMessage, locale: 'en' },
+      controller.signal,
+    );
+    await POST(req, routeContext);
+
+    expect(mockStreamText).toHaveBeenCalledWith(
+      expect.objectContaining({ abortSignal: req.signal }),
+    );
+  });
+
+  it('does not save the assistant response when the stream is aborted', async () => {
+    const assistantMessage = {
+      id: 'a1',
+      role: 'assistant' as const,
+      parts: [{ type: 'text' as const, text: 'Hi' }],
+    };
+    mockStreamText.mockReturnValueOnce({
+      toUIMessageStreamResponse: vi.fn(
+        (opts: {
+          onFinish?: (e: {
+            responseMessage: typeof assistantMessage;
+            messages: never[];
+            isContinuation: boolean;
+            isAborted: boolean;
+          }) => Promise<void> | void;
+        }) => {
+          void opts.onFinish?.({
+            responseMessage: assistantMessage,
+            messages: [],
+            isContinuation: false,
+            isAborted: true,
+          });
+          return new Response(null, { status: 200 });
+        },
+      ),
+    } as never);
+
+    await POST(
+      makeRequest({ message: userMessage, locale: 'en' }),
+      routeContext,
+    );
+
+    const onFinishSave = mockSaveMessages.mock.calls.find((call) =>
+      call[0].messages.some(
+        (m: { id: string }) => m.id === assistantMessage.id,
+      ),
+    );
+    expect(onFinishSave).toBeUndefined();
   });
 });
