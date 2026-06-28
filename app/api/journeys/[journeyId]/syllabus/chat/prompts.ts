@@ -1,3 +1,4 @@
+import { commonSystemPrompt } from '@/lib/ai/prompt';
 import type { Locale } from '@/lib/i18n/locale';
 import type { Style } from '@/lib/styles/get';
 
@@ -41,5 +42,5 @@ export function composeSyllabusSystemPrompt({
   locale,
 }: ComposeSyllabusSystemPromptParams): string {
   const fragment = style.systemPromptFragments[locale];
-  return `${fragment}\n\n${syllabusPhase[locale]}`;
+  return `${fragment}\n\n${commonSystemPrompt[locale]}\n\n${syllabusPhase[locale]}`;
 }

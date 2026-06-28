@@ -1,3 +1,4 @@
+import { commonSystemPrompt } from '@/lib/ai/prompt';
 import type { Locale } from '@/lib/i18n/locale';
 import type { Journey, JourneyChapter } from '@/lib/journeys/get';
 import type { Style } from '@/lib/styles/get';
@@ -71,6 +72,8 @@ export function composeChapterSystemPrompt({
     fullChapter.summary.length > 0 ? `\n\n${fullChapter.summary}` : '';
 
   return `${styleFragment}
+
+${commonSystemPrompt[locale]}
 
 ${chapterPhase[locale]}
 
