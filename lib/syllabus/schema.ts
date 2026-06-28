@@ -18,9 +18,7 @@ export const chapterSchema = z.object({
   summary: z
     .string()
     .max(800)
-    .describe(
-      'One-paragraph overview of what the chapter covers.',
-    ),
+    .describe('One-paragraph overview of what the chapter covers.'),
   sections: z
     .array(
       z

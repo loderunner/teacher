@@ -10,9 +10,9 @@ import { applySyllabusChangeAction } from './apply-syllabus-change';
 import { useSyllabusChangeContext } from './syllabus-change-context';
 import { diffSyllabus } from './syllabus-diff';
 
+import { useToolPartContext } from '@/lib/chat';
 import { Button } from '@/lib/components/ui/button';
 import { useRouter } from '@/lib/i18n/navigation';
-import { useToolPartContext } from '@/lib/chat';
 import { streamdownPlugins } from '@/lib/streamdown';
 import { syllabusSchema } from '@/lib/syllabus/schema';
 

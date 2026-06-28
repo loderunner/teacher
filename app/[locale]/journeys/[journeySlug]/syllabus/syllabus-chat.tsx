@@ -14,10 +14,10 @@ import {
 import { activateJourneyAction } from './activate-journey';
 import { SyllabusDraftDisplay } from './syllabus-draft-display';
 
+import { JourneyChatView, useJourneyChat } from '@/lib/chat';
 import { Button, ChatPageShell } from '@/lib/components/chat-page';
 import { StylePicker, SyllabusPanel } from '@/lib/components/journey';
 import { useRouter } from '@/lib/i18n/navigation';
-import { JourneyChatView, useJourneyChat } from '@/lib/chat';
 import type { Journey } from '@/lib/journeys/get';
 import type { Style } from '@/lib/styles/get';
 import { syllabusSchema } from '@/lib/syllabus/schema';

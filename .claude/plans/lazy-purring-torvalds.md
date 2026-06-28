@@ -9,11 +9,12 @@ title. Root cause: a journey's chapter content is **duplicated** — once in the
 `applySyllabusChange` rewrites the whole JSONB from a model-reconstructed
 proposal, so an imperfect reconstruction silently destroys real data.
 
-The fix (Approach 3): after a journey is activated, the **`chapters` table is the
-sole source of truth**. The JSONB column is renamed `syllabus_draft` and is used
-**only during drafting** plus one read-only post-activation display. This makes
-the drift class of bug structurally impossible for the active/done chapters,
-while still letting the backend reject content changes to protected chapters.
+The fix (Approach 3): after a journey is activated, the **`chapters` table is
+the sole source of truth**. The JSONB column is renamed `syllabus_draft` and is
+used **only during drafting** plus one read-only post-activation display. This
+makes the drift class of bug structurally impossible for the active/done
+chapters, while still letting the backend reject content changes to protected
+chapters.
 
 No backwards compatibility is required — the DB will be reset, so the migration
 is a clean schema change with no backfill.
@@ -21,9 +22,10 @@ is a clean schema change with no backfill.
 ## Decisions (confirmed)
 
 - **Field rename `summary` → `overview` end-to-end** in the syllabus Zod schema,
-  type, JSON, DB column, prompts, and UI. This is the *forward-looking* chapter
-  overview. The pre-existing `chapters.summary` (the *retrospective* note written
-  on completion in `lib/chapters/complete.ts`) is unrelated and stays as-is.
+  type, JSON, DB column, prompts, and UI. This is the _forward-looking_ chapter
+  overview. The pre-existing `chapters.summary` (the _retrospective_ note
+  written on completion in `lib/chapters/complete.ts`) is unrelated and stays
+  as-is.
 - **`syllabus_draft` is frozen, not nulled, at activation.** It is read in
   exactly one place post-activation: the syllabus chat page, to display "the
   resulting syllabus" the drafting conversation produced. It is **never** read
@@ -119,8 +121,8 @@ Nowhere else writes chapter content.
 
 ### 7. Prompts & tools
 
-- `app/api/journeys/[journeyId]/chapters/[chapterId]/chat/prompts.ts`: source the
-  current chapter's overview/sections from the `chapter` row
+- `app/api/journeys/[journeyId]/chapters/[chapterId]/chat/prompts.ts`: source
+  the current chapter's overview/sections from the `chapter` row
   (`chapter.overview`, `chapter.sections`); remove the
   `journey.syllabus === null` throw. Update the prose that says "title, summary,
   and sections" → "overview".
@@ -142,18 +144,18 @@ Update colocated tests and add coverage (per "write unit tests with new code"):
 
 - `lib/chapters/applySyllabusChange.test.ts` — add `overview`/`sections` to mock
   rows and proposals; **change** the existing "renaming done chapters" test (a
-  done-title change now *rejects*); add cases: done title/overview/sections
+  done-title change now _rejects_); add cases: done title/overview/sections
   change → throws; active overview/sections change → throws; active title rename
-  + unchanged content → resolves; happy path still applies locked overview/
-  sections.
+  - unchanged content → resolves; happy path still applies locked overview/
+    sections.
 - `lib/journeys/get.test.ts`, `lib/journeys/activate.test.ts`,
   `lib/journeys/list.test.ts`, `lib/journeys/updateSyllabusDraft.test.ts` —
   update for `syllabusDraft` + new columns / count logic.
 - `lib/syllabus/schema.test.ts` — `summary` → `overview`.
 - `lib/components/journey/syllabus-panel.test.tsx` — overview from rows.
 - `app/api/journeys/[journeyId]/syllabus/chat/{tool,prompts}.test.ts`,
-  `.../chapters/[chapterId]/chat/route.test.ts`,
-  `activate-journey.test.ts`, `bootstrap.test.ts` — field rename fallout.
+  `.../chapters/[chapterId]/chat/route.test.ts`, `activate-journey.test.ts`,
+  `bootstrap.test.ts` — field rename fallout.
 
 ## Verification
 
@@ -164,11 +166,13 @@ pnpm lint
 ```
 
 End-to-end (reset DB, `pnpm dev`):
+
 1. Draft a journey, watch the sidebar build live, click **Start journey**.
-2. On an active chapter, ask the AI for a change that *renames a locked chapter
-   and adds a chapter after the active one* → Apply → sidebar reflects new state.
-3. Ask for a change that *alters the active chapter's overview/sections* → server
-   rejects; active chapter content intact in the sidebar.
+2. On an active chapter, ask the AI for a change that _renames a locked chapter
+   and adds a chapter after the active one_ → Apply → sidebar reflects new
+   state.
+3. Ask for a change that _alters the active chapter's overview/sections_ →
+   server rejects; active chapter content intact in the sidebar.
 4. Revisit the syllabus chat page → it shows the resulting syllabus in the
    content area; the sidebar shows current (possibly changed) chapter state.
 
@@ -184,4 +188,7 @@ End-to-end (reset DB, `pnpm dev`):
 7. `syllabus-view.tsx` + `syllabus-chat.tsx` (the page display split).
 8. `prompts.ts` + `tool.ts` (AI text/source changes).
 9. Tests.
+
+```
+
 ```

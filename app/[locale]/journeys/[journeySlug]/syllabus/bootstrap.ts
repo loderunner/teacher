@@ -1,8 +1,8 @@
 import { Output, type UIMessage, generateText } from 'ai';
 import { z } from 'zod';
 
-import type { Locale } from '@/lib/i18n/locale';
 import { getModel } from '@/lib/ai/model';
+import type { Locale } from '@/lib/i18n/locale';
 import type { Syllabus } from '@/lib/syllabus/schema';
 
 const bootstrapInstructions: Record<Locale, string> = {

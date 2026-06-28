@@ -14,14 +14,14 @@ import { completeChapterAction } from './complete-chapter';
 import { SyllabusChangeCard } from './syllabus-change-card';
 import { SyllabusChangeContext } from './syllabus-change-context';
 
-import { Button, ChatPageShell, Title } from '@/lib/components/chat-page';
-import { StyleLabel, SyllabusPanel } from '@/lib/components/journey';
-import { usePathname, useRouter } from '@/lib/i18n/navigation';
 import {
   type ChatMessageMetadata,
   JourneyChatView,
   useJourneyChat,
 } from '@/lib/chat';
+import { Button, ChatPageShell, Title } from '@/lib/components/chat-page';
+import { StyleLabel, SyllabusPanel } from '@/lib/components/journey';
+import { usePathname, useRouter } from '@/lib/i18n/navigation';
 import type { Journey, JourneyChapter } from '@/lib/journeys/get';
 
 const CHAPTER_TOOLS: Record<string, ComponentType> = {

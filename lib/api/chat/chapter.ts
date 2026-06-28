@@ -1,8 +1,8 @@
 import { type UIMessage } from 'ai';
 import { z } from 'zod';
 
-import type { Locale } from '@/lib/i18n/locale';
 import type { ChatMessageMetadata } from '@/lib/chat';
+import type { Locale } from '@/lib/i18n/locale';
 
 /**
  * Request body for `POST /api/journeys/[id]/chapters/[chapterId]/chat`.
