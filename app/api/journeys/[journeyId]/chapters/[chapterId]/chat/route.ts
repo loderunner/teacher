@@ -2,6 +2,7 @@ import { auth } from '@clerk/nextjs/server';
 import {
   type SystemModelMessage,
   type UIMessage,
+  consumeStream,
   convertToModelMessages,
   generateId,
   smoothStream,
@@ -163,11 +164,16 @@ export async function POST(
       anthropic: { thinking: { type: 'adaptive' }, effort: 'low' },
     },
     experimental_transform: smoothStream(),
+    abortSignal: req.signal,
   });
 
   return result.toUIMessageStreamResponse({
     generateMessageId: generateId,
-    onFinish: async ({ responseMessage }) => {
+    consumeSseStream: consumeStream,
+    onFinish: async ({ responseMessage, isAborted }) => {
+      if (isAborted) {
+        return;
+      }
       const stripped = stripSyllabusChangeContent([responseMessage]);
       if (stripped.length > 0) {
         await saveMessages({

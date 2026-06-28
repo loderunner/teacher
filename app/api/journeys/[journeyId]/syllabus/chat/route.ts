@@ -2,6 +2,7 @@ import { auth } from '@clerk/nextjs/server';
 import {
   type SystemModelMessage,
   type UIMessage,
+  consumeStream,
   convertToModelMessages,
   generateId,
   smoothStream,
@@ -137,11 +138,16 @@ export async function POST(
       },
     },
     experimental_transform: smoothStream({ delayInMs: null }),
+    abortSignal: req.signal,
   });
 
   return result.toUIMessageStreamResponse({
     generateMessageId: generateId,
-    onFinish: async ({ responseMessage }) => {
+    consumeSseStream: consumeStream,
+    onFinish: async ({ responseMessage, isAborted }) => {
+      if (isAborted) {
+        return;
+      }
       await saveMessages({
         journeyId,
         chapterId: null,

@@ -3,6 +3,7 @@
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport, type UIMessage } from 'ai';
 import { useLocale } from 'next-intl';
+import { useEffect } from 'react';
 
 import { type ChatMessageMetadata, isChatMessageMetadata } from './metadata';
 
@@ -76,6 +77,13 @@ export function useJourneyChat({ api, initialMessages }: UseJourneyChatParams) {
     });
 
   const streaming = status === 'streaming' || status === 'submitted';
+
+  useEffect(
+    () => () => {
+      void stop();
+    },
+    [stop],
+  );
 
   const handleSubmit = ({ text, body }: HandleSubmitParams) => {
     void sendMessage({ text }, { body: { locale, ...body } });
