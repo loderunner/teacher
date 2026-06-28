@@ -81,12 +81,6 @@ access a journey or any related row (chapter or message)
   navigation items. The UX is unclear: clicking opens the accordion, but
   navigates to the chapter page simultaneously.
 
-## Stop generating text when the user navigates away from a page
-
-We need to call `stop` on the chat hook when the user navigates away from a
-page, otherwise the model will continue generating text in the background,
-wasting tokens and money.
-
 ## Journey card description
 
 The journey card on the `/journeys` page currently shows title, style, chapter
@@ -159,12 +153,6 @@ source of truth.
 Once you've done that, first update and extend the AGENTS.md file to reflect the
 new best practices. Then dispatch subagents to update the codebase to use the
 new best practices.
-
-## loading dots positioning
-
-loading dots are positioned at the bottom of the message content, right above
-the prompt input. I want them to be positioned at the place where the next
-message will appear.
 
 ## Prompt testing and evaluations
 
