@@ -68,9 +68,7 @@ export function composeChapterSystemPrompt({
       ? `\nSections:\n${fullChapter.sections.map((s) => `- ${s}`).join('\n')}`
       : '';
   const summary =
-    fullChapter.summary && fullChapter.summary.length > 0
-      ? `\n\n${fullChapter.summary}`
-      : '';
+    fullChapter.summary.length > 0 ? `\n\n${fullChapter.summary}` : '';
 
   return `${styleFragment}
 

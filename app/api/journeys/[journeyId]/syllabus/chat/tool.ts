@@ -46,6 +46,7 @@ Example input:
     },
     {
       "title": "The Republic",
+      "summary": "Rome's republican system, its political tensions, and expansion through conflict.",
       "sections": ["Senate and governance", "Conflict with Carthage"]
     }
   ]
