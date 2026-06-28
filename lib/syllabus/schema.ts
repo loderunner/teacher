@@ -18,6 +18,7 @@ export const chapterSchema = z.object({
   summary: z
     .string()
     .max(800)
+    .optional()
     .describe(
       'One-paragraph overview of what the chapter covers. Omit if not yet known.',
     ),
