@@ -1,7 +1,6 @@
 'use client';
 
 import { CheckIcon } from '@phosphor-icons/react';
-import { type DeepPartial } from 'ai';
 import { useTranslations } from 'next-intl';
 
 import * as SidebarSection from './sidebar-section';
@@ -20,7 +19,7 @@ import {
 } from '@/lib/components/ui/accordion';
 import { Link } from '@/lib/i18n/navigation';
 import type { Journey } from '@/lib/journeys/get';
-import type { Syllabus } from '@/lib/syllabus/schema';
+import type { PartialSyllabus, Syllabus } from '@/lib/syllabus/schema';
 import { cn } from '@/lib/tailwind';
 import { syllabusPath } from '@/lib/url';
 
@@ -32,8 +31,8 @@ export type Props =
   | {
       /** Renders a draft syllabus preview — no links, muted status. */
       mode: 'draft';
-      /** Partial syllabus built up by the AI during the drafting chat. */
-      draft: DeepPartial<Syllabus> | null;
+      /** Partial or complete syllabus shown while drafting. */
+      draft: PartialSyllabus | Syllabus | null;
     }
   | {
       /** Renders the activated journey syllabus with navigation links. */

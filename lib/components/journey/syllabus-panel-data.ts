@@ -1,7 +1,9 @@
-import { type DeepPartial } from 'ai';
-
 import type { Journey } from '@/lib/journeys/get';
-import type { Chapter, Syllabus } from '@/lib/syllabus/schema';
+import type {
+  PartialChapter,
+  PartialSyllabus,
+  Syllabus,
+} from '@/lib/syllabus/schema';
 import { chapterPath } from '@/lib/url';
 
 /** Normalized chapter row used by {@link SyllabusPanel} for rendering. */
@@ -16,7 +18,7 @@ export type DisplayChapter = {
 
 /** Converts a partial draft syllabus into {@link DisplayChapter} rows. */
 export function buildDraftChapters(
-  draft: DeepPartial<Syllabus> | null,
+  draft: PartialSyllabus | Syllabus | null,
 ): DisplayChapter[] {
   if (draft === null || draft.chapters === undefined) {
     return [];
@@ -24,13 +26,12 @@ export function buildDraftChapters(
 
   return draft.chapters
     .filter(
-      (c): c is DeepPartial<Chapter> =>
-        c !== undefined && c.title !== undefined,
+      (c): c is PartialChapter & { title: string } => c.title !== undefined,
     )
     .map((c) => ({
       title: c.title,
       summary: c.summary,
-      sections: c.sections?.filter((s): s is string => s !== undefined),
+      sections: c.sections,
       status: 'draft' as const,
       href: undefined,
     }));
