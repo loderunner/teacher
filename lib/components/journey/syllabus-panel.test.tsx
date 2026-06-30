@@ -71,12 +71,12 @@ describe('buildDraftChapters', () => {
     });
   });
 
-  it('filters out undefined section entries', () => {
+  it('passes through section labels unchanged', () => {
     const chapters = buildDraftChapters({
       chapters: [
         {
           title: 'Chapter',
-          sections: ['Sec A', undefined, 'Sec B'] as (string | undefined)[],
+          sections: ['Sec A', 'Sec B'],
         },
       ],
     });

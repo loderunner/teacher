@@ -29,7 +29,7 @@ export const chapterSchema = z.object({
     .min(1)
     .max(20)
     .describe(
-      'Optional ordered list of sub-topics or learning objectives within this chapter.',
+      'Ordered list of sub-topics or learning objectives within this chapter.',
     ),
 });
 
@@ -50,3 +50,34 @@ export type Chapter = z.infer<typeof chapterSchema>;
 
 /** TypeScript type for a full syllabus. */
 export type Syllabus = z.infer<typeof syllabusSchema>;
+
+/**
+ * Permissive chapter schema for in-progress tool inputs. Unlike
+ * {@link chapterSchema.partial}, omits `min(1)` on `title` and `sections` so
+ * mid-stream payloads (empty arrays, blank titles) still parse.
+ *
+ * Keep field keys and max bounds aligned with {@link chapterSchema}; type
+ * parity is checked in `schema.test-d.ts` (via `pnpm test`) and runtime parity
+ * tests in `schema.test.ts`.
+ */
+export const partialChapterSchema = z.object({
+  id: z.string().optional(),
+  title: z.string().max(120).optional(),
+  summary: z.string().max(800).optional(),
+  sections: z.array(z.string().max(200)).max(20).optional(),
+});
+
+/** TypeScript type for a partial syllabus chapter. */
+export type PartialChapter = z.infer<typeof partialChapterSchema>;
+
+/**
+ * Permissive syllabus schema for in-progress tool inputs (streaming sidebar
+ * preview). Unlike {@link syllabusSchema}, allows an empty or omitted
+ * `chapters` array and incomplete chapter objects.
+ */
+export const partialSyllabusSchema = z.object({
+  chapters: z.array(partialChapterSchema).max(30).optional(),
+});
+
+/** TypeScript type for a partial syllabus. */
+export type PartialSyllabus = z.infer<typeof partialSyllabusSchema>;
