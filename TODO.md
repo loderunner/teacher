@@ -178,7 +178,3 @@ Add a new section to AGENTS.md for prompt testing and evaluations guidelines.
 
 - Error toasts for async errors
 - No silent errors
-
-## Journey list
-
-Add a navigation item to the top bar for the journey list.

@@ -235,8 +235,6 @@ describe('partial schema parity with full schema', () => {
 
     expect(full.success).toBe(true);
     expect(partial.success).toBe(true);
-    if (full.success && partial.success) {
-      expect(partial.data).toEqual(full.data);
-    }
+    expect(partial.data).toEqual(full.data);
   });
 });
