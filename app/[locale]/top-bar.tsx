@@ -1,4 +1,6 @@
 import { ClerkLoaded, ClerkLoading, Show, UserButton } from '@clerk/nextjs';
+import { BooksIcon } from '@phosphor-icons/react/dist/ssr';
+import { useTranslations } from 'next-intl';
 
 import { LocalePicker } from './locale-picker';
 import { ThemeToggle } from './theme-toggle';
@@ -6,11 +8,20 @@ import { ThemeToggle } from './theme-toggle';
 import { Link } from '@/lib/i18n/navigation';
 
 export default function TopBar() {
+  const t = useTranslations('TopBar');
+
   return (
     <header className="border-border flex h-14 items-center justify-between border-b px-4">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-5">
         <Link className="font-heading font-semibold tracking-tight" href="/">
           Journey
+        </Link>
+        <Link
+          className="text-foreground/60 hover:text-foreground flex items-center gap-1.5 text-sm font-medium tracking-wide uppercase transition-colors"
+          href="/journeys"
+        >
+          <BooksIcon size={16} weight="bold" />
+          {t('journeys')}
         </Link>
       </div>
       <div className="flex items-center gap-2">

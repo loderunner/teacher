@@ -69,7 +69,8 @@
     "adventure": "Adventure"
   },
   "TopBar": {
-    "home": "Return to home"
+    "home": "Return to home",
+    "journeys": "Journeys"
   },
   "ThemeToggle": {
     "label": "Select theme",

@@ -69,7 +69,8 @@
     "adventure": "Aventure"
   },
   "TopBar": {
-    "home": "Retourner à l'accueil"
+    "home": "Retourner à l'accueil",
+    "journeys": "Parcours"
   },
   "ThemeToggle": {
     "label": "Sélectionner le thème",
