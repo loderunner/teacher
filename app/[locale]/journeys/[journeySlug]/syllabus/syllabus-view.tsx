@@ -37,6 +37,10 @@ export async function SyllabusView({ journey, messages, locale }: Props) {
           <Title>{t('header')}</Title>
         </ChatPageShell.Header>
         <JourneyChatViewIsland messages={messages} tools={SYLLABUS_TOOLS} />
+        <ChatPageShell.Header>
+          <Title>{t('resultingHeader')}</Title>
+        </ChatPageShell.Header>
+        <SyllabusPanel draft={journey.syllabus} mode="draft" />
       </ChatPageShell.Content>
       <ChatPageShell.Sidebar>
         <SyllabusPanel
