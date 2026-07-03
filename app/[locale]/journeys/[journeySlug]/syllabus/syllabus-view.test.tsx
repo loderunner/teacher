@@ -1,8 +1,5 @@
-// @vitest-environment jsdom
-import '@testing-library/jest-dom/vitest';
-
-import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import type { ReactElement } from 'react';
+import { describe, expect, it, vi } from 'vitest';
 
 import { SyllabusView } from './syllabus-view';
 
@@ -19,36 +16,22 @@ vi.mock('next-intl/server', () => ({
 }));
 
 vi.mock('./journey-chat-view-island', () => ({
-  JourneyChatViewIsland: () => <div data-testid="chat-view-island" />,
+  JourneyChatViewIsland: () => null,
 }));
 
 vi.mock('@/lib/components/chat-page', () => ({
   ChatPageShell: {
-    Root: ({ children }: { children: React.ReactNode }) => (
-      <div>{children}</div>
-    ),
-    Content: ({ children }: { children: React.ReactNode }) => (
-      <div>{children}</div>
-    ),
-    Header: ({ children }: { children: React.ReactNode }) => (
-      <div>{children}</div>
-    ),
-    Sidebar: ({ children }: { children: React.ReactNode }) => (
-      <div>{children}</div>
-    ),
+    Root: 'chat-page-root',
+    Content: 'chat-page-content',
+    Header: 'chat-page-header',
+    Sidebar: 'chat-page-sidebar',
   },
-  Title: ({ children }: { children: React.ReactNode }) => (
-    <span>{children}</span>
-  ),
+  Title: 'title',
 }));
 
 vi.mock('@/lib/components/journey', () => ({
-  SyllabusPanel: (props: { mode: string }) => (
-    <div data-testid={`syllabus-panel-${props.mode}`}>
-      {JSON.stringify(props)}
-    </div>
-  ),
-  StyleLabel: () => <div data-testid="style-label" />,
+  SyllabusPanel: 'syllabus-panel',
+  StyleLabel: 'style-label',
 }));
 
 const baseJourney: Journey = {
@@ -70,51 +53,70 @@ const baseJourney: Journey = {
   chapters: [],
 };
 
-describe('SyllabusView', () => {
-  afterEach(() => {
-    cleanup();
-  });
+const asChildren = (element: ReactElement): ReactElement[] => {
+  const { children } = element.props as { children: unknown };
+  return Array.isArray(children)
+    ? (children as ReactElement[])
+    : [children as ReactElement];
+};
 
+const findByType = (elements: ReactElement[], type: string): ReactElement[] =>
+  elements.filter((el) => el.type === type);
+
+describe('SyllabusView', () => {
   it('renders both the activated sidebar panel and the draft content panel', async () => {
-    const element = await SyllabusView({
+    const root = (await SyllabusView({
       journey: baseJourney,
       messages: [],
       locale: 'en',
+    })) as ReactElement;
+
+    const [content, sidebar] = asChildren(root);
+    const [draftPanel] = findByType(asChildren(content), 'syllabus-panel');
+    const [activatedPanel] = findByType(asChildren(sidebar), 'syllabus-panel');
+
+    expect(draftPanel.props).toEqual({
+      draft: baseJourney.syllabus,
+      mode: 'draft',
     });
-    render(element);
-
-    const activatedPanel = screen.getByTestId('syllabus-panel-activated');
-    expect(activatedPanel).toBeInTheDocument();
-
-    const draftPanel = screen.getByTestId('syllabus-panel-draft');
-    expect(draftPanel).toBeInTheDocument();
-    expect(draftPanel.textContent).toContain(
-      JSON.stringify(baseJourney.syllabus),
-    );
+    expect(activatedPanel.props).toEqual({
+      current: { type: 'syllabus' },
+      journey: baseJourney,
+      mode: 'activated',
+    });
   });
 
   it('renders the resulting syllabus header', async () => {
-    const element = await SyllabusView({
+    const root = (await SyllabusView({
       journey: baseJourney,
       messages: [],
       locale: 'en',
-    });
-    render(element);
+    })) as ReactElement;
 
-    expect(screen.getByText('Resulting syllabus')).toBeInTheDocument();
+    const [content] = asChildren(root);
+    const headers = findByType(asChildren(content), 'chat-page-header');
+    const titles = headers.map(
+      (header) => asChildren(header)[0].props as { children: string },
+    );
+
+    expect(titles.map((title) => title.children)).toEqual([
+      'Syllabus chat',
+      'Resulting syllabus',
+    ]);
   });
 
   it('passes a null syllabus through to the draft panel without throwing', async () => {
     const journey: Journey = { ...baseJourney, syllabus: null };
 
-    const element = await SyllabusView({
+    const root = (await SyllabusView({
       journey,
       messages: [],
       locale: 'en',
-    });
-    render(element);
+    })) as ReactElement;
 
-    const draftPanel = screen.getByTestId('syllabus-panel-draft');
-    expect(draftPanel.textContent).toContain('"draft":null');
+    const [content] = asChildren(root);
+    const [draftPanel] = findByType(asChildren(content), 'syllabus-panel');
+
+    expect(draftPanel.props).toEqual({ draft: null, mode: 'draft' });
   });
 });
