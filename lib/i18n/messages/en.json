@@ -91,6 +91,8 @@
   },
   "SyllabusPage": {
     "header": "Syllabus chat",
-    "description": "The conversation where we built your syllabus."
+    "description": "The conversation where we built your syllabus.",
+    "journeyStarted": "Journey started",
+    "resultingSyllabus": "Resulting syllabus"
   }
 }

@@ -91,6 +91,8 @@
   },
   "SyllabusPage": {
     "header": "Chat du programme",
-    "description": "La conversation où nous avons construit votre programme."
+    "description": "La conversation où nous avons construit votre programme.",
+    "journeyStarted": "Parcours démarré",
+    "resultingSyllabus": "Syllabus obtenu"
   }
 }
