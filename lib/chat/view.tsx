@@ -120,6 +120,11 @@ export type JourneyChatViewProps = {
    * Each component reads its part data via {@link useToolPartContext}.
    */
   tools?: Record<string, ComponentType>;
+  /**
+   * Extra content rendered inside the conversation scroll, after the last
+   * message — e.g. a post-conversation event marker and summary.
+   */
+  children?: ReactNode;
 };
 
 // Maps assistant message IDs to their previous text versions (before each regeneration).
@@ -206,6 +211,7 @@ export function JourneyChatView({
   onRegenerate,
   onEditUserMessage,
   tools,
+  children,
 }: JourneyChatViewProps) {
   const t = useTranslations('JourneyChat');
   const streaming = status === 'streaming' || status === 'submitted';
@@ -431,6 +437,7 @@ export function JourneyChatView({
             {showLoadingIndicator && !readOnly && (
               <MessageIndicator type="loading" />
             )}
+            {children}
           </ConversationContent>
           <ConversationScrollButton />
         </Conversation>
