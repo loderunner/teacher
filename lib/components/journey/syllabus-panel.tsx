@@ -2,20 +2,24 @@
 
 import { CheckIcon } from '@phosphor-icons/react';
 import { useTranslations } from 'next-intl';
+import { useState } from 'react';
 
 import * as SidebarSection from './sidebar-section';
 import {
   type DisplayChapter,
   buildActivatedChapters,
   buildDraftChapters,
+  chapterValue,
+  collapsible,
+  collapsibleChapterValues,
 } from './syllabus-panel-data';
 
 import {
   Accordion,
   AccordionContent,
+  AccordionDisclosure,
   AccordionHeader,
   AccordionItem,
-  AccordionTrigger,
 } from '@/lib/components/ui/accordion';
 import { Link } from '@/lib/i18n/navigation';
 import type { Journey } from '@/lib/journeys/get';
@@ -50,7 +54,9 @@ type ChapterItemProps = {
 };
 
 function ChapterItem({ index, chapter, current }: ChapterItemProps) {
-  const triggerClassName = cn(
+  const t = useTranslations('Chapter');
+
+  const titleClassName = cn(
     'flex flex-1 flex-col gap-1 py-2.5 pr-2',
     current && 'bg-muted rounded px-2 font-bold',
     {
@@ -58,7 +64,7 @@ function ChapterItem({ index, chapter, current }: ChapterItemProps) {
         chapter.status === 'locked' || chapter.status === 'draft' || !current,
     },
   );
-  const triggerText = (
+  const titleText = (
     <span className="text-sm font-medium">
       {chapter.status === 'done' && (
         <CheckIcon className="mr-1 inline-block" size={12} />
@@ -66,13 +72,13 @@ function ChapterItem({ index, chapter, current }: ChapterItemProps) {
       {index + 1}. {chapter.title ?? '…'}
     </span>
   );
-  const triggerContent =
+  const title =
     chapter.href !== undefined ? (
-      <Link className={triggerClassName} href={chapter.href}>
-        {triggerText}
+      <Link className={titleClassName} href={chapter.href}>
+        {titleText}
       </Link>
     ) : (
-      <div className={triggerClassName}>{triggerText}</div>
+      <div className={titleClassName}>{titleText}</div>
     );
 
   const summaryContent =
@@ -91,12 +97,19 @@ function ChapterItem({ index, chapter, current }: ChapterItemProps) {
     ) : null;
 
   return (
-    <AccordionItem value={`chapter-${index}`}>
-      <AccordionTrigger>{triggerContent}</AccordionTrigger>
-      <AccordionContent>
-        {summaryContent}
-        {sectionsContent}
-      </AccordionContent>
+    <AccordionItem value={chapterValue(index)}>
+      <div className="flex items-start gap-1">
+        {title}
+        {collapsible(chapter) && (
+          <AccordionDisclosure aria-label={t('toggleSections')} />
+        )}
+      </div>
+      {collapsible(chapter) && (
+        <AccordionContent>
+          {summaryContent}
+          {sectionsContent}
+        </AccordionContent>
+      )}
     </AccordionItem>
   );
 }
@@ -143,6 +156,7 @@ function SyllabusItem({ journey, current }: SyllabusItemProps) {
  */
 export function SyllabusPanel(props: Props) {
   const t = useTranslations('Chapter');
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
 
   let chapters: DisplayChapter[];
   if (props.mode === 'draft') {
@@ -158,11 +172,42 @@ export function SyllabusPanel(props: Props) {
       ? props.current.idx
       : undefined;
 
+  const accordionOpenStateProps =
+    props.mode === 'draft'
+      ? {
+          value: collapsibleChapterValues(chapters).filter(
+            (value) => !collapsed.has(value),
+          ),
+          onValueChange: (next: string[]) => {
+            setCollapsed((prev) => {
+              const updated = new Set(prev);
+              for (const value of collapsibleChapterValues(chapters)) {
+                if (next.includes(value)) {
+                  updated.delete(value);
+                } else {
+                  updated.add(value);
+                }
+              }
+              return updated;
+            });
+          },
+        }
+      : {
+          defaultValue:
+            currentChapterIndex !== undefined
+              ? [chapterValue(currentChapterIndex)]
+              : [],
+        };
+
   const body =
     chapters.length === 0 ? (
       <p className="text-muted-foreground text-sm">{t('emptyDraft')}</p>
     ) : (
-      <Accordion className="flex flex-col">
+      <Accordion
+        className="flex flex-col"
+        multiple
+        {...accordionOpenStateProps}
+      >
         {props.mode === 'activated' && (
           <SyllabusItem current={syllabusCurrent} journey={props.journey} />
         )}

@@ -96,6 +96,39 @@ function AccordionTrigger({
 }
 
 /**
+ * Compact caret-only button that toggles its sibling {@link AccordionContent},
+ * without the full-width row (and any nested navigation link) that
+ * {@link AccordionTrigger} renders. Use this when the item's title is a
+ * separate navigation link and only the caret should control disclosure.
+ *
+ * @param props Forwarded to the underlying Base UI Accordion trigger.
+ */
+function AccordionDisclosure({
+  className,
+  ...props
+}: AccordionPrimitive.Trigger.Props) {
+  return (
+    <AccordionPrimitive.Trigger
+      className={cn(
+        'group/accordion-disclosure focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:after:border-ring text-muted-foreground relative flex shrink-0 items-center justify-center rounded-lg border border-transparent p-1 transition-all outline-none focus-visible:ring-3 aria-disabled:pointer-events-none aria-disabled:opacity-50',
+        className,
+      )}
+      data-slot="accordion-disclosure"
+      {...props}
+    >
+      <CaretDownIcon
+        className="pointer-events-none shrink-0 group-aria-expanded/accordion-disclosure:hidden"
+        size={16}
+      />
+      <CaretUpIcon
+        className="pointer-events-none hidden shrink-0 group-aria-expanded/accordion-disclosure:inline"
+        size={16}
+      />
+    </AccordionPrimitive.Trigger>
+  );
+}
+
+/**
  * Collapsible body of an {@link AccordionItem}. Animates height on open/close.
  *
  * @param props Forwarded to the underlying Base UI Accordion panel.
@@ -126,6 +159,7 @@ function AccordionContent({
 export {
   Accordion,
   AccordionContent,
+  AccordionDisclosure,
   AccordionHeader,
   AccordionItem,
   AccordionTrigger,
