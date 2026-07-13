@@ -65,16 +65,23 @@ export function useJourneyChat({ api, initialMessages }: UseJourneyChatParams) {
       metadata: isChatMessageMetadata(m.metadata) ? m.metadata : undefined,
     }),
   );
-  const { messages, setMessages, sendMessage, status, stop, regenerate } =
-    useChat<JourneyChatMessage>({
-      transport: new DefaultChatTransport({
-        api,
-        prepareSendMessagesRequest: prepareChatRequest,
-      }),
-      ...(typedInitialMessages !== undefined
-        ? { messages: typedInitialMessages }
-        : {}),
-    });
+  const {
+    messages,
+    setMessages,
+    sendMessage,
+    status,
+    stop,
+    regenerate,
+    error,
+  } = useChat<JourneyChatMessage>({
+    transport: new DefaultChatTransport({
+      api,
+      prepareSendMessagesRequest: prepareChatRequest,
+    }),
+    ...(typedInitialMessages !== undefined
+      ? { messages: typedInitialMessages }
+      : {}),
+  });
 
   const streaming = status === 'streaming' || status === 'submitted';
 
@@ -108,6 +115,10 @@ export function useJourneyChat({ api, initialMessages }: UseJourneyChatParams) {
     void sendMessage(undefined, { body: { locale, ...body } });
   };
 
+  const retry = (body?: Record<string, unknown>) => {
+    void regenerate({ body: { locale, ...body } });
+  };
+
   return {
     messages,
     setMessages,
@@ -115,10 +126,12 @@ export function useJourneyChat({ api, initialMessages }: UseJourneyChatParams) {
     status,
     stop,
     streaming,
+    error,
     handleSubmit,
     handleRegenerate,
     handleEditMessage,
     triggerResponse,
+    retry,
   };
 }
 

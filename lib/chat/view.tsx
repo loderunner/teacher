@@ -59,6 +59,8 @@ import {
   ReasoningTrigger,
 } from '@/lib/components/ai-elements/reasoning';
 import { Shimmer } from '@/lib/components/ai-elements/shimmer';
+import { ErrorDetailPopover } from '@/lib/components/error-detail-popover';
+import { Button } from '@/lib/components/ui/button';
 
 // Internal context holding the current tool part being rendered by JourneyChatView.
 const ToolPartContext = createContext<unknown>(null);
@@ -115,6 +117,10 @@ export type JourneyChatViewProps = {
   onRegenerate?: (messageId: string) => void;
   /** Called when the user edits and resubmits a user message. */
   onEditUserMessage?: (messageId: string, text: string) => void;
+  /** The streaming error, if `status` is `'error'`. */
+  error?: Error;
+  /** Called when the user retries after a streaming error. */
+  onRetry?: () => void;
   /**
    * Registry mapping tool part types to display components.
    * Each component reads its part data via {@link useToolPartContext}.
@@ -210,6 +216,8 @@ export function JourneyChatView({
   onStop,
   onRegenerate,
   onEditUserMessage,
+  error,
+  onRetry,
   tools,
   children,
 }: JourneyChatViewProps) {
@@ -428,6 +436,19 @@ export function JourneyChatView({
     );
   });
 
+  const streamError =
+    status === 'error' && !readOnly ? (
+      <div className="flex items-center gap-2 py-1 text-sm">
+        <p className="text-destructive">{t('streamError')}</p>
+        <ErrorDetailPopover detail={error?.message} />
+        {onRetry !== undefined && (
+          <Button size="xs" variant="outline" onClick={onRetry}>
+            {t('retry')}
+          </Button>
+        )}
+      </div>
+    ) : null;
+
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-end gap-4 overflow-hidden px-1 pb-1">
       {messages.length > 0 && (
@@ -438,6 +459,7 @@ export function JourneyChatView({
               <MessageIndicator type="loading" />
             )}
             {children}
+            {streamError}
           </ConversationContent>
           <ConversationScrollButton />
         </Conversation>

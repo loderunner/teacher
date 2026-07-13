@@ -16,6 +16,7 @@ import { SyllabusDraftDisplay } from './syllabus-draft-display';
 
 import { JourneyChatView, useJourneyChat } from '@/lib/chat';
 import { Button, ChatPageShell } from '@/lib/components/chat-page';
+import { ErrorDetailPopover } from '@/lib/components/error-detail-popover';
 import { StylePicker, SyllabusPanel } from '@/lib/components/journey';
 import { useRouter } from '@/lib/i18n/navigation';
 import type { Journey } from '@/lib/journeys/get';
@@ -79,10 +80,12 @@ export function SyllabusChat({ journey, initialMessages, presets }: Props) {
     status,
     stop,
     streaming,
+    error,
     handleSubmit,
     handleRegenerate,
     handleEditMessage,
     triggerResponse,
+    retry,
   } = useJourneyChat({
     api: `/api/journeys/${journey.id}/syllabus/chat`,
     initialMessages,
@@ -121,16 +124,23 @@ export function SyllabusChat({ journey, initialMessages, presets }: Props) {
   const started = messages.length > 0;
   const startable = draft !== null && draft.chapters.length > 0 && !streaming;
 
+  const [activateError, setActivateError] = useState<Error | null>(null);
+
   const handleStartJourney = () => {
     if (draft === null || !startable) {
       return;
     }
+    setActivateError(null);
     startTransition(async () => {
-      const result = await activateJourneyAction({
-        journeyId: journey.id,
-        syllabus: draft,
-      });
-      router.push(result.path);
+      try {
+        const result = await activateJourneyAction({
+          journeyId: journey.id,
+          syllabus: draft,
+        });
+        router.push(result.path);
+      } catch (err) {
+        setActivateError(err instanceof Error ? err : new Error(String(err)));
+      }
     });
   };
 
@@ -138,6 +148,7 @@ export function SyllabusChat({ journey, initialMessages, presets }: Props) {
     <ChatPageShell.Root>
       <ChatPageShell.Content>
         <JourneyChatView
+          error={error}
           messages={messages}
           placeholder={t('promptPlaceholder')}
           status={status}
@@ -146,18 +157,29 @@ export function SyllabusChat({ journey, initialMessages, presets }: Props) {
             handleEditMessage({ messageId, text })
           }
           onRegenerate={(messageId) => handleRegenerate({ messageId })}
+          onRetry={retry}
           onStop={stop}
           onSubmit={handleSubmit}
         />
         {startable && (
           <ChatPageShell.Footer>
-            <Button
-              disabled={pending || streaming}
-              onClick={handleStartJourney}
-            >
-              <ArrowRightIcon size={15} weight="bold" />
-              {t('startJourney')}
-            </Button>
+            <div className="flex flex-col items-end gap-2">
+              {activateError !== null && (
+                <div className="flex items-center gap-2 text-sm">
+                  <p className="text-destructive">
+                    {t('activateJourneyError')}
+                  </p>
+                  <ErrorDetailPopover detail={activateError.message} />
+                </div>
+              )}
+              <Button
+                disabled={pending || streaming}
+                onClick={handleStartJourney}
+              >
+                <ArrowRightIcon size={15} weight="bold" />
+                {t('startJourney')}
+              </Button>
+            </div>
           </ChatPageShell.Footer>
         )}
       </ChatPageShell.Content>

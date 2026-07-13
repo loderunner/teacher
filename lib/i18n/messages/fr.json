@@ -8,7 +8,8 @@
     "chapterProgress": "Chapitre {current} sur {total}",
     "draft": "Brouillon",
     "chapters": "{count, plural, one {# chapitre} other {# chapitres}}",
-    "noResults": "Aucun parcours ne correspond à votre recherche."
+    "noResults": "Aucun parcours ne correspond à votre recherche.",
+    "loadMoreError": "Impossible de charger plus de parcours."
   },
   "Home": {
     "comingSoon": "Bienvenue — bientôt disponible"
@@ -23,7 +24,9 @@
     "startJourneyDisabledHint": "Ajoutez au moins un chapitre et choisissez un style pour commencer.",
     "promptPlaceholder": "Décrivez ce que vous souhaitez apprendre…",
     "updatingSyllabus": "Mise à jour du programme",
-    "syllabusUpdated": "Programme mis à jour"
+    "syllabusUpdated": "Programme mis à jour",
+    "createJourneyError": "Impossible de démarrer ce parcours.",
+    "activateJourneyError": "Impossible de démarrer ce parcours."
   },
   "JourneyChat": {
     "thinkingInProgress": "Réflexion en cours...",
@@ -33,7 +36,9 @@
     "copy": "Copier",
     "editMessage": "Modifier",
     "cancelEdit": "Annuler",
-    "saveEdit": "Enregistrer"
+    "saveEdit": "Enregistrer",
+    "streamError": "Impossible d'obtenir une réponse.",
+    "retry": "Réessayer"
   },
   "Chapter": {
     "position": "Chapitre {n} sur {total}",
@@ -87,7 +92,8 @@
     "title": "Une erreur s'est produite",
     "description": "Une erreur inattendue s'est produite. Veuillez réessayer.",
     "tryAgain": "Réessayer",
-    "backHome": "Retourner à l'accueil"
+    "backHome": "Retourner à l'accueil",
+    "detailsLabel": "Afficher les détails de l'erreur"
   },
   "SyllabusPage": {
     "header": "Chat du programme",
