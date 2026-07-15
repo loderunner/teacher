@@ -178,3 +178,7 @@ Add a new section to AGENTS.md for prompt testing and evaluations guidelines.
 
 - Error toasts for async errors
 - No silent errors
+
+## Delete journey from list
+
+Trash icon to delete a journey from the list view.
