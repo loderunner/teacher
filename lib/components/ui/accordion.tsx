@@ -23,8 +23,8 @@ function Accordion({ className, ...props }: AccordionPrimitive.Root.Props) {
 }
 
 /**
- * A single accordion entry — pair an {@link AccordionTrigger} with an
- * {@link AccordionContent} inside.
+ * A single accordion entry — pair an {@link AccordionHeader} (wrapping an
+ * {@link AccordionTrigger}) with an {@link AccordionContent} inside.
  *
  * @param props Forwarded to the underlying Base UI Accordion item, including
  *   `value` for controlled open state.
@@ -61,8 +61,13 @@ function AccordionHeader({
 }
 
 /**
- * Clickable header that toggles its sibling {@link AccordionContent}.
- * Renders chevron icons that reflect the open/closed state.
+ * Caret button that toggles its sibling {@link AccordionContent}. Renders
+ * chevron icons that reflect the open/closed state, plus any `children`
+ * passed before them.
+ *
+ * Not wrapped in a heading element — pair it with an {@link AccordionHeader}
+ * at the call site, alongside any other heading content (e.g. a separate
+ * navigation link), so the item's heading has an accessible name.
  *
  * @param props Forwarded to the underlying Base UI Accordion trigger.
  */
@@ -72,57 +77,22 @@ function AccordionTrigger({
   ...props
 }: AccordionPrimitive.Trigger.Props) {
   return (
-    <AccordionPrimitive.Header className="flex">
-      <AccordionPrimitive.Trigger
-        className={cn(
-          'group/accordion-trigger focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:after:border-ring **:data-[slot=accordion-trigger-icon]:text-muted-foreground relative flex flex-1 items-start justify-between rounded-lg border border-transparent py-2.5 text-left text-sm font-medium transition-all outline-none hover:underline focus-visible:ring-3 aria-disabled:pointer-events-none aria-disabled:opacity-50 **:data-[slot=accordion-trigger-icon]:ml-auto **:data-[slot=accordion-trigger-icon]:size-4',
-          className,
-        )}
-        data-slot="accordion-trigger"
-        {...props}
-      >
-        {children}
-        <CaretDownIcon
-          className="pointer-events-none shrink-0 group-aria-expanded/accordion-trigger:hidden"
-          data-slot="accordion-trigger-icon"
-        />
-        <CaretUpIcon
-          className="pointer-events-none hidden shrink-0 group-aria-expanded/accordion-trigger:inline"
-          data-slot="accordion-trigger-icon"
-        />
-      </AccordionPrimitive.Trigger>
-    </AccordionPrimitive.Header>
-  );
-}
-
-/**
- * Compact caret-only button that toggles its sibling {@link AccordionContent},
- * without the full-width row (and any nested navigation link) that
- * {@link AccordionTrigger} renders. Use this when the item's title is a
- * separate navigation link and only the caret should control disclosure.
- *
- * @param props Forwarded to the underlying Base UI Accordion trigger.
- */
-function AccordionDisclosure({
-  className,
-  ...props
-}: AccordionPrimitive.Trigger.Props) {
-  return (
     <AccordionPrimitive.Trigger
       className={cn(
-        'group/accordion-disclosure focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:after:border-ring text-muted-foreground relative flex shrink-0 items-center justify-center rounded-lg border border-transparent p-1 transition-all outline-none focus-visible:ring-3 aria-disabled:pointer-events-none aria-disabled:opacity-50',
+        'group/accordion-trigger focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:after:border-ring text-muted-foreground relative flex shrink-0 items-center justify-center rounded-lg border border-transparent p-1 transition-all outline-none focus-visible:ring-3 aria-disabled:pointer-events-none aria-disabled:opacity-50 **:data-[slot=accordion-trigger-icon]:size-4',
         className,
       )}
-      data-slot="accordion-disclosure"
+      data-slot="accordion-trigger"
       {...props}
     >
+      {children}
       <CaretDownIcon
-        className="pointer-events-none shrink-0 group-aria-expanded/accordion-disclosure:hidden"
-        size={16}
+        className="pointer-events-none shrink-0 group-aria-expanded/accordion-trigger:hidden"
+        data-slot="accordion-trigger-icon"
       />
       <CaretUpIcon
-        className="pointer-events-none hidden shrink-0 group-aria-expanded/accordion-disclosure:inline"
-        size={16}
+        className="pointer-events-none hidden shrink-0 group-aria-expanded/accordion-trigger:inline"
+        data-slot="accordion-trigger-icon"
       />
     </AccordionPrimitive.Trigger>
   );
@@ -159,7 +129,6 @@ function AccordionContent({
 export {
   Accordion,
   AccordionContent,
-  AccordionDisclosure,
   AccordionHeader,
   AccordionItem,
   AccordionTrigger,

@@ -17,9 +17,9 @@ import {
 import {
   Accordion,
   AccordionContent,
-  AccordionDisclosure,
   AccordionHeader,
   AccordionItem,
+  AccordionTrigger,
 } from '@/lib/components/ui/accordion';
 import { Link } from '@/lib/i18n/navigation';
 import type { Journey } from '@/lib/journeys/get';
@@ -98,12 +98,12 @@ function ChapterItem({ index, chapter, current }: ChapterItemProps) {
 
   return (
     <AccordionItem value={chapterValue(index)}>
-      <div className="flex items-start gap-1">
+      <AccordionHeader className="items-start gap-1">
         {title}
         {collapsible(chapter) && (
-          <AccordionDisclosure aria-label={t('toggleSections')} />
+          <AccordionTrigger aria-label={t('toggleSections')} />
         )}
-      </div>
+      </AccordionHeader>
       {collapsible(chapter) && (
         <AccordionContent>
           {summaryContent}
