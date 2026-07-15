@@ -3,6 +3,9 @@ import { describe, expect, it } from 'vitest';
 import {
   buildActivatedChapters,
   buildDraftChapters,
+  chapterValue,
+  collapsible,
+  collapsibleChapterValues,
 } from './syllabus-panel-data';
 
 import type { Journey } from '@/lib/journeys/get';
@@ -119,5 +122,49 @@ describe('buildActivatedChapters', () => {
     const chapters = buildActivatedChapters(journey);
     expect(chapters[0].summary).toBeUndefined();
     expect(chapters[0].sections).toBeUndefined();
+  });
+});
+
+describe('chapterValue', () => {
+  it('formats the item value for a chapter index', () => {
+    expect(chapterValue(0)).toBe('chapter-0');
+    expect(chapterValue(3)).toBe('chapter-3');
+  });
+});
+
+describe('collapsible', () => {
+  it('returns true when the chapter has a summary', () => {
+    expect(collapsible({ summary: 'A summary', status: 'draft' })).toBe(true);
+  });
+
+  it('returns true when the chapter has non-empty sections', () => {
+    expect(collapsible({ sections: ['Sec A'], status: 'draft' })).toBe(true);
+  });
+
+  it('returns false when the chapter has neither summary nor sections', () => {
+    expect(collapsible({ status: 'draft' })).toBe(false);
+  });
+
+  it('returns false when sections is an empty array', () => {
+    expect(collapsible({ sections: [], status: 'draft' })).toBe(false);
+  });
+});
+
+describe('collapsibleChapterValues', () => {
+  it('returns item values for only the collapsible chapters', () => {
+    const chapters = [
+      { summary: 'A summary', status: 'draft' as const },
+      { status: 'draft' as const },
+      { sections: ['Sec A'], status: 'draft' as const },
+    ];
+
+    expect(collapsibleChapterValues(chapters)).toEqual([
+      'chapter-0',
+      'chapter-2',
+    ]);
+  });
+
+  it('returns an empty array when no chapters are collapsible', () => {
+    expect(collapsibleChapterValues([{ status: 'draft' }])).toEqual([]);
   });
 });
