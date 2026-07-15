@@ -89,11 +89,11 @@ function ChapterItem({ index, chapter, current }: ChapterItemProps) {
     'flex-col gap-1 pr-2',
   );
   const titleText = (
-    <span>
-      {chapter.status === 'done' && (
-        <CheckIcon className="mr-1 inline-block" size={12} />
-      )}
+    <span className="inline-flex items-baseline">
       {index + 1}. {chapter.title ?? '…'}
+      {chapter.status === 'done' && (
+        <CheckIcon className="ml-2 inline-block" size={12} weight="bold" />
+      )}
     </span>
   );
   const title =
@@ -156,7 +156,10 @@ function SyllabusItem({ journey, current }: SyllabusItemProps) {
           })}
           href={syllabusPath(journey)}
         >
-          {t('syllabusChat')}
+          <span className="inline-flex items-baseline">
+            {t('syllabusChat')}
+            <CheckIcon className="ml-2 inline-block" size={12} weight="bold" />
+          </span>
         </Link>
       </AccordionHeader>
     </AccordionItem>
