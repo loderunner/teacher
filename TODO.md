@@ -73,14 +73,6 @@ to the user.
 setup Neon Oauth, and row-level security so that an authenticated user cannot
 access a journey or any related row (chapter or message)
 
-## Accordion visual glitches
-
-- The first syllabus item in the syllabus panel, the one that links to the
-  syllabus chat, is not styled the same as the other syllabus items.
-- The chapter items in the syllabus panel function both as accordion items and
-  navigation items. The UX is unclear: clicking opens the accordion, but
-  navigates to the chapter page simultaneously.
-
 ## Journey card description
 
 The journey card on the `/journeys` page currently shows title, style, chapter
