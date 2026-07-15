@@ -47,6 +47,31 @@ export type Props =
       current: Current;
     };
 
+/** State that shapes a title link's interactive and highlight styling. */
+type TitleLinkState = {
+  /** Whether this item represents the page currently being viewed. */
+  current: boolean;
+  /** Whether the title text should render in the muted foreground color. */
+  status: DisplayChapter['status'];
+};
+
+/**
+ * Shared classes for a navigable accordion item's title. Both the syllabus
+ * link and each chapter's title link render with the same interactive
+ * treatment — focus ring, hover underline, current-item highlight — so they
+ * read as one family of controls and can't drift apart independently.
+ */
+function titleLinkClassName({ current, status }: TitleLinkState): string {
+  return cn(
+    'focus-visible:border-ring focus-visible:ring-ring/50 relative flex flex-1 items-start rounded-lg border border-transparent px-2 py-2.5 text-sm font-medium transition-all outline-none focus-visible:ring-3',
+    current && 'bg-muted rounded',
+    status === 'locked' && 'text-muted-foreground',
+    !current &&
+      (status === 'active' || status === 'done') &&
+      'not-hover:text-muted-foreground',
+  );
+}
+
 type ChapterItemProps = {
   index: number;
   chapter: DisplayChapter;
@@ -57,15 +82,14 @@ function ChapterItem({ index, chapter, current }: ChapterItemProps) {
   const t = useTranslations('Chapter');
 
   const titleClassName = cn(
-    'flex flex-1 flex-col gap-1 py-2.5 pr-2',
-    current && 'bg-muted rounded px-2 font-bold',
-    {
-      'text-muted-foreground':
-        chapter.status === 'locked' || chapter.status === 'draft' || !current,
-    },
+    titleLinkClassName({
+      current,
+      status: chapter.status,
+    }),
+    'flex-col gap-1 pr-2',
   );
   const titleText = (
-    <span className="text-sm font-medium">
+    <span>
       {chapter.status === 'done' && (
         <CheckIcon className="mr-1 inline-block" size={12} />
       )}
@@ -126,11 +150,10 @@ function SyllabusItem({ journey, current }: SyllabusItemProps) {
     <AccordionItem disabled value="syllabus">
       <AccordionHeader>
         <Link
-          className={cn(
-            'focus-visible:border-ring focus-visible:ring-ring/50 relative flex flex-1 items-start rounded-lg border border-transparent py-2.5 text-sm font-medium transition-all outline-none hover:underline focus-visible:ring-3',
-            current && 'bg-muted rounded px-2 font-medium',
-            !current && 'text-muted-foreground',
-          )}
+          className={titleLinkClassName({
+            current,
+            status: journey.status === 'active' ? 'done' : 'draft',
+          })}
           href={syllabusPath(journey)}
         >
           {t('syllabusChat')}
