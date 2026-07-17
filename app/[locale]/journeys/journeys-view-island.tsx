@@ -136,7 +136,7 @@ export function JourneysViewIsland({
             </li>
           ))}
           {pageToken !== null && (
-            <li className="flex flex-col items-end gap-2 pt-3 pb-1">
+            <li className="flex flex-row items-baseline justify-end gap-2 pt-3 pb-1">
               {loadMoreErrorDetail !== null && (
                 <div className="flex items-center gap-2 text-sm">
                   <p className="text-destructive">{t('loadMoreError')}</p>
