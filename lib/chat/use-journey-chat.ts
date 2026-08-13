@@ -78,12 +78,11 @@ export function useJourneyChat({ api, initialMessages }: UseJourneyChatParams) {
 
   const streaming = status === 'streaming' || status === 'submitted';
 
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    return () => {
       void stop();
-    },
-    [stop],
-  );
+    };
+  }, [stop]);
 
   const handleSubmit = ({ text, body }: HandleSubmitParams) => {
     void sendMessage({ text }, { body: { locale, ...body } });

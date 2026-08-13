@@ -329,14 +329,13 @@ export const PromptInputProvider = ({
   }, [attachmentFiles]);
 
   // Cleanup blob URLs on unmount to prevent memory leaks
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    return () => {
       for (const f of attachmentsRef.current) {
         URL.revokeObjectURL(f.url);
       }
-    },
-    [],
-  );
+    };
+  }, []);
 
   const openFileDialog = () => {
     openRef.current();
@@ -818,16 +817,15 @@ export const PromptInput = ({
     };
   }, [add, globalDrop]);
 
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    return () => {
       if (!usingProvider) {
         for (const f of filesRef.current) {
           URL.revokeObjectURL(f.url);
         }
       }
-    },
-    [usingProvider],
-  );
+    };
+  }, [usingProvider]);
 
   const handleChange: ChangeEventHandler<HTMLInputElement> = (event) => {
     if (event.currentTarget.files !== null) {
