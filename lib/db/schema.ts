@@ -71,6 +71,8 @@ export const chapters = pgTable(
     title: text('title').notNull(),
     status: chapterStatusEnum('status').notNull().default('locked'),
     summary: text('summary'),
+    overview: text('overview').notNull().default(''),
+    sections: jsonb('sections').$type<string[]>().notNull().default([]),
     createdAt: timestamp('created_at').notNull().defaultNow(),
   },
   (t) => [

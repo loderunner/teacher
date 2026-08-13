@@ -13,14 +13,28 @@ vi.mock('@/lib/db', () => ({
 }));
 
 const existingChapters = [
-  { id: 'ch-active-0', idx: 0, title: 'Active Chapter', status: 'active' },
-  { id: 'ch-locked-1', idx: 1, title: 'Locked Chapter', status: 'locked' },
+  {
+    id: 'ch-active-0',
+    idx: 0,
+    title: 'Active Chapter',
+    status: 'active',
+    overview: 'Existing overview',
+    sections: ['Existing section'],
+  },
+  {
+    id: 'ch-locked-1',
+    idx: 1,
+    title: 'Locked Chapter',
+    status: 'locked',
+    overview: 'Existing overview',
+    sections: ['Existing section'],
+  },
 ];
 
 /** Builds a proposal chapter with the required summary and sections fields. */
 const ch = (opts: { id?: string; title: string }) => ({
-  summary: '' as const,
-  sections: ['Overview'],
+  summary: 'New overview' as const,
+  sections: ['New section'],
   ...opts,
 });
 
@@ -61,7 +75,16 @@ describe('applySyllabusChange', () => {
     it('throws when there is no active chapter', async () => {
       setupTx(
         [{ id: 'journey-1' }],
-        [{ id: 'ch-locked-0', idx: 0, title: 'Locked', status: 'locked' }],
+        [
+          {
+            id: 'ch-locked-0',
+            idx: 0,
+            title: 'Locked',
+            status: 'locked',
+            overview: '',
+            sections: [],
+          },
+        ],
       );
 
       await expect(
@@ -98,12 +121,21 @@ describe('applySyllabusChange', () => {
       setupTx(
         [{ id: 'journey-1' }],
         [
-          { id: 'ch-done-0', idx: 0, title: 'Done Chapter', status: 'done' },
+          {
+            id: 'ch-done-0',
+            idx: 0,
+            title: 'Done Chapter',
+            status: 'done',
+            overview: '',
+            sections: [],
+          },
           {
             id: 'ch-active-1',
             idx: 1,
             title: 'Active Chapter',
             status: 'active',
+            overview: '',
+            sections: [],
           },
         ],
       );
@@ -146,6 +178,8 @@ describe('applySyllabusChange', () => {
             idx: 0,
             title: 'Active Chapter',
             status: 'active',
+            overview: '',
+            sections: [],
           },
         ],
       );
@@ -169,13 +203,29 @@ describe('applySyllabusChange', () => {
       setupTx(
         [{ id: 'journey-1' }],
         [
-          { id: 'ch-done-0', idx: 0, title: 'Done One', status: 'done' },
-          { id: 'ch-done-1', idx: 1, title: 'Done Two', status: 'done' },
+          {
+            id: 'ch-done-0',
+            idx: 0,
+            title: 'Done One',
+            status: 'done',
+            overview: '',
+            sections: [],
+          },
+          {
+            id: 'ch-done-1',
+            idx: 1,
+            title: 'Done Two',
+            status: 'done',
+            overview: '',
+            sections: [],
+          },
           {
             id: 'ch-active-2',
             idx: 2,
             title: 'Active Chapter',
             status: 'active',
+            overview: '',
+            sections: [],
           },
         ],
       );
@@ -227,12 +277,16 @@ describe('applySyllabusChange', () => {
             idx: 0,
             title: 'Original Done Title',
             status: 'done',
+            overview: 'Original overview',
+            sections: ['Original section'],
           },
           {
             id: 'ch-active-1',
             idx: 1,
             title: 'Active Chapter',
             status: 'active',
+            overview: 'Existing overview',
+            sections: ['Existing section'],
           },
         ],
       );
@@ -249,7 +303,7 @@ describe('applySyllabusChange', () => {
       });
 
       // The update calls for preserved chapters should never set the done
-      // chapter's title to the new value.
+      // chapter's title, overview, or sections to the proposal's values.
       const setCalls = mockTx.update.set.mock.calls as Array<
         [Record<string, unknown>]
       >;
@@ -258,6 +312,11 @@ describe('applySyllabusChange', () => {
         .filter((t) => t !== undefined);
 
       expect(titlesWritten).not.toContain('Renamed Done Title');
+
+      const doneChapterCall = setCalls.find(
+        ([args]) => args.idx === 0 && Object.keys(args).length === 1,
+      );
+      expect(doneChapterCall?.[0]).toEqual({ idx: 0 });
     });
 
     it('does allow renaming a locked chapter', async () => {
@@ -277,11 +336,16 @@ describe('applySyllabusChange', () => {
       const setCalls = mockTx.update.set.mock.calls as Array<
         [Record<string, unknown>]
       >;
-      const titlesWritten = setCalls
-        .map(([args]) => args.title)
-        .filter((t) => t !== undefined);
+      const lockedChapterCall = setCalls.find(
+        ([args]) => args.title === 'Locked Renamed',
+      );
 
-      expect(titlesWritten).toContain('Locked Renamed');
+      expect(lockedChapterCall?.[0]).toEqual({
+        idx: 1,
+        title: 'Locked Renamed',
+        overview: 'New overview',
+        sections: ['New section'],
+      });
     });
   });
 
@@ -387,6 +451,30 @@ describe('applySyllabusChange', () => {
       });
 
       expect(mockTx.delete).not.toHaveBeenCalled();
+    });
+
+    it('inserts new chapters with overview and sections from the proposal', async () => {
+      const mockTx = setupTx([{ id: 'journey-1' }], existingChapters);
+
+      await applySyllabusChange({
+        userId: 'user-1',
+        journeyId: 'journey-1',
+        newSyllabus: {
+          chapters: [
+            ch({ id: 'ch-active-0', title: 'Active Chapter' }),
+            ch({ id: 'ch-locked-1', title: 'Locked Chapter' }),
+            ch({ title: 'Brand New Chapter' }), // no id → insert
+          ],
+        },
+      });
+
+      expect(mockTx.insert.values).toHaveBeenCalledExactlyOnceWith([
+        expect.objectContaining({
+          title: 'Brand New Chapter',
+          overview: 'New overview',
+          sections: ['New section'],
+        }),
+      ]);
     });
   });
 });

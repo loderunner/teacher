@@ -23,6 +23,8 @@ describe('activateJourney', () => {
       idx: number;
       title: string;
       status: string;
+      overview: string;
+      sections: string[];
     };
     let chapterRows: ChapterValue[] = [];
 
@@ -58,8 +60,8 @@ describe('activateJourney', () => {
       memory: ['M'],
       syllabus: {
         chapters: [
-          { title: 'A', summary: '', sections: ['Overview'] },
-          { title: 'B', summary: '', sections: ['Overview'] },
+          { title: 'A', summary: 'Overview A', sections: ['Section A1'] },
+          { title: 'B', summary: 'Overview B', sections: ['Section B1'] },
         ],
       },
     });
@@ -67,7 +69,11 @@ describe('activateJourney', () => {
     expect(result).toEqual({ id: 'j1', title: 'Final Title' });
     expect(chapterRows).toHaveLength(2);
     expect(chapterRows[0].status).toBe('active');
+    expect(chapterRows[0].overview).toBe('Overview A');
+    expect(chapterRows[0].sections).toEqual(['Section A1']);
     expect(chapterRows[1].status).toBe('locked');
+    expect(chapterRows[1].overview).toBe('Overview B');
+    expect(chapterRows[1].sections).toEqual(['Section B1']);
   });
 
   it('throws when no drafting row matches', async () => {

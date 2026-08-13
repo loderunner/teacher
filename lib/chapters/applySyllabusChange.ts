@@ -25,8 +25,9 @@ export type ApplySyllabusChangeResult = {
  * Replaces a journey's syllabus and reconciles its `chapters` rows.
  *
  * - Existing chapters whose id appears in the proposal are preserved.
- *   Their `id`, `status`, and `summary` survive; `idx` and `title` are
- *   updated to match the proposal.
+ *   Their `id`, `status`, and `summary` survive; `idx`, `title`, `overview`,
+ *   and `sections` are updated to match the proposal (except for `done`
+ *   chapters, whose `title`/`overview`/`sections` are left untouched).
  * - Removed `locked` chapters (id in existing, not in proposal) are deleted.
  * - Removed `done` or `active` chapters cause the call to throw — the
  *   proposal is rejected as it would destroy learner progress.
@@ -68,6 +69,8 @@ export async function applySyllabusChange({
         idx: chapters.idx,
         title: chapters.title,
         status: chapters.status,
+        overview: chapters.overview,
+        sections: chapters.sections,
       })
       .from(chapters)
       .where(eq(chapters.journeyId, journeyId))
@@ -94,8 +97,16 @@ export async function applySyllabusChange({
           existingStatus: JourneyChapterStatus;
           newIdx: number;
           newTitle: string;
+          newOverview: string;
+          newSections: string[];
         }
-      | { kind: 'insert'; newIdx: number; newTitle: string };
+      | {
+          kind: 'insert';
+          newIdx: number;
+          newTitle: string;
+          newOverview: string;
+          newSections: string[];
+        };
 
     const plan: Plan[] = newSyllabus.chapters.map((c, i) => {
       if (c.id !== undefined) {
@@ -110,9 +121,17 @@ export async function applySyllabusChange({
           existingStatus: match.status,
           newIdx: i,
           newTitle: c.title,
+          newOverview: c.summary,
+          newSections: c.sections,
         };
       }
-      return { kind: 'insert' as const, newIdx: i, newTitle: c.title };
+      return {
+        kind: 'insert' as const,
+        newIdx: i,
+        newTitle: c.title,
+        newOverview: c.summary,
+        newSections: c.sections,
+      };
     });
 
     // Phase 5: Chapters present in the DB but not in the proposal are
@@ -179,7 +198,12 @@ export async function applySyllabusChange({
       const fields =
         p.existingStatus === 'done'
           ? { idx: p.newIdx }
-          : { idx: p.newIdx, title: p.newTitle };
+          : {
+              idx: p.newIdx,
+              title: p.newTitle,
+              overview: p.newOverview,
+              sections: p.newSections,
+            };
       await tx
         .update(chapters)
         .set(fields)
@@ -197,6 +221,8 @@ export async function applySyllabusChange({
           idx: p.newIdx,
           title: p.newTitle,
           status: 'locked' as const,
+          overview: p.newOverview,
+          sections: p.newSections,
         })),
       );
     }

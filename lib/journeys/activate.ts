@@ -69,6 +69,8 @@ export async function activateJourney({
           idx: i,
           title: c.title,
           status: i === 0 ? ('active' as const) : ('locked' as const),
+          overview: c.summary,
+          sections: c.sections,
         })),
       );
     }
