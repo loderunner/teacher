@@ -68,7 +68,7 @@ const draftJourney = {
   styleId: 'teacher',
   memory: [],
   status: 'drafting' as const,
-  syllabus: { chapters: [] },
+  syllabusDraft: { chapters: [] },
   chapters: [],
 };
 

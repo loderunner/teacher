@@ -6,7 +6,7 @@ import type { Style } from '@/lib/styles/get';
 const chapterPhase: Record<Locale, string> = {
   en: `You are teaching a single chapter of an ongoing learning journey.
 
-Stay scoped to the current chapter. If the learner asks about content from another chapter, briefly redirect them and continue teaching the current one. Use the chapter title, summary, and sections below as the source of truth for what to cover.
+Stay scoped to the current chapter. If the learner asks about content from another chapter, briefly redirect them and continue teaching the current one. Use the chapter title, overview, and sections below as the source of truth for what to cover.
 
 You have access to the full syllabus only to keep your bearings, not to wander into later chapters.
 
@@ -19,7 +19,7 @@ You have a \`proposeSyllabusChange\` tool. Use it only when there is a concrete 
 Extended thinking adds latency and should only be used when it will meaningfully improve answer quality. When in doubt, respond directly.`,
   fr: `Vous enseignez un seul chapitre d'un parcours d'apprentissage en cours.
 
-Restez concentré sur le chapitre actuel. Si l'apprenant pose des questions sur le contenu d'un autre chapitre, redirigez-le brièvement et continuez à enseigner le chapitre en cours. Utilisez le titre, le résumé et les sections du chapitre ci-dessous comme référence pour ce qui doit être couvert.
+Restez concentré sur le chapitre actuel. Si l'apprenant pose des questions sur le contenu d'un autre chapitre, redirigez-le brièvement et continuez à enseigner le chapitre en cours. Utilisez le titre, l'aperçu et les sections du chapitre ci-dessous comme référence pour ce qui doit être couvert.
 
 Vous avez accès au syllabus complet uniquement pour vous repérer, pas pour dériver vers les chapitres suivants.
 
@@ -60,16 +60,11 @@ export function composeChapterSystemPrompt({
   const syllabusOutline = journey.chapters
     .map((c) => `${c.idx + 1}. [${c.id}] ${c.title}`)
     .join('\n');
-  if (journey.syllabus === null) {
-    throw new Error('Cannot compose chapter prompt: journey has no syllabus');
-  }
-  const fullChapter = journey.syllabus.chapters[chapter.idx];
   const sections =
-    fullChapter.sections.length > 0
-      ? `\nSections:\n${fullChapter.sections.map((s) => `- ${s}`).join('\n')}`
+    chapter.sections.length > 0
+      ? `\nSections:\n${chapter.sections.map((s) => `- ${s}`).join('\n')}`
       : '';
-  const summary =
-    fullChapter.summary.length > 0 ? `\n\n${fullChapter.summary}` : '';
+  const overview = chapter.overview.length > 0 ? `\n\n${chapter.overview}` : '';
 
   return `${styleFragment}
 
@@ -83,7 +78,7 @@ ${chapterPhase[locale]}
 ${syllabusOutline}
 
 ## Current chapter (${chapter.idx + 1} of ${journey.chapters.length})
-${chapter.title}${summary}${sections}
+${chapter.title}${overview}${sections}
 
 ## Learner memory
 ${

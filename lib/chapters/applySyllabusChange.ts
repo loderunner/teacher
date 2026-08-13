@@ -22,12 +22,23 @@ export type ApplySyllabusChangeResult = {
 };
 
 /**
- * Replaces a journey's syllabus and reconciles its `chapters` rows.
+ * Reconciles a journey's `chapters` rows against a proposed syllabus.
  *
- * - Existing chapters whose id appears in the proposal are preserved.
- *   Their `id`, `status`, and `summary` survive; `idx`, `title`, `overview`,
- *   and `sections` are updated to match the proposal (except for `done`
- *   chapters, whose `title`/`overview`/`sections` are left untouched).
+ * The `chapters` rows are the sole source of truth for an active journey's
+ * content, so this function only ever writes rows — `journeys.syllabusDraft`
+ * is left exactly as activation froze it.
+ *
+ * - Existing chapters whose id appears in the proposal are preserved. Their
+ *   `id`, `status`, and `summary` always survive.
+ * - `done` chapters are fully immutable: the proposal may move them to a new
+ *   position, but any change to their `title`, `overview`, or `sections` is
+ *   rejected — throw.
+ * - The `active` chapter may be renamed and moved, but changes to its
+ *   `overview` or `sections` are rejected — throw. This protects the content
+ *   the learner is currently being taught from a model reconstructing it
+ *   imperfectly.
+ * - `locked` chapters carry no learner progress, so their `title`,
+ *   `overview`, and `sections` are replaced wholesale from the proposal.
  * - Removed `locked` chapters (id in existing, not in proposal) are deleted.
  * - Removed `done` or `active` chapters cause the call to throw — the
  *   proposal is rejected as it would destroy learner progress.
@@ -35,8 +46,8 @@ export type ApplySyllabusChangeResult = {
  *   `status = 'locked'` (a fresh nanoid is assigned by the schema default).
  * - Proposed chapters whose `id` doesn't match any existing row are
  *   rejected — throw.
- * - `journeys.syllabus` is replaced and `currentChapterIndex` is updated
- *   to the new idx of the preserved active chapter.
+ * - `currentChapterIndex` is updated to the new idx of the preserved active
+ *   chapter.
  *
  * All writes run inside a single `dbTx.transaction`, gated by the parent
  * `journeys.userId`, so partial state can never be observed.
@@ -44,8 +55,9 @@ export type ApplySyllabusChangeResult = {
  * @param input - Owner ID, journey ID, and proposed new syllabus.
  * @returns The active chapter's new idx and title after reconciliation.
  * @throws Error when the journey is not found, when no active chapter
- *   exists, when the proposal references an unknown id, or when the
- *   proposal would remove a done/active chapter.
+ *   exists, when the proposal references an unknown id, when the proposal
+ *   would remove a done/active chapter, or when it would alter protected
+ *   done/active chapter content.
  */
 export async function applySyllabusChange({
   userId,
@@ -88,6 +100,10 @@ export async function applySyllabusChange({
       existingById.set(row.id, row);
     }
 
+    // Rows the proposal has not claimed yet. Phase 4 removes each id it
+    // matches, so whatever is left over was dropped from the syllabus.
+    const unmatchedById = new Map(existingById);
+
     // Phase 4: Walk the proposed syllabus — each entry becomes either a
     // preserve (known id) or an insert (no id); unknown ids abort.
     type Plan =
@@ -114,14 +130,14 @@ export async function applySyllabusChange({
         if (match === undefined) {
           throw new Error(`Proposal references unknown chapter id: ${c.id}`);
         }
-        existingById.delete(c.id);
+        unmatchedById.delete(c.id);
         return {
           kind: 'preserve' as const,
           existingId: match.id,
           existingStatus: match.status,
           newIdx: i,
           newTitle: c.title,
-          newOverview: c.summary,
+          newOverview: c.overview,
           newSections: c.sections,
         };
       }
@@ -129,14 +145,14 @@ export async function applySyllabusChange({
         kind: 'insert' as const,
         newIdx: i,
         newTitle: c.title,
-        newOverview: c.summary,
+        newOverview: c.overview,
         newSections: c.sections,
       };
     });
 
     // Phase 5: Chapters present in the DB but not in the proposal are
     // "removed"; refuse if any of them are done or active (learner progress).
-    const removed = [...existingById.values()];
+    const removed = [...unmatchedById.values()];
     const protectedRemoved = removed.filter(
       (r) => r.status === 'done' || r.status === 'active',
     );
@@ -170,6 +186,47 @@ export async function applySyllabusChange({
       );
     }
 
+    // Phase 6.5: Protect the content the learner has already reached. A
+    // proposal is a model's reconstruction of the syllabus, so letting it
+    // write back over a done or active chapter silently destroys real content
+    // whenever that reconstruction is imperfect. Reject instead of applying.
+    const preserved = plan.filter(
+      (p): p is Extract<Plan, { kind: 'preserve' }> => p.kind === 'preserve',
+    );
+
+    const sameSections = (a: string[], b: string[]): boolean =>
+      a.length === b.length && a.every((s, i) => s === b[i]);
+
+    for (const p of preserved) {
+      const row = existingById.get(p.existingId);
+      if (row === undefined) {
+        // Unreachable: every preserve entry was matched against this map in
+        // Phase 4. TS can't prove it, so the guard is still needed.
+        throw new Error('Invalid reconciliation: preserved chapter lost');
+      }
+      const contentChanged =
+        p.newOverview !== row.overview ||
+        !sameSections(p.newSections, row.sections);
+
+      // Done chapters are immutable beyond their position: their title and
+      // content were the context under which the retrospective summary was
+      // generated, so changing either post-completion breaks that link.
+      if (
+        row.status === 'done' &&
+        (contentChanged || p.newTitle !== row.title)
+      ) {
+        throw new Error(`Proposal modifies done chapter "${row.title}"`);
+      }
+
+      // The learner is mid-chapter: renaming is harmless, but rewriting what
+      // the chapter covers would change the lesson out from under them.
+      if (row.status === 'active' && contentChanged) {
+        throw new Error(
+          "Proposal modifies the active chapter's overview or sections",
+        );
+      }
+    }
+
     // Phase 7: Delete chapters that vanished from the proposal — at this point
     // only locked rows remain (done/active removals already rejected).
     const removedIds = removed.map((r) => r.id);
@@ -180,10 +237,6 @@ export async function applySyllabusChange({
     // Phase 8: Move preserved rows to their final indices in two steps (first
     // negative placeholders, then real idx/title) so intermediate states never
     // violate chapters_journey_idx_unique on (journeyId, idx).
-    const preserved = plan.filter(
-      (p): p is Extract<Plan, { kind: 'preserve' }> => p.kind === 'preserve',
-    );
-
     for (let i = 0; i < preserved.length; i++) {
       await tx
         .update(chapters)
@@ -191,22 +244,29 @@ export async function applySyllabusChange({
         .where(eq(chapters.id, preserved[i].existingId));
     }
 
+    // Which columns a preserved row accepts, by what its status protects.
+    // Phase 6.5 already verified that done/active content matches the
+    // proposal, so those rows are never rewritten — only repositioned.
+    const updatedFields = (p: Extract<Plan, { kind: 'preserve' }>) => {
+      switch (p.existingStatus) {
+        case 'done':
+          return { idx: p.newIdx };
+        case 'active':
+          return { idx: p.newIdx, title: p.newTitle };
+        case 'locked':
+          return {
+            idx: p.newIdx,
+            title: p.newTitle,
+            overview: p.newOverview,
+            sections: p.newSections,
+          };
+      }
+    };
+
     for (const p of preserved) {
-      // Done chapters are immutable beyond their position: their title was
-      // the context under which the chapter summary was generated, so
-      // renaming them post-completion would break that semantic link.
-      const fields =
-        p.existingStatus === 'done'
-          ? { idx: p.newIdx }
-          : {
-              idx: p.newIdx,
-              title: p.newTitle,
-              overview: p.newOverview,
-              sections: p.newSections,
-            };
       await tx
         .update(chapters)
-        .set(fields)
+        .set(updatedFields(p))
         .where(eq(chapters.id, p.existingId));
     }
 
@@ -227,14 +287,13 @@ export async function applySyllabusChange({
       );
     }
 
-    // Phase 10: Commit the new syllabus blob and point the journey at the
-    // active chapter's new index.
+    // Phase 10: Point the journey at the active chapter's new index. The
+    // syllabus draft is deliberately left untouched — the rows above are the
+    // source of truth, and rewriting a blob from a proposal is exactly the
+    // drift this reconciliation exists to prevent.
     await tx
       .update(journeys)
-      .set({
-        syllabus: newSyllabus,
-        currentChapterIndex: activePlan.newIdx,
-      })
+      .set({ currentChapterIndex: activePlan.newIdx })
       .where(and(eq(journeys.id, journeyId), eq(journeys.userId, userId)));
 
     return {

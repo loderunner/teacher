@@ -16,21 +16,41 @@ const baseJourney: Journey = {
   styleId: 'teacher',
   memory: [],
   status: 'active',
-  syllabus: {
+  // Deliberately stale: frozen at activation and since diverged from the
+  // chapter rows below. Nothing in the sidebar may read from it.
+  syllabusDraft: {
     chapters: [
-      { title: 'Intro', summary: 'Intro summary', sections: ['Sec A'] },
-      {
-        title: 'Advanced',
-        summary: 'Adv summary',
-        sections: ['Sec B', 'Sec C'],
-      },
-      { title: 'Wrap up', summary: '', sections: ['Sec C'] },
+      { title: 'Intro', overview: 'Stale overview', sections: ['Stale sec'] },
     ],
   },
   chapters: [
-    { id: 'ch1', idx: 0, title: 'Intro', status: 'done', summary: null },
-    { id: 'ch2', idx: 1, title: 'Advanced', status: 'active', summary: null },
-    { id: 'ch3', idx: 2, title: 'Wrap up', status: 'locked', summary: null },
+    {
+      id: 'ch1',
+      idx: 0,
+      title: 'Intro',
+      status: 'done',
+      summary: null,
+      overview: 'Intro overview',
+      sections: ['Sec A'],
+    },
+    {
+      id: 'ch2',
+      idx: 1,
+      title: 'Advanced',
+      status: 'active',
+      summary: null,
+      overview: 'Adv overview',
+      sections: ['Sec B', 'Sec C'],
+    },
+    {
+      id: 'ch3',
+      idx: 2,
+      title: 'Wrap up',
+      status: 'locked',
+      summary: null,
+      overview: '',
+      sections: ['Sec C'],
+    },
   ],
 };
 
@@ -44,30 +64,30 @@ describe('buildDraftChapters', () => {
   });
 
   it('returns empty array when all chapters lack titles', () => {
-    expect(buildDraftChapters({ chapters: [{ summary: 'no title' }] })).toEqual(
-      [],
-    );
+    expect(
+      buildDraftChapters({ chapters: [{ overview: 'no title' }] }),
+    ).toEqual([]);
   });
 
   it('returns chapters with draft status and no href', () => {
     const chapters = buildDraftChapters({
       chapters: [
-        { title: 'Chapter One', summary: 'A summary', sections: ['Sec A'] },
-        { title: 'Chapter Two', summary: undefined, sections: undefined },
+        { title: 'Chapter One', overview: 'An overview', sections: ['Sec A'] },
+        { title: 'Chapter Two', overview: undefined, sections: undefined },
       ],
     });
 
     expect(chapters).toHaveLength(2);
     expect(chapters[0]).toEqual({
       title: 'Chapter One',
-      summary: 'A summary',
+      overview: 'An overview',
       sections: ['Sec A'],
       status: 'draft',
       href: undefined,
     });
     expect(chapters[1]).toEqual({
       title: 'Chapter Two',
-      summary: undefined,
+      overview: undefined,
       sections: undefined,
       status: 'draft',
       href: undefined,
@@ -88,16 +108,30 @@ describe('buildDraftChapters', () => {
 });
 
 describe('buildActivatedChapters', () => {
-  it('joins journey.chapters with journey.syllabus.chapters by index', () => {
+  it('takes every field from the chapter row', () => {
     const chapters = buildActivatedChapters(baseJourney);
 
     expect(chapters[0].title).toBe('Intro');
-    expect(chapters[0].summary).toBe('Intro summary');
+    expect(chapters[0].overview).toBe('Intro overview');
     expect(chapters[0].sections).toEqual(['Sec A']);
 
     expect(chapters[1].title).toBe('Advanced');
-    expect(chapters[1].summary).toBe('Adv summary');
+    expect(chapters[1].overview).toBe('Adv overview');
     expect(chapters[1].sections).toEqual(['Sec B', 'Sec C']);
+  });
+
+  it('never reads content from the frozen syllabus draft', () => {
+    // The draft holds one stale chapter; the rows hold three current ones.
+    // A positional join would surface 'Stale overview' at index 0 and leave
+    // the rest undefined — the drift that made this rewrite necessary.
+    const chapters = buildActivatedChapters(baseJourney);
+
+    expect(chapters).toHaveLength(3);
+    expect(chapters.map((c) => c.overview)).toEqual([
+      'Intro overview',
+      'Adv overview',
+      '',
+    ]);
   });
 
   it('sets correct status for each chapter', () => {
@@ -114,14 +148,13 @@ describe('buildActivatedChapters', () => {
     expect(chapters[2].href).toBeUndefined();
   });
 
-  it('uses undefined summary and sections when syllabus chapter is missing', () => {
-    const journey: Journey = {
-      ...baseJourney,
-      syllabus: { chapters: [] },
-    };
+  it('builds chapters even when the journey has no syllabus draft', () => {
+    const journey: Journey = { ...baseJourney, syllabusDraft: null };
     const chapters = buildActivatedChapters(journey);
-    expect(chapters[0].summary).toBeUndefined();
-    expect(chapters[0].sections).toBeUndefined();
+
+    expect(chapters).toHaveLength(3);
+    expect(chapters[0].overview).toBe('Intro overview');
+    expect(chapters[0].sections).toEqual(['Sec A']);
   });
 });
 
@@ -133,15 +166,17 @@ describe('chapterValue', () => {
 });
 
 describe('collapsible', () => {
-  it('returns true when the chapter has a summary', () => {
-    expect(collapsible({ summary: 'A summary', status: 'draft' })).toBe(true);
+  it('returns true when the chapter has an overview', () => {
+    expect(collapsible({ overview: 'An overview', status: 'draft' })).toBe(
+      true,
+    );
   });
 
   it('returns true when the chapter has non-empty sections', () => {
     expect(collapsible({ sections: ['Sec A'], status: 'draft' })).toBe(true);
   });
 
-  it('returns false when the chapter has neither summary nor sections', () => {
+  it('returns false when the chapter has neither overview nor sections', () => {
     expect(collapsible({ status: 'draft' })).toBe(false);
   });
 
@@ -153,7 +188,7 @@ describe('collapsible', () => {
 describe('collapsibleChapterValues', () => {
   it('returns item values for only the collapsible chapters', () => {
     const chapters = [
-      { summary: 'A summary', status: 'draft' as const },
+      { overview: 'An overview', status: 'draft' as const },
       { status: 'draft' as const },
       { sections: ['Sec A'], status: 'draft' as const },
     ];

@@ -17,16 +17,16 @@ describe('chapterSchema', () => {
     it('accepts a chapter with all required fields', () => {
       const result = chapterSchema.safeParse({
         title: 'Introduction',
-        summary: 'An overview of the chapter.',
+        overview: 'An overview of the chapter.',
         sections: ['Basics', 'Advanced topics'],
       });
       expect(result.success).toBe(true);
     });
 
-    it('accepts a chapter with an empty summary', () => {
+    it('accepts a chapter with an empty overview', () => {
       const result = chapterSchema.safeParse({
         title: 'Introduction',
-        summary: '',
+        overview: '',
         sections: ['Overview'],
       });
       expect(result.success).toBe(true);
@@ -37,7 +37,7 @@ describe('chapterSchema', () => {
     it('rejects an empty title', () => {
       const result = chapterSchema.safeParse({
         title: '',
-        summary: '',
+        overview: '',
         sections: ['Overview'],
       });
       expect(result.success).toBe(false);
@@ -46,7 +46,7 @@ describe('chapterSchema', () => {
     it('rejects a title longer than 120 characters', () => {
       const result = chapterSchema.safeParse({
         title: 'A'.repeat(121),
-        summary: '',
+        overview: '',
         sections: ['Overview'],
       });
       expect(result.success).toBe(false);
@@ -55,27 +55,27 @@ describe('chapterSchema', () => {
     it('accepts a title of exactly 120 characters', () => {
       const result = chapterSchema.safeParse({
         title: 'A'.repeat(120),
-        summary: '',
+        overview: '',
         sections: ['Overview'],
       });
       expect(result.success).toBe(true);
     });
   });
 
-  describe('summary validation', () => {
-    it('rejects a summary longer than 800 characters', () => {
+  describe('overview validation', () => {
+    it('rejects an overview longer than 800 characters', () => {
       const result = chapterSchema.safeParse({
         title: 'Introduction',
-        summary: 'A'.repeat(801),
+        overview: 'A'.repeat(801),
         sections: ['Overview'],
       });
       expect(result.success).toBe(false);
     });
 
-    it('accepts a summary of exactly 800 characters', () => {
+    it('accepts an overview of exactly 800 characters', () => {
       const result = chapterSchema.safeParse({
         title: 'Introduction',
-        summary: 'A'.repeat(800),
+        overview: 'A'.repeat(800),
         sections: ['Overview'],
       });
       expect(result.success).toBe(true);
@@ -86,7 +86,7 @@ describe('chapterSchema', () => {
     it('rejects a section item longer than 200 characters', () => {
       const result = chapterSchema.safeParse({
         title: 'Introduction',
-        summary: '',
+        overview: '',
         sections: ['A'.repeat(201)],
       });
       expect(result.success).toBe(false);
@@ -95,7 +95,7 @@ describe('chapterSchema', () => {
     it('rejects more than 20 sections', () => {
       const result = chapterSchema.safeParse({
         title: 'Introduction',
-        summary: '',
+        overview: '',
         sections: Array.from({ length: 21 }, (_, i) => `Section ${i + 1}`),
       });
       expect(result.success).toBe(false);
@@ -104,7 +104,7 @@ describe('chapterSchema', () => {
     it('accepts exactly 20 sections', () => {
       const result = chapterSchema.safeParse({
         title: 'Introduction',
-        summary: '',
+        overview: '',
         sections: Array.from({ length: 20 }, (_, i) => `Section ${i + 1}`),
       });
       expect(result.success).toBe(true);
@@ -113,7 +113,7 @@ describe('chapterSchema', () => {
     it('rejects an empty sections array', () => {
       const result = chapterSchema.safeParse({
         title: 'Introduction',
-        summary: '',
+        overview: '',
         sections: [],
       });
       expect(result.success).toBe(false);
@@ -130,8 +130,8 @@ describe('syllabusSchema', () => {
   it('accepts a chapters array with valid chapters', () => {
     const result = syllabusSchema.safeParse({
       chapters: [
-        { title: 'Chapter 1', summary: 'First.', sections: ['Overview'] },
-        { title: 'Chapter 2', summary: 'Second.', sections: ['Overview'] },
+        { title: 'Chapter 1', overview: 'First.', sections: ['Overview'] },
+        { title: 'Chapter 2', overview: 'Second.', sections: ['Overview'] },
       ],
     });
     expect(result.success).toBe(true);
@@ -141,7 +141,7 @@ describe('syllabusSchema', () => {
     const result = syllabusSchema.safeParse({
       chapters: Array.from({ length: 31 }, (_, i) => ({
         title: `Chapter ${i + 1}`,
-        summary: '',
+        overview: '',
         sections: ['Overview'],
       })),
     });
@@ -152,7 +152,7 @@ describe('syllabusSchema', () => {
     const result = syllabusSchema.safeParse({
       chapters: Array.from({ length: 30 }, (_, i) => ({
         title: `Chapter ${i + 1}`,
-        summary: '',
+        overview: '',
         sections: ['Overview'],
       })),
     });
@@ -218,13 +218,13 @@ describe('partial schema parity with full schema', () => {
       chapters: [
         {
           title: 'Chapter 1',
-          summary: 'First.',
+          overview: 'First.',
           sections: ['Overview'],
         },
         {
           id: 'abc123',
           title: 'Chapter 2',
-          summary: '',
+          overview: '',
           sections: ['Part A', 'Part B'],
         },
       ],

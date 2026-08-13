@@ -1,7 +1,7 @@
 import { and, desc, eq, lt, or, sql } from 'drizzle-orm';
 
 import { db } from '@/lib/db';
-import { journeys } from '@/lib/db/schema';
+import { chapters, journeys } from '@/lib/db/schema';
 
 /** A lightweight journey summary returned from a list query. */
 export type JourneySummary = {
@@ -13,7 +13,11 @@ export type JourneySummary = {
   styleId: string;
   /** Lifecycle state — drafting journeys have not yet been activated. */
   status: 'drafting' | 'active';
-  /** Number of chapters in the syllabus. */
+  /**
+   * Number of chapters in the journey. Counted from the `chapters` rows once
+   * the journey is active, and from the draft syllabus while it is still
+   * drafting (drafting journeys have no chapter rows yet).
+   */
   chapterCount: number;
   /**
    * 1-based index of the current chapter. `null` for drafting journeys that
@@ -65,7 +69,14 @@ export async function listJourneys({
       title: journeys.title,
       styleId: journeys.styleId,
       status: journeys.status,
-      chapterCount: sql<number>`COALESCE(jsonb_array_length(${journeys.syllabus}->'chapters'), 0)`,
+      chapterCount: sql<number>`
+        CASE WHEN ${journeys.status} = 'active'
+          THEN (
+            SELECT COUNT(*)::int FROM ${chapters}
+            WHERE ${chapters.journeyId} = ${journeys.id}
+          )
+          ELSE COALESCE(jsonb_array_length(${journeys.syllabusDraft}->'chapters'), 0)
+        END`,
       currentChapterNumber: sql<number | null>`
         CASE WHEN ${journeys.status} = 'active'
           THEN ${journeys.currentChapterIndex} + 1

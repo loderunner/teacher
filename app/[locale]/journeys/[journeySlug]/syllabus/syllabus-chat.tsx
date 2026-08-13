@@ -111,7 +111,7 @@ export function SyllabusChat({ journey, initialMessages, presets }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const draft = journey.syllabus;
+  const draft = journey.syllabusDraft;
 
   const partialDraft = derivePartialSyllabusDraft(messages);
 

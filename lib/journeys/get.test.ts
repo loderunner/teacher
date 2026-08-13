@@ -15,11 +15,11 @@ describe('getJourney', () => {
   });
 
   it('returns a fully hydrated journey when rows exist', async () => {
-    const syllabus = {
+    const syllabusDraft = {
       chapters: [
         {
           title: 'Variables and control flow',
-          summary: 'Foundations before building larger programs.',
+          overview: 'Foundations before building larger programs.',
           sections: ['Assignments', 'Conditionals', 'Loops'],
         },
       ],
@@ -31,7 +31,7 @@ describe('getJourney', () => {
         title: 'Test Journey',
         styleId: '456',
         memory: [],
-        syllabus,
+        syllabusDraft,
         status: 'active',
       },
     ]);
@@ -42,6 +42,8 @@ describe('getJourney', () => {
         title: 'Variables and control flow',
         status: 'active',
         summary: null,
+        overview: 'Foundations before building larger programs.',
+        sections: ['Assignments', 'Conditionals', 'Loops'],
       },
     ]);
 
@@ -53,7 +55,7 @@ describe('getJourney', () => {
       styleId: '456',
       memory: [],
       status: 'active',
-      syllabus,
+      syllabusDraft,
       chapters: [
         {
           id: 'ch-1',
@@ -61,19 +63,21 @@ describe('getJourney', () => {
           title: 'Variables and control flow',
           status: 'active',
           summary: null,
+          overview: 'Foundations before building larger programs.',
+          sections: ['Assignments', 'Conditionals', 'Loops'],
         },
       ],
     });
   });
 
-  it('returns a journey with null syllabus when the column is null', async () => {
+  it('returns a journey with a null syllabus draft when the column is null', async () => {
     mockDb.select.from.where.mockResolvedValueOnce([
       {
         id: '123',
         title: 'Draft Journey',
         styleId: 'teacher',
         memory: [],
-        syllabus: null,
+        syllabusDraft: null,
         status: 'drafting',
       },
     ]);
@@ -82,17 +86,17 @@ describe('getJourney', () => {
     const journey = await getJourney({ userId: '789', id: '123' });
 
     expect(journey).not.toBeNull();
-    expect(journey!.syllabus).toBeNull();
+    expect(journey!.syllabusDraft).toBeNull();
   });
 
-  it('returns a journey with null syllabus when the column fails validation', async () => {
+  it('returns a journey with a null syllabus draft when the column fails validation', async () => {
     mockDb.select.from.where.mockResolvedValueOnce([
       {
         id: '123',
         title: 'Draft Journey',
         styleId: 'teacher',
         memory: [],
-        syllabus: { chapters: [] },
+        syllabusDraft: { chapters: [] },
         status: 'drafting',
       },
     ]);
@@ -101,7 +105,7 @@ describe('getJourney', () => {
     const journey = await getJourney({ userId: '789', id: '123' });
 
     expect(journey).not.toBeNull();
-    expect(journey!.syllabus).toBeNull();
+    expect(journey!.syllabusDraft).toBeNull();
   });
 
   it('returns null when the journey rows array is empty', async () => {
@@ -113,16 +117,16 @@ describe('getJourney', () => {
   });
 
   it('returns a journey with multiple chapters in order', async () => {
-    const syllabus = {
+    const syllabusDraft = {
       chapters: [
         {
           title: 'Chapter One',
-          summary: 'First chapter.',
+          overview: 'First chapter.',
           sections: ['Overview'],
         },
         {
           title: 'Chapter Two',
-          summary: 'Second chapter.',
+          overview: 'Second chapter.',
           sections: ['Overview'],
         },
       ],
@@ -134,7 +138,7 @@ describe('getJourney', () => {
         title: 'Multi-Chapter Journey',
         styleId: '456',
         memory: ['Learner prefers examples.'],
-        syllabus,
+        syllabusDraft,
         status: 'active',
       },
     ]);
@@ -145,6 +149,8 @@ describe('getJourney', () => {
         title: 'Chapter One',
         status: 'done',
         summary: 'Done.',
+        overview: 'First chapter.',
+        sections: ['Overview'],
       },
       {
         id: 'ch-2',
@@ -152,6 +158,10 @@ describe('getJourney', () => {
         title: 'Chapter Two',
         status: 'active',
         summary: null,
+        // Renamed by a later syllabus change — the row is the source of
+        // truth, so this must not be overwritten by the frozen draft above.
+        overview: 'Second chapter, revised.',
+        sections: ['Overview', 'Extra'],
       },
     ]);
 
@@ -167,6 +177,8 @@ describe('getJourney', () => {
       title: 'Chapter One',
       status: 'done',
       summary: 'Done.',
+      overview: 'First chapter.',
+      sections: ['Overview'],
     });
     expect(journey!.chapters[1]).toEqual({
       id: 'ch-2',
@@ -174,6 +186,8 @@ describe('getJourney', () => {
       title: 'Chapter Two',
       status: 'active',
       summary: null,
+      overview: 'Second chapter, revised.',
+      sections: ['Overview', 'Extra'],
     });
   });
 });

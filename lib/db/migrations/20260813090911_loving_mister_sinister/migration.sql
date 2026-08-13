@@ -1,0 +1,1 @@
+ALTER TABLE "journeys" RENAME COLUMN "syllabus" TO "syllabus_draft";

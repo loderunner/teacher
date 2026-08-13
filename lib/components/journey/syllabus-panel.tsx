@@ -105,9 +105,9 @@ function ChapterItem({ index, chapter, current }: ChapterItemProps) {
       <div className={titleClassName}>{titleText}</div>
     );
 
-  const summaryContent =
-    chapter.summary !== undefined ? (
-      <span className="font-sans text-xs font-normal">{chapter.summary}</span>
+  const overviewContent =
+    chapter.overview !== undefined ? (
+      <span className="font-sans text-xs font-normal">{chapter.overview}</span>
     ) : null;
   const sectionsContent =
     chapter.sections !== undefined && chapter.sections.length > 0 ? (
@@ -130,7 +130,7 @@ function ChapterItem({ index, chapter, current }: ChapterItemProps) {
       </AccordionHeader>
       {collapsible(chapter) && (
         <AccordionContent>
-          {summaryContent}
+          {overviewContent}
           {sectionsContent}
         </AccordionContent>
       )}
