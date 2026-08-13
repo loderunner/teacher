@@ -26,3 +26,7 @@ This might only be happening locally.
 "Thinking..." messages stay active until the entire response is completed, even
 though the thinking turn actually ends with the next tool call or assistant
 message.
+
+## Prevent sending empty message in chat
+
+You can send an empty message in the chat areas. We want to prevent this.

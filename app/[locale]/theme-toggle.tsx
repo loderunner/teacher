@@ -14,7 +14,9 @@ import {
 
 // useSyncExternalStore: server snapshot → false, client snapshot → true.
 // Gives React a stable hydration boundary without useEffect + setState.
-const subscribe = () => () => {};
+const subscribe = () => {
+  return () => {};
+};
 const getClientSnapshot = () => true;
 const getServerSnapshot = () => false;
 

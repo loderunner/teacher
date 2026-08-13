@@ -54,3 +54,24 @@ export function buildActivatedChapters(journey: Journey): DisplayChapter[] {
     };
   });
 }
+
+/** Accordion item value for the chapter at `index`. */
+export function chapterValue(index: number): string {
+  return `chapter-${index}`;
+}
+
+/** Whether `chapter` has anything to disclose (a summary or non-empty sections). */
+export function collapsible(chapter: DisplayChapter): boolean {
+  return (
+    chapter.summary !== undefined ||
+    (chapter.sections !== undefined && chapter.sections.length > 0)
+  );
+}
+
+/** Item values of every collapsible chapter in `chapters`. */
+export function collapsibleChapterValues(chapters: DisplayChapter[]): string[] {
+  return chapters
+    .map((chapter, i) => ({ chapter, value: chapterValue(i) }))
+    .filter(({ chapter }) => collapsible(chapter))
+    .map(({ value }) => value);
+}

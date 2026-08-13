@@ -48,7 +48,8 @@
     "emptyDraft": "Chat to start sketching out your syllabus.",
     "emptyChapterSections": "No sections yet.",
     "locked": "This chapter is locked. Complete the active chapter to unlock it.",
-    "goToActiveChapter": "Go to active chapter"
+    "goToActiveChapter": "Go to active chapter",
+    "toggleSections": "Show or hide sections"
   },
   "ChapterChat": {
     "promptPlaceholder": "Chat to continue this chapter…",
