@@ -8,7 +8,8 @@
     "chapterProgress": "Chapter {current} of {total}",
     "draft": "Draft",
     "chapters": "{count, plural, one {# chapter} other {# chapters}}",
-    "noResults": "No journeys match your search."
+    "noResults": "No journeys match your search.",
+    "loadMoreError": "Couldn't load more journeys."
   },
   "Home": {
     "comingSoon": "Welcome — coming soon"
@@ -23,7 +24,9 @@
     "startJourneyDisabledHint": "Add at least one chapter and pick a style to begin.",
     "promptPlaceholder": "Describe what you want to learn…",
     "updatingSyllabus": "Updating syllabus",
-    "syllabusUpdated": "Updated syllabus"
+    "syllabusUpdated": "Updated syllabus",
+    "createJourneyError": "Couldn't start this journey.",
+    "activateJourneyError": "Couldn't start this journey."
   },
   "JourneyChat": {
     "thinkingInProgress": "Thinking...",
@@ -33,7 +36,9 @@
     "copy": "Copy",
     "editMessage": "Edit",
     "cancelEdit": "Cancel",
-    "saveEdit": "Save"
+    "saveEdit": "Save",
+    "streamError": "Couldn't get a response.",
+    "retry": "Retry"
   },
   "Chapter": {
     "position": "Chapter {n} of {total}",
@@ -88,7 +93,8 @@
     "title": "Something went wrong",
     "description": "An unexpected error occurred. Please try again.",
     "tryAgain": "Try again",
-    "backHome": "Back to home"
+    "backHome": "Back to home",
+    "detailsLabel": "Show error details"
   },
   "SyllabusPage": {
     "header": "Syllabus chat",

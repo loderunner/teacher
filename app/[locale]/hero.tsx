@@ -13,6 +13,7 @@ import {
   PromptInputSubmit,
   PromptInputTextarea,
 } from '@/lib/components/ai-elements/prompt-input';
+import { ErrorDetailPopover } from '@/lib/components/error-detail-popover';
 import { StylePicker } from '@/lib/components/journey';
 import { useRouter } from '@/lib/i18n/navigation';
 import type { Style } from '@/lib/styles/get';
@@ -35,14 +36,21 @@ export function Hero({ presets }: Props) {
   const defaultStyleId = presets.length > 0 ? presets[0].id : 'teacher';
   const [styleId, setStyleId] = useState(defaultStyleId);
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
 
   const handleSubmit = async ({ text }: PromptInputMessage): Promise<void> => {
     if (text.trim() === '') {
       return;
     }
     setSubmitting(true);
-    const result = await createDraftJourneyAction({ text, styleId });
-    router.push(result.path);
+    setError(null);
+    try {
+      const result = await createDraftJourneyAction({ text, styleId });
+      router.push(result.path);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error(String(err)));
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -68,6 +76,13 @@ export function Hero({ presets }: Props) {
             <PromptInputSubmit status={submitting ? 'submitted' : 'ready'} />
           </PromptInputFooter>
         </PromptInput>
+
+        {error !== null && (
+          <div className="mt-2 flex items-center gap-2 text-sm">
+            <p className="text-destructive">{t('createJourneyError')}</p>
+            <ErrorDetailPopover detail={error.message} />
+          </div>
+        )}
 
         <div className="mt-3">
           <StylePicker

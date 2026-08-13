@@ -11,6 +11,7 @@ import { useSyllabusChangeContext } from './syllabus-change-context';
 import { diffSyllabus } from './syllabus-diff';
 
 import { useToolPartContext } from '@/lib/chat';
+import { ErrorDetailPopover } from '@/lib/components/error-detail-popover';
 import { Button } from '@/lib/components/ui/button';
 import { useRouter } from '@/lib/i18n/navigation';
 import { streamdownPlugins } from '@/lib/streamdown';
@@ -34,6 +35,7 @@ export function SyllabusChangeCard() {
   const [applying, startApplying] = useTransition();
   const [dismissed, setDismissed] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorDetail, setErrorDetail] = useState<string | null>(null);
 
   const part = useToolPartContext<DynamicToolUIPart>();
   const { journey, currentPath, appliedToolCallIds, onApplied } =
@@ -69,6 +71,7 @@ export function SyllabusChangeCard() {
 
   const handleApply = () => {
     setError(null);
+    setErrorDetail(null);
     startApplying(async () => {
       try {
         const result = await applySyllabusChangeAction({
@@ -81,8 +84,9 @@ export function SyllabusChangeCard() {
         } else {
           router.refresh();
         }
-      } catch {
+      } catch (err) {
         setError(t('proposalApplyError'));
+        setErrorDetail(err instanceof Error ? err.message : String(err));
       }
     });
   };
@@ -123,7 +127,12 @@ export function SyllabusChangeCard() {
           {t('proposalDismiss')}
         </Button>
       </div>
-      {error !== null && <p className="text-destructive text-sm">{error}</p>}
+      {error !== null && (
+        <div className="flex items-center gap-2">
+          <p className="text-destructive text-sm">{error}</p>
+          <ErrorDetailPopover detail={errorDetail ?? undefined} />
+        </div>
+      )}
     </div>
   );
 }

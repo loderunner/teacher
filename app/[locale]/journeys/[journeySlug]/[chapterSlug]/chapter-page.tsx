@@ -20,6 +20,7 @@ import {
   useJourneyChat,
 } from '@/lib/chat';
 import { Button, ChatPageShell, Title } from '@/lib/components/chat-page';
+import { ErrorDetailPopover } from '@/lib/components/error-detail-popover';
 import { StyleLabel, SyllabusPanel } from '@/lib/components/journey';
 import { usePathname, useRouter } from '@/lib/i18n/navigation';
 import type { Journey, JourneyChapter } from '@/lib/journeys/get';
@@ -45,10 +46,12 @@ export function ChapterPage({ journey, chapter, initialMessages }: Props) {
     setMessages,
     status,
     stop,
+    error,
     handleSubmit,
     handleRegenerate,
     handleEditMessage,
     triggerResponse,
+    retry,
   } = useJourneyChat({
     api: `/api/journeys/${journey.id}/chapters/${chapter.id}/chat`,
     initialMessages,
@@ -91,6 +94,9 @@ export function ChapterPage({ journey, chapter, initialMessages }: Props) {
 
   const [completing, startCompleting] = useTransition();
   const [completeError, setCompleteError] = useState<string | null>(null);
+  const [completeErrorDetail, setCompleteErrorDetail] = useState<string | null>(
+    null,
+  );
 
   const chapterComplete = messages.some(
     (m) =>
@@ -105,8 +111,9 @@ export function ChapterPage({ journey, chapter, initialMessages }: Props) {
 
   const handleComplete = () => {
     startCompleting(async () => {
+      setCompleteError(null);
+      setCompleteErrorDetail(null);
       try {
-        setCompleteError(null);
         const result = await completeChapterAction({
           journeyId: journey.id,
           chapterIdx: chapter.idx,
@@ -116,8 +123,11 @@ export function ChapterPage({ journey, chapter, initialMessages }: Props) {
         } else {
           router.refresh();
         }
-      } catch {
+      } catch (err) {
         setCompleteError(tChat('completeError'));
+        setCompleteErrorDetail(
+          err instanceof Error ? err.message : String(err),
+        );
       }
     });
   };
@@ -144,6 +154,7 @@ export function ChapterPage({ journey, chapter, initialMessages }: Props) {
           }}
         >
           <JourneyChatView
+            error={error}
             messages={messages}
             placeholder={tChat('promptPlaceholder')}
             status={status}
@@ -152,6 +163,7 @@ export function ChapterPage({ journey, chapter, initialMessages }: Props) {
               handleEditMessage({ messageId, text })
             }
             onRegenerate={(messageId) => handleRegenerate({ messageId })}
+            onRetry={retry}
             onStop={stop}
             onSubmit={handleSubmit}
           />
@@ -159,9 +171,10 @@ export function ChapterPage({ journey, chapter, initialMessages }: Props) {
         {chapterComplete && (
           <>
             {completeError !== null && (
-              <p className="text-destructive mx-auto w-full max-w-3xl px-1 text-sm">
-                {completeError}
-              </p>
+              <div className="mx-auto flex w-full max-w-3xl items-center gap-2 px-1 text-sm">
+                <p className="text-destructive">{completeError}</p>
+                <ErrorDetailPopover detail={completeErrorDetail ?? undefined} />
+              </div>
             )}
             <ChatPageShell.Footer>
               <Button disabled={completing} onClick={handleComplete}>

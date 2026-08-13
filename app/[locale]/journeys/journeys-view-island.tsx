@@ -9,6 +9,7 @@ import {
   type JourneySummary,
   listJourneysResponseSchema,
 } from '@/lib/api/journeys';
+import { ErrorDetailPopover } from '@/lib/components/error-detail-popover';
 import { Button } from '@/lib/components/ui/button';
 import { Input } from '@/lib/components/ui/input';
 import { Link } from '@/lib/i18n/navigation';
@@ -58,6 +59,9 @@ export function JourneysViewIsland({
   const [pageToken, setPageToken] = useState<string | null>(initialPageToken);
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loadMoreErrorDetail, setLoadMoreErrorDetail] = useState<string | null>(
+    null,
+  );
 
   const searchText = (item: JourneySummary): string =>
     [
@@ -75,16 +79,20 @@ export function JourneysViewIsland({
 
   const handleLoadMore = async () => {
     setLoading(true);
+    setLoadMoreErrorDetail(null);
     try {
       const res = await fetch(
         `/api/journeys?limit=${PAGE_LIMIT}&pageToken=${pageToken}`,
       );
       if (!res.ok) {
+        setLoadMoreErrorDetail(String(res.status));
         return;
       }
       const data = listJourneysResponseSchema.parse(await res.json());
       setItems((prev) => [...prev, ...data.items]);
       setPageToken(data.nextPageToken ?? null);
+    } catch (err) {
+      setLoadMoreErrorDetail(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
@@ -128,7 +136,13 @@ export function JourneysViewIsland({
             </li>
           ))}
           {pageToken !== null && (
-            <li className="flex justify-end pt-3 pb-1">
+            <li className="flex flex-row items-baseline justify-end gap-2 pt-3 pb-1">
+              {loadMoreErrorDetail !== null && (
+                <div className="flex items-center gap-2 text-sm">
+                  <p className="text-destructive">{t('loadMoreError')}</p>
+                  <ErrorDetailPopover detail={loadMoreErrorDetail} />
+                </div>
+              )}
               <Button
                 disabled={loading}
                 variant="outline"
