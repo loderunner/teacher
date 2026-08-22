@@ -223,6 +223,18 @@ const ProviderAttachmentsContext = createContext<AttachmentsContext | null>(
   null,
 );
 
+/** Tracks whether an uncontrolled {@link PromptInputTextarea} is empty, for {@link PromptInputSubmit}. */
+interface LocalTextEmptyContextValue {
+  /** Whether the textarea's current value is empty (or all whitespace). */
+  empty: boolean;
+  /** Updates the tracked emptiness state. */
+  setEmpty: (empty: boolean) => void;
+}
+
+const LocalTextEmptyContext = createContext<LocalTextEmptyContextValue | null>(
+  null,
+);
+
 /**
  * Returns the {@link PromptInputControllerProps} from the nearest {@link PromptInputProvider}.
  * Throws if called outside a provider.
@@ -582,6 +594,9 @@ export const PromptInput = ({
   const [items, setItems] = useState<(FileUIPart & { id: string })[]>([]);
   const files = usingProvider ? controller.attachments.files : items;
 
+  // ----- Local text emptiness (only used when no provider)
+  const [localTextEmpty, setLocalTextEmpty] = useState(true);
+
   // ----- Local referenced sources (always local to PromptInput)
   const [referencedSources, setReferencedSources] = useState<
     (SourceDocumentUIPart & { id: string })[]
@@ -737,6 +752,9 @@ export const PromptInput = ({
   const clear = () => {
     clearAttachments();
     clearReferencedSources();
+    if (!usingProvider) {
+      setLocalTextEmpty(true);
+    }
   };
 
   // Let provider know about our hidden file input so external menus can call openFileDialog()
@@ -948,11 +966,18 @@ export const PromptInput = ({
     </LocalReferencedSourcesContext.Provider>
   );
 
+  const localTextEmptyCtx: LocalTextEmptyContextValue = {
+    empty: localTextEmpty,
+    setEmpty: setLocalTextEmpty,
+  };
+
   // Always provide LocalAttachmentsContext so children get validated add function
   return (
-    <LocalAttachmentsContext.Provider value={attachmentsCtx}>
-      {withReferencedSources}
-    </LocalAttachmentsContext.Provider>
+    <LocalTextEmptyContext.Provider value={localTextEmptyCtx}>
+      <LocalAttachmentsContext.Provider value={attachmentsCtx}>
+        {withReferencedSources}
+      </LocalAttachmentsContext.Provider>
+    </LocalTextEmptyContext.Provider>
   );
 };
 
@@ -986,6 +1011,7 @@ export const PromptInputTextarea = ({
 }: PromptInputTextareaProps) => {
   const controller = useOptionalPromptInputController();
   const attachments = usePromptInputAttachments();
+  const localTextEmptyCtx = useContext(LocalTextEmptyContext);
   const [composing, setComposing] = useState(false);
 
   const handleKeyDown: KeyboardEventHandler<HTMLTextAreaElement> = (e) => {
@@ -1009,7 +1035,11 @@ export const PromptInputTextarea = ({
       // Check if the submit button is disabled before submitting
       const { form } = e.currentTarget;
       const submitButton = form?.querySelector('button[type="submit"]');
-      if (submitButton instanceof HTMLButtonElement && submitButton.disabled) {
+      if (
+        submitButton instanceof HTMLButtonElement &&
+        (submitButton.disabled ||
+          submitButton.getAttribute('aria-disabled') === 'true')
+      ) {
         return;
       }
 
@@ -1062,7 +1092,10 @@ export const PromptInputTextarea = ({
           value: controller.textInput.value,
         }
       : {
-          onChange,
+          onChange: (e: ChangeEvent<HTMLTextAreaElement>) => {
+            localTextEmptyCtx?.setEmpty(e.currentTarget.value.trim() === '');
+            onChange?.(e);
+          },
         };
 
   return (
@@ -1258,6 +1291,10 @@ export type PromptInputSubmitProps = ComponentProps<typeof InputGroupButton> & {
 /**
  * Submit/stop button for a {@link PromptInput}.
  * Shows a spinner while submitted, a stop icon while streaming, and a send arrow otherwise.
+ * Blocked by default while the message text is empty, unless `disabled` is set explicitly
+ * or the chat is generating (so the stop action stays reachable). The empty-text block uses
+ * `aria-disabled` rather than the native `disabled` attribute so the surrounding
+ * {@link InputGroup}'s `has-disabled` styling doesn't also dim the textarea.
  */
 export const PromptInputSubmit = ({
   className,
@@ -1267,9 +1304,18 @@ export const PromptInputSubmit = ({
   onStop,
   onClick,
   children,
+  disabled,
   ...props
 }: PromptInputSubmitProps) => {
   const generating = status === 'submitted' || status === 'streaming';
+  const controller = useOptionalPromptInputController();
+  const localTextEmptyCtx = useContext(LocalTextEmptyContext);
+  const textEmpty =
+    controller !== null
+      ? controller.textInput.value.trim() === ''
+      : (localTextEmptyCtx?.empty ?? true);
+  const emptyTextBlocked = disabled === undefined && !generating && textEmpty;
+  const blocked = disabled === true || emptyTextBlocked;
 
   let Icon = <ArrowBendDownLeftIcon className="size-4" />;
 
@@ -1282,6 +1328,10 @@ export const PromptInputSubmit = ({
   }
 
   const handleClick: NonNullable<PromptInputSubmitProps['onClick']> = (e) => {
+    if (blocked) {
+      e.preventDefault();
+      return;
+    }
     if (generating && onStop !== undefined) {
       e.preventDefault();
       onStop();
@@ -1294,8 +1344,10 @@ export const PromptInputSubmit = ({
 
   return (
     <InputGroupButton
+      aria-disabled={blocked}
       aria-label={generating ? 'Stop' : 'Submit'}
-      className={cn(className)}
+      className={cn(blocked && 'pointer-events-none opacity-50', className)}
+      disabled={disabled}
       size={size}
       type={generating && onStop !== undefined ? 'button' : 'submit'}
       variant={variant}
