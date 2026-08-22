@@ -27,7 +27,9 @@ const mockActivate = vi.mocked(activateJourney);
 const mockEnsureUser = vi.mocked(ensureUser);
 
 const validSyllabus = {
-  chapters: [{ title: 'One', summary: '', sections: ['Overview'] as string[] }],
+  chapters: [
+    { title: 'One', overview: '', sections: ['Overview'] as string[] },
+  ],
 };
 
 describe('activateJourneyAction', () => {
@@ -42,7 +44,7 @@ describe('activateJourneyAction', () => {
       memory: [],
 
       status: 'drafting',
-      syllabus: { chapters: [] },
+      syllabusDraft: { chapters: [] },
       chapters: [],
     });
     mockGetMessages.mockResolvedValue([]);
@@ -66,7 +68,7 @@ describe('activateJourneyAction', () => {
       memory: [],
 
       status: 'active',
-      syllabus: validSyllabus,
+      syllabusDraft: validSyllabus,
       chapters: [],
     });
 

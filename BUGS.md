@@ -30,3 +30,18 @@ message.
 ## Prevent sending empty message in chat
 
 You can send an empty message in the chat areas. We want to prevent this.
+
+## Syllabus draft blinks in and out
+
+After the first syllabus draft tool call ends and until the message finishes
+streaming the syllabus disappears, and only reappears when the streaming is
+done.
+
+## Applying syllabus change failure
+
+When the user applies a syllabus change, and it fails because the chapter is
+current or completed, it feels like a bug: the app proposes a change that it
+cannot apply. If the user attempts to apply a change, and it fails because of
+chapter mutability issues, the LLM should pick up on that failure, and continue,
+acknowledging the failure to apply. Other failures should not continue, as they
+might be transient errors.

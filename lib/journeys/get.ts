@@ -18,6 +18,10 @@ export type JourneyChapter = {
   status: JourneyChapterStatus;
   /** Optional one-paragraph summary written after completion. */
   summary: string | null;
+  /** Forward-looking one-paragraph overview of what the chapter covers. */
+  overview: string;
+  /** Ordered list of sub-topics covered in the chapter. */
+  sections: string[];
 };
 
 /** A fully hydrated journey including its chapters. */
@@ -32,8 +36,13 @@ export type Journey = {
   memory: string[];
   /** Drafting journeys have no chapters until activation. */
   status: 'drafting' | 'active';
-  /** Structured syllabus for the journey. `null` while the journey is still being drafted. */
-  syllabus: Syllabus | null;
+  /**
+   * The syllabus produced by the drafting conversation. `null` until the model
+   * publishes a first draft. Frozen at activation and never rewritten
+   * afterwards — it is kept for display only. The current state of an active
+   * journey lives in {@link chapters}, not here.
+   */
+  syllabusDraft: Syllabus | null;
   /** Ordered list of chapters. */
   chapters: JourneyChapter[];
 };
@@ -57,7 +66,7 @@ export async function getJourney({
       title: journeys.title,
       styleId: journeys.styleId,
       memory: journeys.memory,
-      syllabus: journeys.syllabus,
+      syllabusDraft: journeys.syllabusDraft,
       status: journeys.status,
     })
     .from(journeys)
@@ -68,11 +77,11 @@ export async function getJourney({
   }
 
   const row = rows[0];
-  let syllabus: Syllabus | null = null;
-  if (row.syllabus !== null) {
-    const parsed = syllabusSchema.safeParse(row.syllabus);
+  let syllabusDraft: Syllabus | null = null;
+  if (row.syllabusDraft !== null) {
+    const parsed = syllabusSchema.safeParse(row.syllabusDraft);
     if (parsed.success) {
-      syllabus = parsed.data;
+      syllabusDraft = parsed.data;
     }
   }
 
@@ -83,6 +92,8 @@ export async function getJourney({
       title: chapters.title,
       status: chapters.status,
       summary: chapters.summary,
+      overview: chapters.overview,
+      sections: chapters.sections,
     })
     .from(chapters)
     .where(eq(chapters.journeyId, id))
@@ -94,7 +105,7 @@ export async function getJourney({
     styleId: row.styleId,
     memory: row.memory,
     status: row.status,
-    syllabus,
+    syllabusDraft,
     chapters: chapterRows,
   };
 }

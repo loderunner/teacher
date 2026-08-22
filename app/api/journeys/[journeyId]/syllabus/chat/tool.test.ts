@@ -12,7 +12,7 @@ const syllabus = {
   chapters: [
     {
       title: 'Introduction',
-      summary: 'Overview of the course.',
+      overview: 'Overview of the course.',
       sections: ['What is this?'],
     },
   ],

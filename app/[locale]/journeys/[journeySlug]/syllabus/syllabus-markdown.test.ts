@@ -3,10 +3,10 @@ import { describe, expect, it } from 'vitest';
 import { formatSyllabusMarkdown } from './syllabus-markdown';
 
 describe('formatSyllabusMarkdown', () => {
-  it('renders a single chapter as a numbered heading, summary, and sections', () => {
+  it('renders a single chapter as a numbered heading, overview, and sections', () => {
     const markdown = formatSyllabusMarkdown({
       chapters: [
-        { title: 'Intro', summary: 'Basics.', sections: ['Setup', 'Hello'] },
+        { title: 'Intro', overview: 'Basics.', sections: ['Setup', 'Hello'] },
       ],
     });
 
@@ -16,8 +16,8 @@ describe('formatSyllabusMarkdown', () => {
   it('numbers chapters sequentially and joins them with blank lines', () => {
     const markdown = formatSyllabusMarkdown({
       chapters: [
-        { title: 'One', summary: 'First.', sections: ['a'] },
-        { title: 'Two', summary: 'Second.', sections: ['b'] },
+        { title: 'One', overview: 'First.', sections: ['a'] },
+        { title: 'Two', overview: 'Second.', sections: ['b'] },
       ],
     });
 

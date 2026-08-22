@@ -27,13 +27,19 @@ describe('activateJourney', () => {
       sections: string[];
     };
     let chapterRows: ChapterValue[] = [];
+    let updateFields: Record<string, unknown> = {};
 
     transactionImpl.mockImplementationOnce(
       (callback: (tx: ChainMock) => Promise<unknown>) => {
         const mockTx = chainMock();
 
         const updateChain = chainMock();
-        updateChain.set.mockReturnValueOnce(updateChain);
+        updateChain.set.mockImplementationOnce(
+          (fields: Record<string, unknown>) => {
+            updateFields = fields;
+            return updateChain;
+          },
+        );
         updateChain.where.mockReturnValueOnce(updateChain);
         updateChain.returning.mockResolvedValueOnce([
           { id: 'j1', title: 'Final Title' },
@@ -60,13 +66,25 @@ describe('activateJourney', () => {
       memory: ['M'],
       syllabus: {
         chapters: [
-          { title: 'A', summary: 'Overview A', sections: ['Section A1'] },
-          { title: 'B', summary: 'Overview B', sections: ['Section B1'] },
+          { title: 'A', overview: 'Overview A', sections: ['Section A1'] },
+          { title: 'B', overview: 'Overview B', sections: ['Section B1'] },
         ],
       },
     });
 
     expect(result).toEqual({ id: 'j1', title: 'Final Title' });
+    // The syllabus is frozen onto the draft column, never re-read for state.
+    expect(updateFields).toEqual(
+      expect.objectContaining({
+        status: 'active',
+        syllabusDraft: {
+          chapters: [
+            { title: 'A', overview: 'Overview A', sections: ['Section A1'] },
+            { title: 'B', overview: 'Overview B', sections: ['Section B1'] },
+          ],
+        },
+      }),
+    );
     expect(chapterRows).toHaveLength(2);
     expect(chapterRows[0].status).toBe('active');
     expect(chapterRows[0].overview).toBe('Overview A');

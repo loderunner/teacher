@@ -13,7 +13,7 @@ const syllabus = {
   chapters: [
     {
       title: 'Introduction',
-      summary: 'Overview of the course.',
+      overview: 'Overview of the course.',
       sections: ['What is this?'],
     },
   ],
@@ -32,6 +32,18 @@ describe('updateSyllabusDraft', () => {
         syllabus,
       }),
     ).resolves.toBeUndefined();
+  });
+
+  it('writes the parsed syllabus to the draft column', async () => {
+    await updateSyllabusDraft({
+      userId: 'user-1',
+      journeyId: 'journey-1',
+      syllabus,
+    });
+
+    expect(mockDb.update.set).toHaveBeenCalledExactlyOnceWith({
+      syllabusDraft: syllabus,
+    });
   });
 
   it('scopes the update with journeyId, userId, and drafting status', async () => {

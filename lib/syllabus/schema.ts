@@ -15,7 +15,7 @@ export const chapterSchema = z.object({
     .describe(
       "Chapter title — concise noun phrase, e.g. 'Introduction to recursion'",
     ),
-  summary: z
+  overview: z
     .string()
     .max(800)
     .describe('One-paragraph overview of what the chapter covers.'),
@@ -63,7 +63,7 @@ export type Syllabus = z.infer<typeof syllabusSchema>;
 export const partialChapterSchema = z.object({
   id: z.string().optional(),
   title: z.string().max(120).optional(),
-  summary: z.string().max(800).optional(),
+  overview: z.string().max(800).optional(),
   sections: z.array(z.string().max(200)).max(20).optional(),
 });
 

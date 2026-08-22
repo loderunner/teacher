@@ -28,7 +28,7 @@ export async function updateSyllabusDraft({
 }: UpdateSyllabusDraftParams): Promise<void> {
   await db
     .update(journeys)
-    .set({ syllabus: syllabusSchema.parse(syllabus) })
+    .set({ syllabusDraft: syllabusSchema.parse(syllabus) })
     .where(
       and(
         eq(journeys.id, journeyId),

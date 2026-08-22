@@ -69,8 +69,8 @@ const activeJourney = {
   styleId: 'teacher',
   memory: [],
   status: 'active' as const,
-  syllabus: {
-    chapters: [{ title: 'Chapter 1', summary: '', sections: ['Overview'] }],
+  syllabusDraft: {
+    chapters: [{ title: 'Chapter 1', overview: '', sections: ['Overview'] }],
   },
   chapters: [
     {
@@ -79,6 +79,8 @@ const activeJourney = {
       title: 'Chapter 1',
       status: 'active' as const,
       summary: null,
+      overview: '',
+      sections: ['Overview'],
     },
   ],
 };
@@ -155,6 +157,8 @@ describe('POST /api/journeys/[journeyId]/chapters/[chapterId]/chat', () => {
           title: 'Chapter 1',
           status: 'locked' as const,
           summary: null,
+          overview: '',
+          sections: ['Overview'],
         },
       ],
     });
