@@ -63,6 +63,17 @@ export async function listJourneys({
   updatedAt,
   id,
 }: ListJourneysParams): Promise<JourneySummary[]> {
+  // Built via the query builder (not a raw `sql` correlation) so Drizzle
+  // qualifies both sides with their table names. A raw `${chapters.journeyId}
+  // = ${journeys.id}` fragment renders unqualified column names once inlined
+  // into the outer select, and since `chapters` has its own `id` column,
+  // Postgres resolves the bare `id` to `chapters.id` instead of correlating
+  // to the outer journey — silently zeroing the count.
+  const chapterCount = db
+    .select({ count: sql<number>`count(*)::int`.as('count') })
+    .from(chapters)
+    .where(eq(chapters.journeyId, journeys.id));
+
   return db
     .select({
       id: journeys.id,
@@ -71,10 +82,7 @@ export async function listJourneys({
       status: journeys.status,
       chapterCount: sql<number>`
         CASE WHEN ${journeys.status} = 'active'
-          THEN (
-            SELECT COUNT(*)::int FROM ${chapters}
-            WHERE ${chapters.journeyId} = ${journeys.id}
-          )
+          THEN (${chapterCount})
           ELSE COALESCE(jsonb_array_length(${journeys.syllabusDraft}->'chapters'), 0)
         END`,
       currentChapterNumber: sql<number | null>`
