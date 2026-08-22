@@ -96,11 +96,10 @@ finding a better name for the project.
 
 ## Conversation branching
 
-Currently, or at least after we are done with the delta message transport, the
-conversation is linear. When a user edits a user message or regenerates an
-assistant message, every message after that message is deleted. We should find a
-way to support a full conversation tree, with branching. And add controls to
-navigate between branches in the UI.
+Currently, the conversation is linear. When a user edits a user message or
+regenerates an assistant message, every message after that message is deleted.
+We should find a way to support a full conversation tree, with branching. And
+add controls to navigate between branches in the UI.
 
 ## Better request schema validation
 
@@ -174,3 +173,27 @@ Add a new section to AGENTS.md for prompt testing and evaluations guidelines.
 ## Delete journey from list
 
 Trash icon to delete a journey from the list view.
+
+## Continue streaming and save message when user closes tab
+
+When the user closes the tab, it cancels the streaming call to save tokens. We
+want a user to be able to navigate away or close the browser window but still
+come back to a finished LLM response. Continue the streaming on server after the
+connection breaks and save the completed message to database.
+
+## Improve pacing
+
+- Syllabus chat should ask questions before creating a syllabus draft
+- Chapter chat should pace the learning over several messages, not attempt to
+  cover the entire chapter in one message.
+
+## Add a icon to other chapters
+
+In the sidebar, show locked chapters with a lock icon, similarly placed to the
+check icon in completed chapters. Show current chapter with a "play" triangle
+icon.
+
+## Improve proposeSyllabusChange card
+
+- The card blinks in and out until the message is done streaming
+- The user cannot re-read an applied or disimissed syllabus change
