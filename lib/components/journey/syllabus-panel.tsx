@@ -1,6 +1,6 @@
 'use client';
 
-import { CheckIcon } from '@phosphor-icons/react';
+import { CheckIcon, LockIcon, PlayIcon } from '@phosphor-icons/react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 
@@ -88,12 +88,17 @@ function ChapterItem({ index, chapter, current }: ChapterItemProps) {
     }),
     'flex-col gap-1 pr-2',
   );
+  const titleIcon =
+    chapter.status === 'done' ? (
+      <CheckIcon size={12} weight="fill" />
+    ) : chapter.status === 'locked' ? (
+      <LockIcon size={12} weight="fill" />
+    ) : chapter.status === 'active' ? (
+      <PlayIcon size={12} weight="fill" />
+    ) : null;
   const titleText = (
     <span className="inline-flex items-baseline">
       {index + 1}. {chapter.title ?? '…'}
-      {chapter.status === 'done' && (
-        <CheckIcon className="ml-2 inline-block" size={12} weight="bold" />
-      )}
     </span>
   );
   const title =
@@ -122,7 +127,8 @@ function ChapterItem({ index, chapter, current }: ChapterItemProps) {
 
   return (
     <AccordionItem value={chapterValue(index)}>
-      <AccordionHeader className="items-start gap-1">
+      <AccordionHeader className="items-baseline gap-1">
+        {titleIcon}
         {title}
         {collapsible(chapter) && (
           <AccordionTrigger aria-label={t('toggleSections')} />
@@ -148,7 +154,8 @@ function SyllabusItem({ journey, current }: SyllabusItemProps) {
 
   return (
     <AccordionItem disabled value="syllabus">
-      <AccordionHeader>
+      <AccordionHeader className="items-baseline gap-1">
+        <CheckIcon size={12} weight="bold" />
         <Link
           className={titleLinkClassName({
             current,
@@ -158,7 +165,6 @@ function SyllabusItem({ journey, current }: SyllabusItemProps) {
         >
           <span className="inline-flex items-baseline">
             {t('syllabusChat')}
-            <CheckIcon className="ml-2 inline-block" size={12} weight="bold" />
           </span>
         </Link>
       </AccordionHeader>
