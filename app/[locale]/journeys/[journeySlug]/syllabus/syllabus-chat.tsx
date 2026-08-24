@@ -157,7 +157,7 @@ export function SyllabusChat({ journey, initialMessages, presets }: Props) {
             handleEditMessage({ messageId, text })
           }
           onRegenerate={(messageId) => handleRegenerate({ messageId })}
-          onRetry={retry}
+          onRetry={() => retry()}
           onStop={stop}
           onSubmit={handleSubmit}
         />

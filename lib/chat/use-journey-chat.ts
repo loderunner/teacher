@@ -115,7 +115,12 @@ export function useJourneyChat({ api, initialMessages }: UseJourneyChatParams) {
   };
 
   const retry = (body?: Record<string, unknown>) => {
-    void regenerate({ body: { locale, ...body } });
+    const target = selectRetryTarget(messages);
+    if (target.kind === 'regenerate') {
+      handleRegenerate({ messageId: target.messageId, body });
+      return;
+    }
+    triggerResponse(body);
   };
 
   return {
@@ -132,6 +137,36 @@ export function useJourneyChat({ api, initialMessages }: UseJourneyChatParams) {
     triggerResponse,
     retry,
   };
+}
+
+/** What a retry after a failed turn should re-drive. */
+export type RetryTarget =
+  /** Re-run an assistant turn that failed part-way through streaming. */
+  | { kind: 'regenerate'; messageId: string }
+  /** Re-send the trailing user message (or the bare start signal) as a delta. */
+  | { kind: 'resend' };
+
+/**
+ * Decides what a retry should re-drive, based on the last message the SDK
+ * holds. A failed send leaves the optimistic user message in place; a failure
+ * part-way through a stream leaves a partial assistant message after it.
+ *
+ * Re-sending a user message is safe whether or not it reached the database:
+ * the chat routes truncate from its id and upsert it.
+ *
+ * @param messages - Current SDK message list.
+ * @returns The turn to re-drive.
+ *
+ * @example
+ * selectRetryTarget([userMessage]); // { kind: 'resend' }
+ * selectRetryTarget([userMessage, partialAssistant]); // { kind: 'regenerate', messageId: … }
+ */
+export function selectRetryTarget(messages: UIMessage[]): RetryTarget {
+  const last = messages.at(-1);
+  if (last !== undefined && last.role === 'assistant') {
+    return { kind: 'regenerate', messageId: last.id };
+  }
+  return { kind: 'resend' };
 }
 
 /** Options passed by the AI SDK to {@link prepareChatRequest}. */

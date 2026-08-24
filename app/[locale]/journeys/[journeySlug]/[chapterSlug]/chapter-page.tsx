@@ -163,7 +163,7 @@ export function ChapterPage({ journey, chapter, initialMessages }: Props) {
               handleEditMessage({ messageId, text })
             }
             onRegenerate={(messageId) => handleRegenerate({ messageId })}
-            onRetry={retry}
+            onRetry={() => retry()}
             onStop={stop}
             onSubmit={handleSubmit}
           />

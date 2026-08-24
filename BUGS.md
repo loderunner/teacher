@@ -6,13 +6,6 @@ Tool call errors are not handled which results, for example, in an infinite
 "Applying syllabus" message, never resolved. Handle tool call errors gracefully
 by showing them in the chat flow.
 
-## Hero prompt misbehavior
-
-Hero prompt accepts submission with empty text area which it shouldn't. Also,
-when submitting, the text area content is reset to zero, even if there is an
-error. This makes it impossible to re-submit the same text after a transient
-error.
-
 ## Journey creation fails at first
 
 After sending the first message from the hero and navigating to the chat page,
@@ -26,10 +19,6 @@ This might only be happening locally.
 "Thinking..." messages stay active until the entire response is completed, even
 though the thinking turn actually ends with the next tool call or assistant
 message.
-
-## Prevent sending empty message in chat
-
-You can send an empty message in the chat areas. We want to prevent this.
 
 ## Syllabus draft blinks in and out
 
@@ -45,3 +34,11 @@ cannot apply. If the user attempts to apply a change, and it fails because of
 chapter mutability issues, the LLM should pick up on that failure, and continue,
 acknowledging the failure to apply. Other failures should not continue, as they
 might be transient errors.
+
+## Messages with bad ID
+
+Syllabus change message ID is UUID, but all other messages are nanoid. See
+@app/[locale]/journeys/[journeySlug]/[chapterSlug]/chapter-page.tsx:69
+
+First message in the syllabus chat when creating a journey is nanoid(10). See
+@app/[locale]/create-draft-journey.ts:61

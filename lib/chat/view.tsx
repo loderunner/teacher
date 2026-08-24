@@ -451,7 +451,7 @@ export function JourneyChatView({
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-end gap-4 overflow-hidden px-1 pb-1">
-      {messages.length > 0 && (
+      {(messages.length > 0 || streamError !== null) && (
         <Conversation className="flex-1">
           <ConversationContent>
             {messageItems}
@@ -469,7 +469,10 @@ export function JourneyChatView({
           <PromptInputTextarea disabled={streaming} placeholder={placeholder} />
           <PromptInputFooter>
             <div />
-            <PromptInputSubmit status={status} onStop={onStop} />
+            <PromptInputSubmit
+              status={status}
+              onStop={onStop === undefined ? undefined : () => onStop()}
+            />
           </PromptInputFooter>
         </PromptInput>
       )}
