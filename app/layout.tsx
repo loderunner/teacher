@@ -17,13 +17,11 @@ const poppins = Poppins({
 const atkinsonNext = Atkinson_Hyperlegible_Next({
   variable: '--font-atkinson-next',
   subsets: ['latin'],
-  adjustFontFallback: false,
 });
 
 const atkinsonMono = Atkinson_Hyperlegible_Mono({
   variable: '--font-atkinson-mono',
   subsets: ['latin'],
-  adjustFontFallback: false,
 });
 
 export default async function RootLayout({
