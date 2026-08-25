@@ -51,7 +51,7 @@ export function ChapterPage({ journey, chapter, initialMessages }: Props) {
     handleRegenerate,
     handleEditMessage,
     triggerResponse,
-    retry,
+    draft,
   } = useJourneyChat({
     api: `/api/journeys/${journey.id}/chapters/${chapter.id}/chat`,
     initialMessages,
@@ -154,6 +154,7 @@ export function ChapterPage({ journey, chapter, initialMessages }: Props) {
           }}
         >
           <JourneyChatView
+            draft={draft}
             error={error}
             messages={messages}
             placeholder={tChat('promptPlaceholder')}
@@ -163,7 +164,6 @@ export function ChapterPage({ journey, chapter, initialMessages }: Props) {
               handleEditMessage({ messageId, text })
             }
             onRegenerate={(messageId) => handleRegenerate({ messageId })}
-            onRetry={() => retry()}
             onStop={stop}
             onSubmit={handleSubmit}
           />

@@ -3,7 +3,7 @@
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport, type UIMessage } from 'ai';
 import { useLocale } from 'next-intl';
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { type ChatMessageMetadata, isChatMessageMetadata } from './metadata';
 
@@ -65,6 +65,10 @@ export function useJourneyChat({ api, initialMessages }: UseJourneyChatParams) {
       metadata: isChatMessageMetadata(m.metadata) ? m.metadata : undefined,
     }),
   );
+  /** Text handed back to the prompt after a send that never reached the server. */
+  const [draft, setDraft] = useState<string | null>(null);
+  // Text of the message currently in flight from handleSubmit, if any.
+  const pendingTextRef = useRef<string | null>(null);
   const {
     messages,
     setMessages,
@@ -81,6 +85,16 @@ export function useJourneyChat({ api, initialMessages }: UseJourneyChatParams) {
     ...(typedInitialMessages !== undefined
       ? { messages: typedInitialMessages }
       : {}),
+    onFinish: ({ messages: after, isError }) => {
+      const text = pendingTextRef.current;
+      pendingTextRef.current = null;
+      if (!isError || text === null || after.at(-1)?.role === 'assistant') {
+        return;
+      }
+      // No `start` chunk, so the route never got as far as persisting the message.
+      setMessages((prev) => prev.slice(0, -1));
+      setDraft(text);
+    },
   });
 
   const streaming = status === 'streaming' || status === 'submitted';
@@ -92,6 +106,8 @@ export function useJourneyChat({ api, initialMessages }: UseJourneyChatParams) {
   }, [stop]);
 
   const handleSubmit = ({ text, body }: HandleSubmitParams) => {
+    pendingTextRef.current = text;
+    setDraft(null);
     void sendMessage({ text }, { body: { locale, ...body } });
   };
 
@@ -99,6 +115,7 @@ export function useJourneyChat({ api, initialMessages }: UseJourneyChatParams) {
     messageId,
     body,
   }: HandleRegenerateParams = {}) => {
+    setDraft(null);
     void regenerate({ messageId, body: { locale, ...body } });
   };
 
@@ -107,20 +124,13 @@ export function useJourneyChat({ api, initialMessages }: UseJourneyChatParams) {
     text,
     body,
   }: HandleEditMessageParams) => {
+    setDraft(null);
     void sendMessage({ text, messageId }, { body: { locale, ...body } });
   };
 
   const triggerResponse = (body?: Record<string, unknown>) => {
+    setDraft(null);
     void sendMessage(undefined, { body: { locale, ...body } });
-  };
-
-  const retry = (body?: Record<string, unknown>) => {
-    const target = selectRetryTarget(messages);
-    if (target.kind === 'regenerate') {
-      handleRegenerate({ messageId: target.messageId, body });
-      return;
-    }
-    triggerResponse(body);
   };
 
   return {
@@ -131,42 +141,12 @@ export function useJourneyChat({ api, initialMessages }: UseJourneyChatParams) {
     stop,
     streaming,
     error,
+    draft,
     handleSubmit,
     handleRegenerate,
     handleEditMessage,
     triggerResponse,
-    retry,
   };
-}
-
-/** What a retry after a failed turn should re-drive. */
-export type RetryTarget =
-  /** Re-run an assistant turn that failed part-way through streaming. */
-  | { kind: 'regenerate'; messageId: string }
-  /** Re-send the trailing user message (or the bare start signal) as a delta. */
-  | { kind: 'resend' };
-
-/**
- * Decides what a retry should re-drive, based on the last message the SDK
- * holds. A failed send leaves the optimistic user message in place; a failure
- * part-way through a stream leaves a partial assistant message after it.
- *
- * Re-sending a user message is safe whether or not it reached the database:
- * the chat routes truncate from its id and upsert it.
- *
- * @param messages - Current SDK message list.
- * @returns The turn to re-drive.
- *
- * @example
- * selectRetryTarget([userMessage]); // { kind: 'resend' }
- * selectRetryTarget([userMessage, partialAssistant]); // { kind: 'regenerate', messageId: … }
- */
-export function selectRetryTarget(messages: UIMessage[]): RetryTarget {
-  const last = messages.at(-1);
-  if (last !== undefined && last.role === 'assistant') {
-    return { kind: 'regenerate', messageId: last.id };
-  }
-  return { kind: 'resend' };
 }
 
 /** Options passed by the AI SDK to {@link prepareChatRequest}. */

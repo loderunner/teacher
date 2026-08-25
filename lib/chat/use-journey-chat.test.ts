@@ -2,18 +2,12 @@ import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('client-only', () => ({}));
 
-import { prepareChatRequest, selectRetryTarget } from './use-journey-chat';
+import { prepareChatRequest } from './use-journey-chat';
 
 const userMessage = {
   id: 'u1',
   role: 'user' as const,
   parts: [{ type: 'text' as const, text: 'Hello' }],
-};
-
-const assistantMessage = {
-  id: 'a1',
-  role: 'assistant' as const,
-  parts: [{ type: 'text' as const, text: 'Hi' }],
 };
 
 describe('prepareChatRequest', () => {
@@ -94,30 +88,5 @@ describe('prepareChatRequest', () => {
     });
 
     expect(result).toEqual({ body: {} });
-  });
-});
-
-describe('selectRetryTarget', () => {
-  it('resends when there are no messages', () => {
-    expect(selectRetryTarget([])).toEqual({ kind: 'resend' });
-  });
-
-  it('resends when the last message is the user turn that failed', () => {
-    expect(selectRetryTarget([userMessage])).toEqual({ kind: 'resend' });
-  });
-
-  it('regenerates when the last message is a partial assistant turn', () => {
-    expect(selectRetryTarget([userMessage, assistantMessage])).toEqual({
-      kind: 'regenerate',
-      messageId: 'a1',
-    });
-  });
-
-  it('resends a user turn that follows a completed assistant turn', () => {
-    const followUp = { ...userMessage, id: 'u2' };
-
-    expect(
-      selectRetryTarget([userMessage, assistantMessage, followUp]),
-    ).toEqual({ kind: 'resend' });
   });
 });

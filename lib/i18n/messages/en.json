@@ -37,8 +37,7 @@
     "editMessage": "Edit",
     "cancelEdit": "Cancel",
     "saveEdit": "Save",
-    "streamError": "Couldn't get a response.",
-    "retry": "Retry"
+    "streamError": "Couldn't get a response."
   },
   "Chapter": {
     "position": "Chapter {n} of {total}",

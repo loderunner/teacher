@@ -85,7 +85,7 @@ export function SyllabusChat({ journey, initialMessages, presets }: Props) {
     handleRegenerate,
     handleEditMessage,
     triggerResponse,
-    retry,
+    draft: promptDraft,
   } = useJourneyChat({
     api: `/api/journeys/${journey.id}/syllabus/chat`,
     initialMessages,
@@ -148,6 +148,7 @@ export function SyllabusChat({ journey, initialMessages, presets }: Props) {
     <ChatPageShell.Root>
       <ChatPageShell.Content>
         <JourneyChatView
+          draft={promptDraft}
           error={error}
           messages={messages}
           placeholder={t('promptPlaceholder')}
@@ -157,7 +158,6 @@ export function SyllabusChat({ journey, initialMessages, presets }: Props) {
             handleEditMessage({ messageId, text })
           }
           onRegenerate={(messageId) => handleRegenerate({ messageId })}
-          onRetry={() => retry()}
           onStop={stop}
           onSubmit={handleSubmit}
         />
