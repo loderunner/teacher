@@ -1,6 +1,6 @@
 .claude/skills/
 .claude/worktrees/
-.agents/
-lib/server/db/migrations/
+.agents/skills/
+lib/server/migrations/
 pnpm-lock.yaml
 vercel.json
