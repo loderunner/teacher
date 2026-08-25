@@ -164,6 +164,9 @@ const UserMessageEditor = ({
 }: UserMessageEditorProps) => (
   <div className="flex w-full flex-col items-end gap-2">
     <textarea
+      // Focuses in response to the user's own "edit" action, not on page load —
+      // the recognized exception to this rule.
+      // eslint-disable-next-line jsx-a11y/no-autofocus
       autoFocus
       className="bg-secondary text-foreground field-sizing-content min-h-12 w-full rounded-lg px-4 py-3 text-sm outline-none"
       value={text}

@@ -17,6 +17,9 @@ function InputGroup({ className, ...props }: React.ComponentProps<'div'>) {
         className,
       )}
       data-slot="input-group"
+      // ARIA group role for a compound input widget; `fieldset` (the suggested
+      // alternative) is for form-field grouping, not a fitting substitute here.
+      // eslint-disable-next-line jsx-a11y/prefer-tag-over-role
       role="group"
       {...props}
     />
@@ -51,10 +54,17 @@ function InputGroupAddon({
   ...props
 }: React.ComponentProps<'div'> & VariantProps<typeof inputGroupAddonVariants>) {
   return (
+    // ARIA group role for an addon slot (`fieldset`, the suggested alternative,
+    // is for form-field grouping, not a fitting substitute here). The click
+    // handler is a mouse-only convenience that proxies focus to the sibling
+    // input, which is already independently keyboard-reachable — not gated
+    // functionality.
+    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-noninteractive-element-interactions
     <div
       className={cn(inputGroupAddonVariants({ align }), className)}
       data-align={align}
       data-slot="input-group-addon"
+      // eslint-disable-next-line jsx-a11y/prefer-tag-over-role
       role="group"
       onClick={(e) => {
         if (
