@@ -469,10 +469,7 @@ export function JourneyChatView({
           <PromptInputTextarea disabled={streaming} placeholder={placeholder} />
           <PromptInputFooter>
             <div />
-            <PromptInputSubmit
-              status={status}
-              onStop={onStop === undefined ? undefined : () => onStop()}
-            />
+            <PromptInputSubmit status={status} onStop={onStop} />
           </PromptInputFooter>
         </PromptInput>
       )}
