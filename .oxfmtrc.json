@@ -1,0 +1,22 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "singleQuote": true,
+  "printWidth": 80,
+  "sortPackageJson": false,
+  "ignorePatterns": [
+    ".claude/skills/",
+    ".claude/worktrees/",
+    ".agents/skills/",
+    "lib/db/migrations/",
+    "pnpm-lock.yaml",
+    "vercel.json"
+  ],
+  "overrides": [
+    {
+      "files": ["**/*.md"],
+      "options": {
+        "proseWrap": "always"
+      }
+    }
+  ]
+}
