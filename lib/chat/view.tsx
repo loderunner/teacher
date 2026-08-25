@@ -20,6 +20,8 @@ import {
   type ReactNode,
   createContext,
   useContext,
+  useEffect,
+  useRef,
   useState,
 } from 'react';
 
@@ -50,8 +52,10 @@ import {
   PromptInput,
   PromptInputFooter,
   type PromptInputMessage,
+  PromptInputProvider,
   PromptInputSubmit,
   PromptInputTextarea,
+  usePromptInputController,
 } from '@/lib/components/ai-elements/prompt-input';
 import {
   Reasoning,
@@ -60,7 +64,6 @@ import {
 } from '@/lib/components/ai-elements/reasoning';
 import { Shimmer } from '@/lib/components/ai-elements/shimmer';
 import { ErrorDetailPopover } from '@/lib/components/error-detail-popover';
-import { Button } from '@/lib/components/ui/button';
 
 // Internal context holding the current tool part being rendered by JourneyChatView.
 const ToolPartContext = createContext<unknown>(null);
@@ -119,8 +122,8 @@ export type JourneyChatViewProps = {
   onEditUserMessage?: (messageId: string, text: string) => void;
   /** The streaming error, if `status` is `'error'`. */
   error?: Error;
-  /** Called when the user retries after a streaming error. */
-  onRetry?: () => void;
+  /** Text to put back into the prompt after a failed send; null when there is none. */
+  draft?: string | null;
   /**
    * Registry mapping tool part types to display components.
    * Each component reads its part data via {@link useToolPartContext}.
@@ -190,6 +193,56 @@ const UserMessageEditor = ({
   </div>
 );
 
+/** Props for the {@link ChatPrompt} prompt row. */
+type ChatPromptProps = {
+  /** Text to restore into the prompt after a failed send; null when there is none. */
+  draft: string | null;
+  /** Placeholder text for the prompt input. */
+  placeholder: string;
+  /** Current chat streaming status. */
+  status: ChatStatus;
+  /** Whether the chat is currently streaming a response. */
+  streaming: boolean;
+  /** Called when the user clicks the stop button during streaming. */
+  onStop?: () => void;
+  /** Called when the user submits a message. */
+  onSubmit: (message: PromptInputMessage) => void;
+};
+
+const ChatPrompt = ({
+  draft,
+  placeholder,
+  status,
+  streaming,
+  onStop,
+  onSubmit,
+}: ChatPromptProps) => {
+  const { setInput } = usePromptInputController().textInput;
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // A send that never reached the server hands its text back for another try.
+  useEffect(() => {
+    if (draft !== null) {
+      setInput(draft);
+      textareaRef.current?.focus();
+    }
+  }, [draft, setInput]);
+
+  return (
+    <PromptInput onSubmit={onSubmit}>
+      <PromptInputTextarea
+        ref={textareaRef}
+        disabled={streaming}
+        placeholder={placeholder}
+      />
+      <PromptInputFooter>
+        <div />
+        <PromptInputSubmit status={status} onStop={() => onStop?.()} />
+      </PromptInputFooter>
+    </PromptInput>
+  );
+};
+
 /**
  * Chat view that handles text, reasoning, and step-start parts and dispatches
  * tool and data parts to feature-supplied display components via a registry.
@@ -217,7 +270,7 @@ export function JourneyChatView({
   onRegenerate,
   onEditUserMessage,
   error,
-  onRetry,
+  draft = null,
   tools,
   children,
 }: JourneyChatViewProps) {
@@ -441,17 +494,12 @@ export function JourneyChatView({
       <div className="flex items-center gap-2 py-1 text-sm">
         <p className="text-destructive">{t('streamError')}</p>
         <ErrorDetailPopover detail={error?.message} />
-        {onRetry !== undefined && (
-          <Button size="xs" variant="outline" onClick={onRetry}>
-            {t('retry')}
-          </Button>
-        )}
       </div>
     ) : null;
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-end gap-4 overflow-hidden px-1 pb-1">
-      {messages.length > 0 && (
+      {(messages.length > 0 || streamError !== null) && (
         <Conversation className="flex-1">
           <ConversationContent>
             {messageItems}
@@ -465,13 +513,16 @@ export function JourneyChatView({
         </Conversation>
       )}
       {!readOnly && (
-        <PromptInput onSubmit={onSubmit}>
-          <PromptInputTextarea disabled={streaming} placeholder={placeholder} />
-          <PromptInputFooter>
-            <div />
-            <PromptInputSubmit status={status} onStop={onStop} />
-          </PromptInputFooter>
-        </PromptInput>
+        <PromptInputProvider>
+          <ChatPrompt
+            draft={draft}
+            placeholder={placeholder}
+            status={status}
+            streaming={streaming}
+            onStop={onStop}
+            onSubmit={onSubmit}
+          />
+        </PromptInputProvider>
       )}
     </div>
   );

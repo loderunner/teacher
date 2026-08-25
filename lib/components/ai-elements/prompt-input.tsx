@@ -6,7 +6,6 @@ import {
   ImageIcon,
   PlusIcon,
   SquareIcon,
-  XIcon,
 } from '@phosphor-icons/react';
 import type { ChatStatus, FileUIPart, SourceDocumentUIPart } from 'ai';
 import { nanoid } from 'nanoid';
@@ -17,6 +16,7 @@ import {
   type ClipboardEventHandler,
   type ComponentProps,
   type HTMLAttributes,
+  type JSX,
   type KeyboardEventHandler,
   type PropsWithChildren,
   type ReactNode,
@@ -1317,14 +1317,14 @@ export const PromptInputSubmit = ({
   const emptyTextBlocked = disabled === undefined && !generating && textEmpty;
   const blocked = disabled === true || emptyTextBlocked;
 
-  let Icon = <ArrowBendDownLeftIcon className="size-4" />;
+  let Icon: JSX.Element;
 
   if (status === 'submitted') {
     Icon = <Spinner />;
   } else if (status === 'streaming') {
     Icon = <SquareIcon className="size-4" />;
-  } else if (status === 'error') {
-    Icon = <XIcon className="size-4" />;
+  } else {
+    Icon = <ArrowBendDownLeftIcon className="size-4" />;
   }
 
   const handleClick: NonNullable<PromptInputSubmitProps['onClick']> = (e) => {

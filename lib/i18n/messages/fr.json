@@ -37,8 +37,7 @@
     "editMessage": "Modifier",
     "cancelEdit": "Annuler",
     "saveEdit": "Enregistrer",
-    "streamError": "Impossible d'obtenir une réponse.",
-    "retry": "Réessayer"
+    "streamError": "Impossible d'obtenir une réponse."
   },
   "Chapter": {
     "position": "Chapitre {n} sur {total}",

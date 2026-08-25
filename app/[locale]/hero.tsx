@@ -10,6 +10,7 @@ import {
   PromptInput,
   PromptInputFooter,
   type PromptInputMessage,
+  PromptInputProvider,
   PromptInputSubmit,
   PromptInputTextarea,
 } from '@/lib/components/ai-elements/prompt-input';
@@ -50,6 +51,9 @@ export function Hero({ presets }: Props) {
     } catch (err) {
       setError(err instanceof Error ? err : new Error(String(err)));
       setSubmitting(false);
+      // PromptInput clears its text when onSubmit resolves, so rethrowing
+      // keeps the prompt available for a retry.
+      throw err;
     }
   };
 
@@ -66,16 +70,18 @@ export function Hero({ presets }: Props) {
       </div>
 
       <div className="mx-auto flex w-full max-w-3xl flex-col">
-        <PromptInput onSubmit={handleSubmit}>
-          <PromptInputTextarea
-            disabled={submitting}
-            placeholder={t('promptPlaceholder')}
-          />
-          <PromptInputFooter>
-            <div />
-            <PromptInputSubmit status={submitting ? 'submitted' : 'ready'} />
-          </PromptInputFooter>
-        </PromptInput>
+        <PromptInputProvider>
+          <PromptInput onSubmit={handleSubmit}>
+            <PromptInputTextarea
+              disabled={submitting}
+              placeholder={t('promptPlaceholder')}
+            />
+            <PromptInputFooter>
+              <div />
+              <PromptInputSubmit status={submitting ? 'submitted' : 'ready'} />
+            </PromptInputFooter>
+          </PromptInput>
+        </PromptInputProvider>
 
         {error !== null && (
           <div className="mt-2 flex items-center gap-2 text-sm">
