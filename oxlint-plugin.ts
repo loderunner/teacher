@@ -34,7 +34,7 @@ const noChainedArrow = defineRule({
                 fix: (fixer) =>
                   fixer.replaceText(
                     body,
-                    `{ return ${context.getSourceCode().getText(body)}; }`,
+                    `{ return ${context.sourceCode.getText(body)}; }`,
                   ),
               },
             ],
