@@ -187,13 +187,38 @@ connection breaks and save the completed message to database.
 - Chapter chat should pace the learning over several messages, not attempt to
   cover the entire chapter in one message.
 
-## Add a icon to other chapters
-
-In the sidebar, show locked chapters with a lock icon, similarly placed to the
-check icon in completed chapters. Show current chapter with a "play" triangle
-icon.
-
 ## Improve proposeSyllabusChange card
 
 - The card blinks in and out until the message is done streaming
 - The user cannot re-read an applied or disimissed syllabus change
+
+## Make content uncopyable
+
+The goal of the app is to teach. Copy-pasting does not teach. We should prevent
+users from copying the text in assistant messages. If they want the text, they
+should copy it manually, going through the process of actually reading it.
+
+This is a harsh limitation, and contrary to traditional computer UX, so how can
+we make this understandable and palatable to the user, without feeling alien and
+weird?
+
+## Move CI off Vercel
+
+Right now, we make use of Vercel's GitHub integration to kick off deployments.
+This is great because we needed to do no config. It also works almost perfectly
+with preview deploys and Neon preview branches. But then we had to add Vercel
+"deployment checks" which are limited to "Lint" and "Typecheck". And then, we
+had to make the Vercel "build" command actually run tests and deploy migrations,
+which feels hacky. And finally, we had to create a GitHub Actions workflow to
+cleanup stale Neon branches.
+
+I want to move everything CI off Vercel, so we can level up the CI. Everything
+should happen in GitHub Actions, and we only use Vercel as the hosting platform.
+
+Make sure:
+
+- jobs and workflows structure is optimized for parallelization and performance
+- we keep preview deployments for feature branches
+- we keep neon database branches for preview deployments
+- we replicate 100% of the behavior that is currently on Vercel
+- the only Vercel command we should run in CI is `vc deploy`
