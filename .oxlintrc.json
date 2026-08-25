@@ -11,9 +11,7 @@
     "import",
     "vitest"
   ],
-  "jsPlugins": [
-    "./oxlint-plugin.ts"
-  ],
+  "jsPlugins": ["./oxlint-plugin.ts"],
   "categories": {
     "correctness": "error"
   },
@@ -149,10 +147,7 @@
     "vitest/valid-expect": "error",
     "vitest/valid-expect-in-promise": "error",
     "vitest/valid-title": "error",
-    "curly": [
-      "error",
-      "all"
-    ],
+    "curly": ["error", "all"],
     "nextjs/google-font-display": "warn",
     "nextjs/google-font-preconnect": "warn",
     "nextjs/next-script-for-ga": "warn",
@@ -261,20 +256,14 @@
   },
   "overrides": [
     {
-      "files": [
-        "**/*.{js,jsx,mjs,ts,tsx,mts,cts}"
-      ],
+      "files": ["**/*.{js,jsx,mjs,ts,tsx,mts,cts}"],
       "rules": {
         "import/no-anonymous-default-export": "warn",
         "jsx-a11y/alt-text": [
           "warn",
           {
-            "elements": [
-              "img"
-            ],
-            "img": [
-              "Image"
-            ]
+            "elements": ["img"],
+            "img": ["Image"]
           }
         ],
         "jsx-a11y/aria-props": "warn",
@@ -1379,21 +1368,13 @@
         "XRWebGLLayer": "readonly",
         "XSLTProcessor": "readonly"
       },
-      "plugins": [
-        "import",
-        "jsx-a11y"
-      ],
+      "plugins": ["import", "jsx-a11y"],
       "env": {
         "node": true
       }
     },
     {
-      "files": [
-        "**/*.ts",
-        "**/*.tsx",
-        "**/*.mts",
-        "**/*.cts"
-      ],
+      "files": ["**/*.ts", "**/*.tsx", "**/*.mts", "**/*.cts"],
       "rules": {
         "prefer-const": "error",
         "prefer-rest-params": "error",

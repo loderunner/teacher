@@ -3,9 +3,9 @@ import type { SQL } from 'drizzle-orm';
 import { PgDialect } from 'drizzle-orm/pg-core';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { listJourneys } from './list';
-
 import { db } from '@/lib/db';
+
+import { listJourneys } from './list';
 
 vi.mock('@/lib/db');
 

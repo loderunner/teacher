@@ -1,15 +1,15 @@
 import { auth } from '@clerk/nextjs/server';
 import { notFound } from 'next/navigation';
 
-import { SyllabusChat } from './syllabus-chat';
-import { SyllabusView } from './syllabus-view';
-
 import { permanentRedirect } from '@/lib/i18n/navigation';
 import { getJourney } from '@/lib/journeys/get';
 import { getMessages } from '@/lib/messages';
 import { listPresets } from '@/lib/styles/get';
 import { journeySlugSegment, parseJourneySlug, syllabusPath } from '@/lib/url';
 import { ensureUser } from '@/lib/users/ensure';
+
+import { SyllabusChat } from './syllabus-chat';
+import { SyllabusView } from './syllabus-view';
 
 export default async function Page({
   params,

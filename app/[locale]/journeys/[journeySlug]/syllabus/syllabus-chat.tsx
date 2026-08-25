@@ -11,9 +11,6 @@ import {
   useTransition,
 } from 'react';
 
-import { activateJourneyAction } from './activate-journey';
-import { SyllabusDraftDisplay } from './syllabus-draft-display';
-
 import { JourneyChatView, useJourneyChat } from '@/lib/chat';
 import { Button, ChatPageShell } from '@/lib/components/chat-page';
 import { ErrorDetailPopover } from '@/lib/components/error-detail-popover';
@@ -25,6 +22,9 @@ import {
   type PartialSyllabus,
   partialSyllabusSchema,
 } from '@/lib/syllabus/schema';
+
+import { activateJourneyAction } from './activate-journey';
+import { SyllabusDraftDisplay } from './syllabus-draft-display';
 
 const SYLLABUS_TOOLS: Record<string, ComponentType> = {
   'tool-updateSyllabusDraft': SyllabusDraftDisplay,

@@ -1,5 +1,4 @@
 import 'client-only';
-
 import {
   ArrowBendDownLeftIcon,
   DesktopIcon,

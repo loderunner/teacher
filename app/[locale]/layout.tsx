@@ -1,15 +1,15 @@
 import { frFR } from '@clerk/localizations';
 import { ClerkProvider } from '@clerk/nextjs';
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, getTranslations } from 'next-intl/server';
-
-import { ThemeProvider } from './theme-provider';
-import TopBar from './top-bar';
+import { notFound } from 'next/navigation';
 
 import { hasLocale } from '@/lib/i18n/locale';
 import { routing } from '@/lib/i18n/routing';
+
+import { ThemeProvider } from './theme-provider';
+import TopBar from './top-bar';
 
 export async function generateMetadata({
   params,

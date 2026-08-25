@@ -1,10 +1,10 @@
 import { chainMocked } from 'chain-mock';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ensureUser } from './ensure';
-
 import { db } from '@/lib/db';
 import { users } from '@/lib/db/schema';
+
+import { ensureUser } from './ensure';
 
 // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
 vi.mock('react', () => ({ cache: (fn: Function) => fn }));

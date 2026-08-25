@@ -1,4 +1,3 @@
-import { defineConfig, globalIgnores } from 'eslint/config';
 import loderunnerBase from 'eslint-config-loderunner/base';
 import loderunnerFormatting from 'eslint-config-loderunner/formatting';
 import loderunnerImport from 'eslint-config-loderunner/import';
@@ -7,6 +6,7 @@ import loderunnerTs from 'eslint-config-loderunner/typescript';
 import loderunnerVitest from 'eslint-config-loderunner/vitest';
 import nextVitals from 'eslint-config-next/core-web-vitals';
 import nextTs from 'eslint-config-next/typescript';
+import { defineConfig, globalIgnores } from 'eslint/config';
 
 const eslintConfig = defineConfig([
   ...nextVitals,

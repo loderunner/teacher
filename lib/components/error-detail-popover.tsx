@@ -1,5 +1,4 @@
 import 'client-only';
-
 import { InfoIcon } from '@phosphor-icons/react';
 import { useTranslations } from 'next-intl';
 

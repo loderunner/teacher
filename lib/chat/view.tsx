@@ -1,5 +1,4 @@
 import 'client-only';
-
 import {
   ArrowCounterClockwiseIcon,
   CheckIcon,
@@ -24,8 +23,6 @@ import {
   useRef,
   useState,
 } from 'react';
-
-import { isChatMessageMetadata } from './metadata';
 
 import {
   Conversation,
@@ -64,6 +61,8 @@ import {
 } from '@/lib/components/ai-elements/reasoning';
 import { Shimmer } from '@/lib/components/ai-elements/shimmer';
 import { ErrorDetailPopover } from '@/lib/components/error-detail-popover';
+
+import { isChatMessageMetadata } from './metadata';
 
 // Internal context holding the current tool part being rendered by JourneyChatView.
 const ToolPartContext = createContext<unknown>(null);

@@ -2,10 +2,10 @@ import { ClerkLoaded, ClerkLoading, Show, UserButton } from '@clerk/nextjs';
 import { BooksIcon } from '@phosphor-icons/react/dist/ssr';
 import { useTranslations } from 'next-intl';
 
+import { Link } from '@/lib/i18n/navigation';
+
 import { LocalePicker } from './locale-picker';
 import { ThemeToggle } from './theme-toggle';
-
-import { Link } from '@/lib/i18n/navigation';
 
 export default function TopBar() {
   const t = useTranslations('TopBar');

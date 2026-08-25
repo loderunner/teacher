@@ -2,12 +2,12 @@ import type { UIMessage } from 'ai';
 import { getTranslations } from 'next-intl/server';
 import type { ComponentType } from 'react';
 
-import { JourneyChatViewIsland } from './journey-chat-view-island';
-import { SyllabusDraftDisplay } from './syllabus-draft-display';
-
 import { ChatPageShell, Title } from '@/lib/components/chat-page';
 import { StyleLabel, SyllabusPanel } from '@/lib/components/journey';
 import type { Journey } from '@/lib/journeys/get';
+
+import { JourneyChatViewIsland } from './journey-chat-view-island';
+import { SyllabusDraftDisplay } from './syllabus-draft-display';
 
 const SYLLABUS_TOOLS: Record<string, ComponentType> = {
   'tool-updateSyllabusDraft': SyllabusDraftDisplay,

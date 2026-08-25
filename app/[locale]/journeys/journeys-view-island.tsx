@@ -3,8 +3,6 @@
 import { useLocale, useTranslations } from 'next-intl';
 import { useState } from 'react';
 
-import { JourneyCard } from './journey-card';
-
 import {
   type JourneySummary,
   listJourneysResponseSchema,
@@ -14,6 +12,8 @@ import { Button } from '@/lib/components/ui/button';
 import { Input } from '@/lib/components/ui/input';
 import { Link } from '@/lib/i18n/navigation';
 import { journeyPath } from '@/lib/url';
+
+import { JourneyCard } from './journey-card';
 
 /** Props for {@link JourneysViewIsland}. */
 type JourneysViewIslandProps = {

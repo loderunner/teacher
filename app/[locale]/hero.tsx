@@ -4,8 +4,6 @@ import { CompassIcon } from '@phosphor-icons/react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 
-import { createDraftJourneyAction } from './create-draft-journey';
-
 import {
   PromptInput,
   PromptInputFooter,
@@ -18,6 +16,8 @@ import { ErrorDetailPopover } from '@/lib/components/error-detail-popover';
 import { StylePicker } from '@/lib/components/journey';
 import { useRouter } from '@/lib/i18n/navigation';
 import type { Style } from '@/lib/styles/get';
+
+import { createDraftJourneyAction } from './create-draft-journey';
 
 /** Props for {@link Hero}. */
 type Props = {

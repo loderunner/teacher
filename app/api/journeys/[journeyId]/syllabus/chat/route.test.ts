@@ -2,11 +2,11 @@ import { auth } from '@clerk/nextjs/server';
 import { streamText } from 'ai';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { POST } from './route';
-
 import { getJourney } from '@/lib/journeys/get';
 import { deleteMessagesFrom, getMessages, saveMessages } from '@/lib/messages';
 import { ensureUser } from '@/lib/users/ensure';
+
+import { POST } from './route';
 
 vi.mock('@clerk/nextjs/server', () => ({
   auth: vi.fn(),

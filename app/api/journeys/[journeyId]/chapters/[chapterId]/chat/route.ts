@@ -10,13 +10,6 @@ import {
   validateUIMessages,
 } from 'ai';
 
-import { composeChapterSystemPrompt } from './prompts';
-import {
-  createAppendMemoriesTool,
-  createMarkChapterCompleteTool,
-  createProposeSyllabusChangeTool,
-} from './tools';
-
 import { getModel } from '@/lib/ai/model';
 import {
   type ChapterChatRequest,
@@ -27,6 +20,13 @@ import { getJourney } from '@/lib/journeys/get';
 import { deleteMessagesFrom, getMessages, saveMessages } from '@/lib/messages';
 import { getStyle } from '@/lib/styles/get';
 import { ensureUser } from '@/lib/users/ensure';
+
+import { composeChapterSystemPrompt } from './prompts';
+import {
+  createAppendMemoriesTool,
+  createMarkChapterCompleteTool,
+  createProposeSyllabusChangeTool,
+} from './tools';
 
 export const maxDuration = 60;
 

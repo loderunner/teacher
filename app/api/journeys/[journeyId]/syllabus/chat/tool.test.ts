@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { createUpdateSyllabusDraftTool } from './tool';
-
 import { updateSyllabusDraft } from '@/lib/journeys/updateSyllabusDraft';
+
+import { createUpdateSyllabusDraftTool } from './tool';
 
 vi.mock('@/lib/journeys/updateSyllabusDraft');
 

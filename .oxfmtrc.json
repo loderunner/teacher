@@ -3,6 +3,12 @@
   "singleQuote": true,
   "printWidth": 80,
   "sortPackageJson": false,
+  "sortImports": {
+    "ignoreCase": false,
+    "newlinesBetween": true,
+    "internalPattern": ["@/"],
+    "sortSideEffects": false
+  },
   "ignorePatterns": [
     ".claude/skills/",
     ".claude/worktrees/",

@@ -1,9 +1,9 @@
 import { chainMock, chainMocked } from 'chain-mock';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { deleteMessagesFrom } from './delete';
-
 import { db } from '@/lib/db';
+
+import { deleteMessagesFrom } from './delete';
 
 vi.mock('@/lib/db', () => ({ db: chainMock() }));
 
