@@ -1,10 +1,10 @@
 import { chainMock, chainMocked } from 'chain-mock';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { createDraftJourney } from './create';
-
 import { db } from '@/lib/db';
 import { journeys } from '@/lib/db/schema';
+
+import { createDraftJourney } from './create';
 
 vi.mock('@/lib/db', () => ({ db: chainMock() }));
 

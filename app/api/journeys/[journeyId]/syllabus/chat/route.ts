@@ -11,9 +11,6 @@ import {
   validateUIMessages,
 } from 'ai';
 
-import { composeSyllabusSystemPrompt } from './prompts';
-import { createUpdateSyllabusDraftTool } from './tool';
-
 import { getModel } from '@/lib/ai/model';
 import {
   type SyllabusChatRequest,
@@ -24,6 +21,9 @@ import { deleteMessagesFrom, getMessages, saveMessages } from '@/lib/messages';
 import { getStyle } from '@/lib/styles/get';
 import { PRESETS } from '@/lib/styles/presets';
 import { ensureUser } from '@/lib/users/ensure';
+
+import { composeSyllabusSystemPrompt } from './prompts';
+import { createUpdateSyllabusDraftTool } from './tool';
 
 export const maxDuration = 60;
 

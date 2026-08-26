@@ -11,13 +11,13 @@ vi.mock('@/lib/messages', () => ({ getMessages: vi.fn() }));
 vi.mock('@/lib/users/ensure', () => ({ ensureUser: vi.fn() }));
 vi.mock('./bootstrap', () => ({ bootstrapJourney: vi.fn() }));
 
-import { activateJourneyAction } from './activate-journey';
-import { bootstrapJourney } from './bootstrap';
-
 import { activateJourney } from '@/lib/journeys/activate';
 import { getJourney } from '@/lib/journeys/get';
 import { getMessages } from '@/lib/messages';
 import { ensureUser } from '@/lib/users/ensure';
+
+import { activateJourneyAction } from './activate-journey';
+import { bootstrapJourney } from './bootstrap';
 
 const mockAuth = vi.mocked(auth);
 const mockGetJourney = vi.mocked(getJourney);

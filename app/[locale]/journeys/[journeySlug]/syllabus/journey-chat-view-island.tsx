@@ -5,8 +5,6 @@ import type { UIMessage } from 'ai';
 import { useTranslations } from 'next-intl';
 import { type ComponentType, useState } from 'react';
 
-import { formatSyllabusMarkdown } from './syllabus-markdown';
-
 import { JourneyChatView } from '@/lib/chat';
 import {
   Message,
@@ -21,6 +19,8 @@ import {
 } from '@/lib/components/ui/collapsible';
 import { type Syllabus } from '@/lib/syllabus/schema';
 import { cn } from '@/lib/tailwind';
+
+import { formatSyllabusMarkdown } from './syllabus-markdown';
 
 type JourneyChatViewIslandProps = {
   messages: UIMessage[];

@@ -10,10 +10,6 @@ import {
   useTransition,
 } from 'react';
 
-import { completeChapterAction } from './complete-chapter';
-import { SyllabusChangeCard } from './syllabus-change-card';
-import { SyllabusChangeContext } from './syllabus-change-context';
-
 import {
   type ChatMessageMetadata,
   JourneyChatView,
@@ -24,6 +20,10 @@ import { ErrorDetailPopover } from '@/lib/components/error-detail-popover';
 import { StyleLabel, SyllabusPanel } from '@/lib/components/journey';
 import { usePathname, useRouter } from '@/lib/i18n/navigation';
 import type { Journey, JourneyChapter } from '@/lib/journeys/get';
+
+import { completeChapterAction } from './complete-chapter';
+import { SyllabusChangeCard } from './syllabus-change-card';
+import { SyllabusChangeContext } from './syllabus-change-context';
 
 const CHAPTER_TOOLS: Record<string, ComponentType> = {
   'tool-proposeSyllabusChange': SyllabusChangeCard,

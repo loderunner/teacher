@@ -1,5 +1,4 @@
 import 'client-only';
-
 import { BrainIcon, CaretDownIcon } from '@phosphor-icons/react';
 import { useControllableState } from '@radix-ui/react-use-controllable-state';
 import {
@@ -13,8 +12,6 @@ import {
 } from 'react';
 import { Streamdown } from 'streamdown';
 
-import { Shimmer } from './shimmer';
-
 import {
   Collapsible,
   CollapsibleContent,
@@ -22,6 +19,8 @@ import {
 } from '@/lib/components/ui/collapsible';
 import { streamdownPlugins } from '@/lib/streamdown';
 import { cn } from '@/lib/tailwind';
+
+import { Shimmer } from './shimmer';
 
 interface ReasoningContextValue {
   isStreaming: boolean;

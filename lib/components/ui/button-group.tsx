@@ -36,6 +36,9 @@ function ButtonGroup({
       className={cn(buttonGroupVariants({ orientation }), className)}
       data-orientation={orientation}
       data-slot="button-group"
+      // ARIA group role for a toolbar of controls; `fieldset` (the suggested
+      // alternative) is for form-field grouping, not a fitting substitute here.
+      // eslint-disable-next-line jsx-a11y/prefer-tag-over-role
       role="group"
       {...props}
     />

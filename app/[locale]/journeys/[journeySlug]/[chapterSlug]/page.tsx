@@ -1,9 +1,6 @@
 import { auth } from '@clerk/nextjs/server';
 import { notFound } from 'next/navigation';
 
-import { ChapterPage } from './chapter-page';
-import { LockedChapterPage } from './locked-chapter-page';
-
 import { permanentRedirect } from '@/lib/i18n/navigation';
 import { getJourney } from '@/lib/journeys/get';
 import { getMessages } from '@/lib/messages';
@@ -15,6 +12,9 @@ import {
   parseJourneySlug,
 } from '@/lib/url';
 import { ensureUser } from '@/lib/users/ensure';
+
+import { ChapterPage } from './chapter-page';
+import { LockedChapterPage } from './locked-chapter-page';
 
 export default async function Page({
   params,

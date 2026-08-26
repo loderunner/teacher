@@ -1,5 +1,4 @@
 import 'client-only';
-
 import { CaretLeftIcon, CaretRightIcon } from '@phosphor-icons/react';
 import type { UIMessage } from 'ai';
 import {

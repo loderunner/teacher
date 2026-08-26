@@ -1,9 +1,9 @@
 import { chainMocked } from 'chain-mock';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { appendJourneyMemories } from './appendMemories';
-
 import { db } from '@/lib/db';
+
+import { appendJourneyMemories } from './appendMemories';
 
 vi.mock('@/lib/db');
 

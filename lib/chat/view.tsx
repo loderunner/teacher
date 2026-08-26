@@ -1,5 +1,4 @@
 import 'client-only';
-
 import {
   ArrowCounterClockwiseIcon,
   CheckIcon,
@@ -24,8 +23,6 @@ import {
   useRef,
   useState,
 } from 'react';
-
-import { isChatMessageMetadata } from './metadata';
 
 import {
   Conversation,
@@ -64,6 +61,8 @@ import {
 } from '@/lib/components/ai-elements/reasoning';
 import { Shimmer } from '@/lib/components/ai-elements/shimmer';
 import { ErrorDetailPopover } from '@/lib/components/error-detail-popover';
+
+import { isChatMessageMetadata } from './metadata';
 
 // Internal context holding the current tool part being rendered by JourneyChatView.
 const ToolPartContext = createContext<unknown>(null);
@@ -165,6 +164,9 @@ const UserMessageEditor = ({
 }: UserMessageEditorProps) => (
   <div className="flex w-full flex-col items-end gap-2">
     <textarea
+      // Focuses in response to the user's own "edit" action, not on page load —
+      // the recognized exception to this rule.
+      // eslint-disable-next-line jsx-a11y/no-autofocus
       autoFocus
       className="bg-secondary text-foreground field-sizing-content min-h-12 w-full rounded-lg px-4 py-3 text-sm outline-none"
       value={text}

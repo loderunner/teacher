@@ -1,6 +1,6 @@
-import { PRESETS } from './presets';
-
 import type { Locale } from '@/lib/i18n/locale';
+
+import { PRESETS } from './presets';
 
 /** A teaching style preset with per-locale system prompt fragments. */
 export type Style = {

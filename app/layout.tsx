@@ -1,9 +1,9 @@
+import { getLocale } from 'next-intl/server';
 import {
   Atkinson_Hyperlegible_Mono,
   Atkinson_Hyperlegible_Next,
   Poppins,
 } from 'next/font/google';
-import { getLocale } from 'next-intl/server';
 
 import 'katex/dist/katex.min.css';
 import './globals.css';

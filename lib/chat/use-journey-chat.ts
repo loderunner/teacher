@@ -5,10 +5,10 @@ import { DefaultChatTransport, type UIMessage } from 'ai';
 import { useLocale } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
 
-import { type ChatMessageMetadata, isChatMessageMetadata } from './metadata';
-
 import type { PromptInputMessage } from '@/lib/components/ai-elements/prompt-input';
 import { parseLocale } from '@/lib/i18n/locale';
+
+import { type ChatMessageMetadata, isChatMessageMetadata } from './metadata';
 
 type JourneyChatMessage = UIMessage<ChatMessageMetadata>;
 

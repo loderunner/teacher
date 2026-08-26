@@ -1,9 +1,9 @@
 import { chainMocked } from 'chain-mock';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { updateSyllabusDraft } from './updateSyllabusDraft';
-
 import { db } from '@/lib/db';
+
+import { updateSyllabusDraft } from './updateSyllabusDraft';
 
 vi.mock('@/lib/db');
 

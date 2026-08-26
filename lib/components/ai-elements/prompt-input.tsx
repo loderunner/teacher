@@ -1,5 +1,4 @@
 import 'client-only';
-
 import {
   ArrowBendDownLeftIcon,
   DesktopIcon,
@@ -1487,7 +1486,7 @@ export const PromptInputTabLabel = ({
   ...props
 }: PromptInputTabLabelProps) => (
   // Content provided via children in props
-  // oxlint-disable-next-line eslint-plugin-jsx-a11y(heading-has-content)
+  // eslint-disable-next-line jsx-a11y/heading-has-content
   <h3
     className={cn(
       'font-heading text-muted-foreground mb-2 px-3 text-xs font-medium',

@@ -4,16 +4,6 @@ import { CheckIcon, LockIcon, PlayIcon } from '@phosphor-icons/react';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 
-import * as SidebarSection from './sidebar-section';
-import {
-  type DisplayChapter,
-  buildActivatedChapters,
-  buildDraftChapters,
-  chapterValue,
-  collapsible,
-  collapsibleChapterValues,
-} from './syllabus-panel-data';
-
 import {
   Accordion,
   AccordionContent,
@@ -26,6 +16,16 @@ import type { Journey } from '@/lib/journeys/get';
 import type { PartialSyllabus, Syllabus } from '@/lib/syllabus/schema';
 import { cn } from '@/lib/tailwind';
 import { syllabusPath } from '@/lib/url';
+
+import * as SidebarSection from './sidebar-section';
+import {
+  type DisplayChapter,
+  buildActivatedChapters,
+  buildDraftChapters,
+  chapterValue,
+  collapsible,
+  collapsibleChapterValues,
+} from './syllabus-panel-data';
 
 /** Identifies which item in the panel is currently active (activated mode only). */
 export type Current = { type: 'syllabus' } | { type: 'chapter'; idx: number };

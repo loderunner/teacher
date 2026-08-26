@@ -1,9 +1,9 @@
 import { chainMock, chainMocked } from 'chain-mock';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { saveMessages } from './save';
-
 import { db } from '@/lib/db';
+
+import { saveMessages } from './save';
 
 vi.mock('@/lib/db', () => ({ db: chainMock() }));
 
