@@ -7,6 +7,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "typegen": "next typegen",
     "lint": "oxfmt --check && oxlint --max-warnings 0",
     "lint:fix": "oxfmt && oxlint --fix --max-warnings 0",
     "typecheck": "tsc --noEmit",
@@ -69,7 +70,7 @@
     "oxlint": "1.80.0",
     "oxlint-tsgolint": "7.0.2001",
     "tailwindcss": "4.2.4",
-    "typescript": "5.9.3",
+    "typescript": "7.0.2",
     "vercel": "59.1.4",
     "vitest": "4.1.5"
   },
