@@ -1,0 +1,79 @@
+name: Production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+concurrency:
+  group: production
+  cancel-in-progress: false
+
+jobs:
+  checks:
+    uses: ./.github/workflows/checks.yml
+
+  deploy:
+    name: Deploy Production
+    needs: checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    environment:
+      name: Production
+      url: ${{ steps.deploy.outputs.url }}
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+    steps:
+      # Already attached to `main` — no `ref:` needed.
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup
+
+      # Derived from the Neon API at run time, not a stored secret — this
+      # avoids drift if the Neon password rotates.
+      - name: Resolve production database URL
+        id: db
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
+          NEON_PRODUCTION_BRANCH: ${{ vars.NEON_PRODUCTION_BRANCH }}
+          NEON_DATABASE_NAME: ${{ vars.NEON_DATABASE_NAME }}
+          NEON_ROLE_NAME: ${{ vars.NEON_ROLE_NAME }}
+        run: |
+          set -euo pipefail
+          api=https://console.neon.tech/api/v2
+          branch_id=$(curl -fsSL -H "Authorization: Bearer $NEON_API_KEY" \
+            "$api/projects/$NEON_PROJECT_ID/branches" \
+            | jq -er --arg n "$NEON_PRODUCTION_BRANCH" '.branches[] | select(.name == $n) | .id')
+          uri=$(curl -fsSL -H "Authorization: Bearer $NEON_API_KEY" \
+            "$api/projects/$NEON_PROJECT_ID/connection_uri?branch_id=$branch_id&database_name=$NEON_DATABASE_NAME&role_name=$NEON_ROLE_NAME&pooled=false" \
+            | jq -er '.uri')
+          echo "::add-mask::$uri"
+          echo "url=$uri" >> "$GITHUB_OUTPUT"
+
+      - name: Migrate production database
+        env:
+          DATABASE_URL: ${{ steps.db.outputs.url }}
+        run: pnpm run db:migrate
+
+      # No `DATABASE_URL` shadow here — the pulled production value from
+      # `vc build --target=production` is the correct one.
+      - name: Build
+        run: pnpm exec vercel build --yes --target=production
+
+      # No `--env` flags — project env vars are already correct and `vc build`
+      # pulls them. No `--skip-domain` — we want automatic promotion/aliasing.
+      - name: Deploy production
+        id: deploy
+        run: |
+          set -euo pipefail
+          pnpm exec vercel deploy \
+            --prebuilt --yes --archive=tgz --prod --json \
+            > deployment.json || { cat deployment.json; exit 1; }
+          echo "url=$(jq -r '.deployment.url // .url' deployment.json)" >> "$GITHUB_OUTPUT"

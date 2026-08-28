@@ -1,7 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "permissions": {
-    "deny": ["Edit(./lib/server/db/migrations/**/snapshot.json)"]
+    "deny": ["Edit(./lib/db/migrations/**/snapshot.json)"]
   },
   "plansDirectory": "./.claude/plans",
   "worktree": {
@@ -25,7 +25,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "pnpm lint:fix 1>&2",
+            "command": "pnpm fix 1>&2",
             "timeout": 10
           },
           {
