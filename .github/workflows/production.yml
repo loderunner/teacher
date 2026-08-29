@@ -28,11 +28,6 @@ jobs:
       VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
     steps:
-      # Already attached to `main` — no `ref:` needed.
-      - uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-
       - uses: ./.github/actions/setup
 
       # Derived from the Neon API at run time, not a stored secret — this

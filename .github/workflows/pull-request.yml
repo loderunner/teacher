@@ -33,12 +33,9 @@ jobs:
       VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
     steps:
       # `ref: head_ref` attaches HEAD to the branch — required by createGitMeta.
-      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
         with:
           ref: ${{ github.head_ref }}
-          persist-credentials: false
-
-      - uses: ./.github/actions/setup
 
       - name: Create Neon branch
         id: neon
