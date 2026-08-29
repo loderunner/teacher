@@ -4,8 +4,7 @@ on:
   workflow_call:
 
 jobs:
-  check:
-    name: ${{ matrix.check }}
+  format:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -15,14 +14,42 @@ jobs:
         with:
           persist-credentials: false
       - uses: ./.github/actions/setup
-      - parallel:
-        - name: format
-          run: pnpm run format
-        - name: lint
-          run: pnpm run lint
-        - name: typecheck
-          run: pnpm run typecheck
-        - name: test
-          run: pnpm run test --reporter=default --reporter=github-actions
-          env:
-            DATABASE_URL: postgres://ci:ci@localhost:5432/ci
+      - run: pnpm run format
+
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+      - run: pnpm run lint
+
+  typecheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+      - run: pnpm run typecheck
+
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+      - run: pnpm run test --reporter=default --reporter=github-actions
+        env:
+          DATABASE_URL: postgres://ci:ci@localhost:5432/ci
