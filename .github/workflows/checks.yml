@@ -17,16 +17,14 @@ jobs:
         check: [format, lint, typecheck, test]
     steps:
       - uses: ./.github/actions/setup
-
-      - name: ${{ matrix.check }}
-        env:
-          # Only consumed by `test`; harmless elsewhere. NOT a real database —
-          # Vitest automocks import the real module graph, which evaluates
-          # lib/db/index.ts at module scope. The pool is constructed but never
-          # connected.
-          DATABASE_URL: postgres://ci:ci@localhost:5432/ci
-          # Extends the shared `test` script with CI-only reporters. `default`
-          # is respecified because naming any reporter replaces the default.
-          # pnpm forwards these verbatim to `vitest run --typecheck`.
-          EXTRA_ARGS: ${{ matrix.check == 'test' && '--reporter=default --reporter=github-actions' || '' }}
-        run: pnpm run ${{ matrix.check }} ${{ env.EXTRA_ARGS }}
+      - parallel:
+        - name: format
+          run: pnpm run format
+        - name: lint
+          run: pnpm run lint
+        - name: typecheck
+          run: pnpm run typecheck
+        - name: test
+          run: pnpm run test --reporter=default --reporter=github-actions
+          env:
+            DATABASE_URL: postgres://ci:ci@localhost:5432/ci
