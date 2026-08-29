@@ -10,11 +10,6 @@ jobs:
     timeout-minutes: 10
     permissions:
       contents: read
-    strategy:
-      # Report all four results, not just the first failure.
-      fail-fast: false
-      matrix:
-        check: [format, lint, typecheck, test]
     steps:
       - uses: actions/checkout@v7
         with:
