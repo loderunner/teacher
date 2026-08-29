@@ -41,19 +41,13 @@ jobs:
         id: db
         env:
           NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
-          NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
-          NEON_PRODUCTION_BRANCH: ${{ vars.NEON_PRODUCTION_BRANCH }}
-          NEON_DATABASE_NAME: ${{ vars.NEON_DATABASE_NAME }}
-          NEON_ROLE_NAME: ${{ vars.NEON_ROLE_NAME }}
         run: |
           set -euo pipefail
-          api=https://console.neon.tech/api/v2
-          branch_id=$(curl -fsSL -H "Authorization: Bearer $NEON_API_KEY" \
-            "$api/projects/$NEON_PROJECT_ID/branches" \
-            | jq -er --arg n "$NEON_PRODUCTION_BRANCH" '.branches[] | select(.name == $n) | .id')
-          uri=$(curl -fsSL -H "Authorization: Bearer $NEON_API_KEY" \
-            "$api/projects/$NEON_PROJECT_ID/connection_uri?branch_id=$branch_id&database_name=$NEON_DATABASE_NAME&role_name=$NEON_ROLE_NAME&pooled=false" \
-            | jq -er '.uri')
+          uri=$(pnpm exec neonctl connection-string \
+            "${{ vars.NEON_PRODUCTION_BRANCH }}" \
+            --project-id "${{ vars.NEON_PROJECT_ID }}" \
+            --database-name "${{ vars.NEON_DATABASE_NAME }}" \
+            --role-name "${{ vars.NEON_ROLE_NAME }}")
           echo "::add-mask::$uri"
           echo "url=$uri" >> "$GITHUB_OUTPUT"
 
