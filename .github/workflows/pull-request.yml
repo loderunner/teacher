@@ -68,32 +68,14 @@ jobs:
           DATABASE_URL: ${{ steps.neon.outputs.db_url }}
         run: pnpm run db:migrate
 
-      # `--yes` makes `vc build` pull project settings + target env itself
-      # (it shells `pull --yes --environment preview` internally), so this is
-      # still two Vercel commands, not three. `--target=preview` is what gets
-      # the correct NEXT_PUBLIC_CLERK_* values inlined into the client bundle.
+      - name: Pull Vercel project
+        run: pnpm vc pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
       - name: Build
-        env:
-          # Shadow the pulled (production) DATABASE_URL so a build-time query
-          # can never reach production. Nothing is prerendered today — every
-          # route is `ƒ (Dynamic)` — so the build never connects. Belt and braces.
-          DATABASE_URL: ${{ steps.neon.outputs.db_url_pooled }}
-        run: pnpm exec vercel build --yes --target=preview
-
-      - name: Deploy preview
-        id: deploy
-        env:
-          DB_POOLED: ${{ steps.neon.outputs.db_url_pooled }}
-          DB_DIRECT: ${{ steps.neon.outputs.db_url }}
+        run: pnpm vc build --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Deploy
         run: |
           set -euo pipefail
-          pnpm exec vercel deploy \
-            --prebuilt --yes --archive=tgz --target=preview --json \
-            --env DATABASE_URL="$DB_POOLED" \
-            --env DATABASE_URL_UNPOOLED="$DB_DIRECT" \
-            --env POSTGRES_URL="$DB_POOLED" \
-            --env POSTGRES_URL_NON_POOLING="$DB_DIRECT" \
-            --env POSTGRES_PRISMA_URL="$DB_POOLED" \
+          pnpm vc deploy --prebuilt --archive=tgz --json --token=${{ secrets.VERCEL_TOKEN }} \
             > deployment.json || { cat deployment.json; exit 1; }
 
           url=$(jq -r '.deployment.url // .url' deployment.json)
