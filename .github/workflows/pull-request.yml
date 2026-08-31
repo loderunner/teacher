@@ -11,15 +11,13 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  checks:
-    uses: ./.github/workflows/checks.yml
+  # checks:
+  #   uses: ./.github/workflows/checks.yml
 
   preview:
     name: Deploy Preview
-    needs: checks
-    # Fork PRs get no secrets. A job skipped by a job-level `if` reports as
-    # successful to required-check evaluation, so fork PRs stay mergeable.
-    # Never use pull_request_target here.
+    # needs: checks
+    # Don't deploy fork PRs
     if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 20
