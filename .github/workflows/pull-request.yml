@@ -11,13 +11,15 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # checks:
-  #   uses: ./.github/workflows/checks.yml
+  checks:
+    uses: ./.github/workflows/checks.yml
 
   preview:
     name: Deploy Preview
-    # needs: checks
-    # Don't deploy fork PRs
+    needs: checks
+    # Fork PRs get no secrets. A job skipped by a job-level `if` reports as
+    # successful to required-check evaluation, so fork PRs stay mergeable.
+    # Never use pull_request_target here.
     if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -66,14 +68,32 @@ jobs:
           DATABASE_URL: ${{ steps.neon.outputs.db_url }}
         run: pnpm run db:migrate
 
-      - name: Pull Vercel project
-        run: pnpm vc pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+      # `--yes` makes `vc build` pull project settings + target env itself
+      # (it shells `pull --yes --environment preview` internally), so this is
+      # still two Vercel commands, not three. `--target=preview` is what gets
+      # the correct NEXT_PUBLIC_CLERK_* values inlined into the client bundle.
       - name: Build
-        run: pnpm vc build --token=${{ secrets.VERCEL_TOKEN }}
-      - name: Deploy
+        env:
+          # Shadow the pulled (production) DATABASE_URL so a build-time query
+          # can never reach production. Nothing is prerendered today — every
+          # route is `ƒ (Dynamic)` — so the build never connects. Belt and braces.
+          DATABASE_URL: ${{ steps.neon.outputs.db_url_pooled }}
+        run: pnpm exec vercel build --yes --target=preview
+
+      - name: Deploy preview
+        id: deploy
+        env:
+          DB_POOLED: ${{ steps.neon.outputs.db_url_pooled }}
+          DB_DIRECT: ${{ steps.neon.outputs.db_url }}
         run: |
           set -euo pipefail
-          pnpm vc deploy --prebuilt --archive=tgz --json --token=${{ secrets.VERCEL_TOKEN }} \
+          pnpm exec vercel deploy \
+            --prebuilt --yes --archive=tgz --target=preview --json \
+            --env DATABASE_URL="$DB_POOLED" \
+            --env DATABASE_URL_UNPOOLED="$DB_DIRECT" \
+            --env POSTGRES_URL="$DB_POOLED" \
+            --env POSTGRES_URL_NON_POOLING="$DB_DIRECT" \
+            --env POSTGRES_PRISMA_URL="$DB_POOLED" \
             > deployment.json || { cat deployment.json; exit 1; }
 
           url=$(jq -r '.deployment.url // .url' deployment.json)
