@@ -1,0 +1,107 @@
+name: Pull Request
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+  workflow_dispatch: {}
+
+concurrency:
+  group: pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    uses: ./.github/workflows/checks.yml
+
+  preview:
+    name: Deploy Preview
+    needs: checks
+    # Fork PRs get no secrets. A job skipped by a job-level `if` reports as
+    # successful to required-check evaluation, so fork PRs stay mergeable.
+    # Never use pull_request_target here.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    environment:
+      name: Preview
+      url: ${{ steps.deploy.outputs.url }}
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+    steps:
+      # `ref: head_ref` attaches HEAD to the branch — required by createGitMeta.
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.head_ref }}
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup
+
+      - name: Create Neon branch
+        id: neon
+        uses: neondatabase/create-branch-action@v6
+        with:
+          project_id: ${{ vars.NEON_PROJECT_ID }}
+          parent_branch: ${{ vars.NEON_PRODUCTION_BRANCH }}
+          branch_name: preview/${{ github.head_ref }}
+          role: ${{ vars.NEON_ROLE_NAME }}
+          database: ${{ vars.NEON_DATABASE_NAME }}
+          api_key: ${{ secrets.NEON_API_KEY }}
+
+      # Action outputs are NOT auto-masked. Mask before anything can echo them.
+      - name: Mask connection strings
+        env:
+          A: ${{ steps.neon.outputs.db_url }}
+          B: ${{ steps.neon.outputs.db_url_pooled }}
+          C: ${{ steps.neon.outputs.password }}
+        run: |
+          for v in "$A" "$B" "$C"; do [ -n "$v" ] && echo "::add-mask::$v"; done
+
+      # DDL over the direct (unpooled) endpoint. Today this runs over the pooled
+      # endpoint inside the Vercel build; unpooled is safer through pgbouncer.
+      - name: Migrate preview database
+        env:
+          DATABASE_URL: ${{ steps.neon.outputs.db_url }}
+        run: pnpm run db:migrate
+
+      # `--yes` makes `vc build` pull project settings + target env itself
+      # (it shells `pull --yes --environment preview` internally), so this is
+      # still two Vercel commands, not three. `--target=preview` is what gets
+      # the correct NEXT_PUBLIC_CLERK_* values inlined into the client bundle.
+      - name: Build
+        env:
+          # Shadow the pulled (production) DATABASE_URL so a build-time query
+          # can never reach production. Nothing is prerendered today — every
+          # route is `ƒ (Dynamic)` — so the build never connects. Belt and braces.
+          DATABASE_URL: ${{ steps.neon.outputs.db_url_pooled }}
+        run: pnpm exec vercel build --yes --target=preview
+
+      - name: Deploy preview
+        id: deploy
+        env:
+          DB_POOLED: ${{ steps.neon.outputs.db_url_pooled }}
+          DB_DIRECT: ${{ steps.neon.outputs.db_url }}
+        run: |
+          set -euo pipefail
+          pnpm exec vercel deploy \
+            --prebuilt --yes --archive=tgz --target=preview --json \
+            --env DATABASE_URL="$DB_POOLED" \
+            --env DATABASE_URL_UNPOOLED="$DB_DIRECT" \
+            --env POSTGRES_URL="$DB_POOLED" \
+            --env POSTGRES_URL_NON_POOLING="$DB_DIRECT" \
+            --env POSTGRES_PRISMA_URL="$DB_POOLED" \
+            > deployment.json || { cat deployment.json; exit 1; }
+
+          url=$(jq -r '.deployment.url // .url' deployment.json)
+          inspect=$(jq -r '.deployment.inspectorUrl // .inspectorUrl // empty' deployment.json)
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          {
+            echo "### Preview deployment"
+            echo "- Preview: $url"
+            echo "- Inspect: $inspect"
+            echo "- Neon branch: \`preview/${{ github.head_ref }}\` (new: ${{ steps.neon.outputs.created }})"
+          } >> "$GITHUB_STEP_SUMMARY"

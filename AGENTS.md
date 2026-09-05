@@ -1,22 +1,22 @@
 # Tech stack
 
-| Concern         | Choice                                                                                                                  |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| Framework       | Next.js 16, App Router, TypeScript 7 (native Go compiler), React 19                                                     |
-| UI              | shadcn/ui + Tailwind CSS v4, brutalist B&W defaults, no custom styling                                                  |
-| Icons           | `@phosphor-icons/react`                                                                                                 |
-| AI chat UI      | AI Elements (primitives), Streamdown (markdown + streaming code blocks)                                                 |
-| AI SDK          | Vercel AI SDK — `streamText`, `generateObject`, tool calling                                                            |
-| AI provider     | Vercel AI Gateway → Anthropic `claude-sonnet-4-6` (plain `"provider/model"` strings — no provider-specific SDK imports) |
-| Database        | Neon Postgres (Vercel Marketplace) + Drizzle ORM (`drizzle-orm/neon-http` + `@neondatabase/serverless`)                 |
-| Object storage  | Vercel Blob                                                                                                             |
-| Auth            | Clerk (Vercel Marketplace) + `@clerk/nextjs`                                                                            |
-| i18n            | `next-intl` — `app/[locale]/` dynamic segment routing, middleware locale detection                                      |
-| Package manager | pnpm — always use `pnpm add`/`pnpm remove`, never edit `package.json` directly                                          |
-| Test runner     | Vitest                                                                                                                  |
-| Formatter       | oxfmt — `pnpm lint:fix` to auto-format                                                                                  |
-| Lint            | oxlint (type-aware via `oxlint-tsgolint`) — `pnpm lint` runs oxfmt check then oxlint                                    |
-| Deploy          | Vercel — pushes to `main` deploy automatically                                                                          |
+| Concern         | Choice                                                                                                                       |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Framework       | Next.js 16, App Router, TypeScript 7 (native Go compiler), React 19                                                          |
+| UI              | shadcn/ui + Tailwind CSS v4, brutalist B&W defaults, no custom styling                                                       |
+| Icons           | `@phosphor-icons/react`                                                                                                      |
+| AI chat UI      | AI Elements (primitives), Streamdown (markdown + streaming code blocks)                                                      |
+| AI SDK          | Vercel AI SDK — `streamText`, `generateObject`, tool calling                                                                 |
+| AI provider     | Vercel AI Gateway → Anthropic `claude-sonnet-4-6` (plain `"provider/model"` strings — no provider-specific SDK imports)      |
+| Database        | Neon Postgres (Vercel Marketplace) + Drizzle ORM (`drizzle-orm/neon-http` + `@neondatabase/serverless`)                      |
+| Object storage  | Vercel Blob                                                                                                                  |
+| Auth            | Clerk (Vercel Marketplace) + `@clerk/nextjs`                                                                                 |
+| i18n            | `next-intl` — `app/[locale]/` dynamic segment routing, middleware locale detection                                           |
+| Package manager | pnpm — always use `pnpm add`/`pnpm remove`, never edit `package.json` directly                                               |
+| Test runner     | Vitest                                                                                                                       |
+| Formatter       | oxfmt — `pnpm format:fix` to auto-format (or `pnpm fix` to format and lint together)                                         |
+| Lint            | oxlint (type-aware via `oxlint-tsgolint`) — `pnpm lint` runs oxlint only; formatting is checked separately via `pnpm format` |
+| Deploy          | Vercel (hosting only) — deployed by GitHub Actions via `vc build` + `vc deploy`, not automatic Git pushes                    |
 
 TypeScript 7 ships no editor plugin API: VS Code's built-in TypeScript extension
 no longer works with "Use Workspace Version" for this compiler, and the Next.js
@@ -25,6 +25,30 @@ client-hook placement checks) does not load. Install the dedicated **TypeScript
 7** extension (`TypeScriptTeam.native-preview`, recommended in
 `.vscode/extensions.json`) for editor language support; `next build` still
 validates everything the generated route types cover.
+
+---
+
+# CI/CD philosophy
+
+1. GitHub Actions owns CI/CD. Vercel is only the hosting platform. Never move a
+   check into `vercel.json`'s `buildCommand` — that file builds, it does not
+   validate.
+2. CI calls `package.json` scripts and may only extend them with flags. If a
+   check needs different behavior, change the script, not the workflow. This is
+   what keeps a green local run meaning the same thing as a green CI run.
+3. The build runs once, in the deploying job: `vc build` →
+   `vc deploy --prebuilt`. Do not add a second `next build` anywhere — the bytes
+   validated are the bytes deployed.
+4. Migrations must be expand/contract. They run before the code that needs them
+   is live, and the gap becomes permanent if a deploy fails. Add nullable
+   columns; never drop or rename in the same PR that stops using them; backfill
+   separately. Drizzle has no down-migrations — always fix forward.
+5. Preview deployments get their own Neon branch, injected via `--env`. Any new
+   `process.env.POSTGRES_*` / `PG*` read must be added to the `--env` list in
+   `pull-request.yml`, or that code path will reach production from a preview.
+6. Unit tests must not depend on ambient environment. Mock `@/lib/db` via
+   `lib/db/__mocks__/index.ts`. CI currently sets a fake `DATABASE_URL` to work
+   around one test that doesn't.
 
 ---
 
@@ -220,9 +244,9 @@ Never hardcode plain text strings in user-facing components.
 
 shadcn/ui code is copied into `lib/components/ui/` by the CLI — it lives in this
 repository like any other source file. Treat each newly added component as
-unreviewed contributor code: pass it through `pnpm lint:fix`, then review it
-against the coding standards below before using it. Typical adjustments are the
-`cn` import path (`@/lib/tailwind`, not `@/lib/utils`), icon library
+unreviewed contributor code: pass it through `pnpm fix`, then review it against
+the coding standards below before using it. Typical adjustments are the `cn`
+import path (`@/lib/tailwind`, not `@/lib/utils`), icon library
 (`@phosphor-icons/react`, not `lucide-react`), quote style, JSDoc on exported
 symbols, and naming conventions. The generated file should feel native to the
 codebase by the time it is committed.
