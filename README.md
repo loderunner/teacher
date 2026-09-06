@@ -70,16 +70,18 @@ integration auto-deploy is disabled (`vercel.json` sets
 On every pull request, a `checks` workflow runs `pnpm format`, `pnpm lint`,
 `pnpm typecheck`, and `pnpm test` as required status checks. For same-repo PRs,
 a preview deploy job then creates a Neon database branch, runs migrations
-against it, and deploys with `vc build` + `vc deploy --prebuilt` to a Preview
-Vercel environment.
+against it, and calls `vercel deploy` (no local build) to a Preview Vercel
+environment, passing the Neon branch's connection string via `--env`. Vercel's
+own infrastructure runs the actual `next build` remotely.
 
 On push to `main`, the same checks run, then a production deploy job resolves
-the production Neon connection string, runs migrations, and deploys with
-`vc build --target=production` + `vc deploy --prebuilt --prod`.
+the production Neon connection string, runs migrations, and calls
+`vercel deploy --prod` — no `--env` needed, since Vercel already has correctly
+configured Production env vars and its remote build reads them directly.
 
-There is no separate build step outside CI — the build that is validated is the
-exact build that gets deployed. Do not run `vercel deploy` manually for normal
-changes; push to a PR branch or merge to `main` instead.
+GitHub Actions is always the trigger; Vercel's Git integration auto-deploy stays
+disabled so it can never fire a competing deploy. Do not run `vercel deploy`
+manually for normal changes; push to a PR branch or merge to `main` instead.
 
 ## Environment variables
 

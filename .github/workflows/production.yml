@@ -28,72 +28,40 @@ jobs:
       VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
     steps:
-      # Already attached to `main` — no `ref:` needed.
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
 
       - uses: ./.github/actions/setup
 
-      # Derived from the Neon API at run time, not a stored secret — this
-      # avoids drift if the Neon password rotates. `vercel pull` (which
-      # `vc build --yes` runs internally) does not resolve these: Neon writes
-      # its Marketplace-synced values as Sensitive Vercel env vars, and
-      # Sensitive values are never returned by `vercel pull`/`vercel env pull`
-      # — only by a build actually running on Vercel's own infrastructure.
-      # So every DB connection string must be threaded through explicitly,
-      # the same way the preview job does for its per-branch Neon database.
+      # Derived at run time so it never drifts from a rotated Neon password.
       - name: Resolve production database URL
         id: db
         env:
           NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
         run: |
           set -euo pipefail
-          pooled=$(pnpm exec neonctl connection-string \
-            "${{ vars.NEON_PRODUCTION_BRANCH }}" \
-            --project-id "${{ vars.NEON_PROJECT_ID }}" \
-            --database-name "${{ vars.NEON_DATABASE_NAME }}" \
-            --role-name "${{ vars.NEON_ROLE_NAME }}" \
-            --pooled)
           direct=$(pnpm exec neonctl connection-string \
             "${{ vars.NEON_PRODUCTION_BRANCH }}" \
             --project-id "${{ vars.NEON_PROJECT_ID }}" \
             --database-name "${{ vars.NEON_DATABASE_NAME }}" \
             --role-name "${{ vars.NEON_ROLE_NAME }}")
-          echo "::add-mask::$pooled"
           echo "::add-mask::$direct"
-          echo "url_pooled=$pooled" >> "$GITHUB_OUTPUT"
           echo "url=$direct" >> "$GITHUB_OUTPUT"
 
-      # DDL over the direct (unpooled) endpoint — unpooled is safer through
-      # pgbouncer, same reasoning as the preview job's migration step.
+      # Unpooled endpoint — safer for DDL through pgbouncer.
       - name: Migrate production database
         env:
           DATABASE_URL: ${{ steps.db.outputs.url }}
         run: pnpm run db:migrate
 
-      # No `DATABASE_URL` shadow needed — nothing is prerendered today, every
-      # route is `ƒ (Dynamic)`, so the build never connects to the database.
-      - name: Build
-        run: pnpm exec vercel build --yes --target=production
-
-      # `--env` injects the Neon-resolved connection strings at deploy time,
-      # overriding whatever `vc build` pulled (or failed to pull, being
-      # Sensitive) for these keys. No `--skip-domain` — we want automatic
-      # promotion/aliasing.
+      # `vercel deploy` runs the build remotely, where Production env vars
+      # (Sensitive ones included) are already configured — no `--env` needed.
       - name: Deploy production
         id: deploy
-        env:
-          DB_POOLED: ${{ steps.db.outputs.url_pooled }}
-          DB_DIRECT: ${{ steps.db.outputs.url }}
         run: |
           set -euo pipefail
           pnpm exec vercel deploy \
-            --prebuilt --yes --archive=tgz --prod --json \
-            --env DATABASE_URL="$DB_POOLED" \
-            --env DATABASE_URL_UNPOOLED="$DB_DIRECT" \
-            --env POSTGRES_URL="$DB_POOLED" \
-            --env POSTGRES_URL_NON_POOLING="$DB_DIRECT" \
-            --env POSTGRES_PRISMA_URL="$DB_POOLED" \
+            --yes --archive=tgz --prod --json \
             > deployment.json || { cat deployment.json; exit 1; }
           echo "url=$(jq -r '.deployment.url // .url' deployment.json)" >> "$GITHUB_OUTPUT"

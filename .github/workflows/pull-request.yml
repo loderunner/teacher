@@ -17,9 +17,7 @@ jobs:
   preview:
     name: Deploy Preview
     needs: checks
-    # Fork PRs get no secrets. A job skipped by a job-level `if` reports as
-    # successful to required-check evaluation, so fork PRs stay mergeable.
-    # Never use pull_request_target here.
+    # Fork PRs get no secrets; skipping via `if` keeps them mergeable.
     if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -33,7 +31,7 @@ jobs:
       VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
     steps:
-      # `ref: head_ref` attaches HEAD to the branch — required by createGitMeta.
+      # Required by createGitMeta.
       - uses: actions/checkout@v7
         with:
           ref: ${{ github.head_ref }}
@@ -52,7 +50,7 @@ jobs:
           database: ${{ vars.NEON_DATABASE_NAME }}
           api_key: ${{ secrets.NEON_API_KEY }}
 
-      # Action outputs are NOT auto-masked. Mask before anything can echo them.
+      # Action outputs aren't auto-masked.
       - name: Mask connection strings
         env:
           A: ${{ steps.neon.outputs.db_url }}
@@ -61,25 +59,13 @@ jobs:
         run: |
           for v in "$A" "$B" "$C"; do [ -n "$v" ] && echo "::add-mask::$v"; done
 
-      # DDL over the direct (unpooled) endpoint. Today this runs over the pooled
-      # endpoint inside the Vercel build; unpooled is safer through pgbouncer.
+      # Unpooled endpoint — safer for DDL through pgbouncer.
       - name: Migrate preview database
         env:
           DATABASE_URL: ${{ steps.neon.outputs.db_url }}
         run: pnpm run db:migrate
 
-      # `--yes` makes `vc build` pull project settings + target env itself
-      # (it shells `pull --yes --environment preview` internally), so this is
-      # still two Vercel commands, not three. `--target=preview` is what gets
-      # the correct NEXT_PUBLIC_CLERK_* values inlined into the client bundle.
-      - name: Build
-        env:
-          # Shadow the pulled (production) DATABASE_URL so a build-time query
-          # can never reach production. Nothing is prerendered today — every
-          # route is `ƒ (Dynamic)` — so the build never connects. Belt and braces.
-          DATABASE_URL: ${{ steps.neon.outputs.db_url_pooled }}
-        run: pnpm exec vercel build --yes --target=preview
-
+      # `--target=preview` inlines the correct NEXT_PUBLIC_CLERK_* values.
       - name: Deploy preview
         id: deploy
         env:
@@ -88,7 +74,7 @@ jobs:
         run: |
           set -euo pipefail
           pnpm exec vercel deploy \
-            --prebuilt --yes --archive=tgz --target=preview --json \
+            --yes --archive=tgz --target=preview --json \
             --env DATABASE_URL="$DB_POOLED" \
             --env DATABASE_URL_UNPOOLED="$DB_DIRECT" \
             --env POSTGRES_URL="$DB_POOLED" \
