@@ -98,6 +98,7 @@ const generateChapterSummary = async ({
     prompt,
     providerOptions: {
       anthropic: { thinking: { type: 'adaptive' }, effort: 'low' },
+      deepseek: { thinking: { type: 'enabled' }, reasoningEffort: 'low' },
     },
   });
   return text;
