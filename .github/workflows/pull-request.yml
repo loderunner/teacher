@@ -68,18 +68,13 @@ jobs:
           DATABASE_URL: ${{ steps.neon.outputs.db_url }}
         run: pnpm run db:migrate
 
-      # `--yes` makes `vc build` pull project settings + target env itself
-      # (it shells `pull --yes --environment preview` internally), so this is
-      # still two Vercel commands, not three. `--target=preview` is what gets
-      # the correct NEXT_PUBLIC_CLERK_* values inlined into the client bundle.
-      - name: Build
-        env:
-          # Shadow the pulled (production) DATABASE_URL so a build-time query
-          # can never reach production. Nothing is prerendered today — every
-          # route is `ƒ (Dynamic)` — so the build never connects. Belt and braces.
-          DATABASE_URL: ${{ steps.neon.outputs.db_url_pooled }}
-        run: pnpm exec vercel build --yes --target=preview
-
+      # No `vc build`/`--prebuilt`: Vercel's own infrastructure runs `next
+      # build` remotely, which is also the only place that can read
+      # Marketplace-synced Sensitive env vars (a CI-runner `vc build --yes` /
+      # `vercel pull` cannot). `--target=preview` is what gets the correct
+      # NEXT_PUBLIC_CLERK_* values inlined into the client bundle, and `--env`
+      # is a standard deployment-creation parameter here, not a `--prebuilt`
+      # edge case — the build hasn't happened yet when these are set.
       - name: Deploy preview
         id: deploy
         env:
@@ -88,7 +83,7 @@ jobs:
         run: |
           set -euo pipefail
           pnpm exec vercel deploy \
-            --prebuilt --yes --archive=tgz --target=preview --json \
+            --yes --archive=tgz --target=preview --json \
             --env DATABASE_URL="$DB_POOLED" \
             --env DATABASE_URL_UNPOOLED="$DB_DIRECT" \
             --env POSTGRES_URL="$DB_POOLED" \
