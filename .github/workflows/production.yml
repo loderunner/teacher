@@ -28,17 +28,13 @@ jobs:
       VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
     steps:
-      # Already attached to `main` — no `ref:` needed.
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
 
       - uses: ./.github/actions/setup
 
-      # Derived from the Neon API at run time, not a stored secret — this
-      # avoids drift if the Neon password rotates. Only needed for the
-      # migration step below: the deploy step no longer needs a connection
-      # string at all (see the Deploy production step).
+      # Derived at run time so it never drifts from a rotated Neon password.
       - name: Resolve production database URL
         id: db
         env:
@@ -53,18 +49,14 @@ jobs:
           echo "::add-mask::$direct"
           echo "url=$direct" >> "$GITHUB_OUTPUT"
 
-      # DDL over the direct (unpooled) endpoint — unpooled is safer through
-      # pgbouncer, same reasoning as the preview job's migration step.
+      # Unpooled endpoint — safer for DDL through pgbouncer.
       - name: Migrate production database
         env:
           DATABASE_URL: ${{ steps.db.outputs.url }}
         run: pnpm run db:migrate
 
-      # No `vc build`/`--prebuilt`, no `--env`: Vercel's own infrastructure
-      # runs `next build` remotely and already has correctly configured
-      # Production env vars (including Marketplace-synced Sensitive ones,
-      # which a CI-runner build could never read). No `--skip-domain` — we
-      # want automatic promotion/aliasing.
+      # `vercel deploy` runs the build remotely, where Production env vars
+      # (Sensitive ones included) are already configured — no `--env` needed.
       - name: Deploy production
         id: deploy
         run: |
