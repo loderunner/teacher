@@ -162,6 +162,7 @@ export async function POST(
     tools,
     providerOptions: {
       anthropic: { thinking: { type: 'adaptive' }, effort: 'low' },
+      deepseek: { thinking: { type: 'enabled' }, reasoningEffort: 'low' },
     },
     experimental_transform: smoothStream(),
     abortSignal: req.signal,

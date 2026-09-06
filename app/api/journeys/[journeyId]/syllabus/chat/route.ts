@@ -136,6 +136,10 @@ export async function POST(
         thinking: { type: 'adaptive' },
         ...(initialUserMessage ? { effort: 'max' } : {}),
       },
+      deepseek: {
+        thinking: { type: 'enabled' },
+        reasoningEffort: initialUserMessage ? 'max' : 'low',
+      },
     },
     experimental_transform: smoothStream({ delayInMs: null }),
     abortSignal: req.signal,
