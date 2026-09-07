@@ -1,6 +1,6 @@
 'use client';
 
-import type { UIMessage } from 'ai';
+import { generateId, type UIMessage } from 'ai';
 import { useTranslations } from 'next-intl';
 import {
   type ComponentType,
@@ -66,7 +66,7 @@ export function ChapterPage({ journey, chapter, initialMessages }: Props) {
     setMessages((prev) => [
       ...prev,
       {
-        id: crypto.randomUUID(),
+        id: generateId(),
         role: 'user',
         metadata: {
           action: 'syllabusChangeApplied',

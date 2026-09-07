@@ -1,7 +1,7 @@
 'use server';
 
 import { auth } from '@clerk/nextjs/server';
-import { nanoid } from 'nanoid';
+import { generateId } from 'ai';
 
 import { createDraftJourney } from '@/lib/journeys/create';
 import { saveMessages } from '@/lib/messages';
@@ -58,7 +58,7 @@ export async function createDraftJourneyAction(
     chapterId: null,
     messages: [
       {
-        id: nanoid(10),
+        id: generateId(),
         role: 'user',
         parts: [{ type: 'text', text: input.text }],
       },
