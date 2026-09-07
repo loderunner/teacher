@@ -405,12 +405,13 @@ export function JourneyChatView({
       if (part.type === 'step-start') {
         return null;
       }
+      const isLastPart = i === msg.parts.length - 1;
       if (isReasoningUIPart(part)) {
         return (
           <Reasoning
             key={i}
             defaultOpen={false}
-            isStreaming={isActivelyStreaming}
+            isStreaming={isActivelyStreaming && isLastPart}
           >
             <ReasoningTrigger getThinkingMessage={getThinkingMessage} />
             <ReasoningContent>{part.text}</ReasoningContent>

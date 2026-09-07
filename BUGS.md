@@ -14,12 +14,6 @@ still does not work. I need to re-submit the first message.
 
 This might only be happening locally.
 
-## Thinking messages stay active
-
-"Thinking..." messages stay active until the entire response is completed, even
-though the thinking turn actually ends with the next tool call or assistant
-message.
-
 ## Syllabus draft blinks in and out
 
 After the first syllabus draft tool call ends and until the message finishes
