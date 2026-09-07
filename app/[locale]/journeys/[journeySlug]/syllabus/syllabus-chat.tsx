@@ -18,41 +18,14 @@ import { StylePicker, SyllabusPanel } from '@/lib/components/journey';
 import { useRouter } from '@/lib/i18n/navigation';
 import type { Journey } from '@/lib/journeys/get';
 import type { Style } from '@/lib/styles/get';
-import {
-  type PartialSyllabus,
-  partialSyllabusSchema,
-} from '@/lib/syllabus/schema';
 
 import { activateJourneyAction } from './activate-journey';
+import { derivePartialSyllabusDraft } from './derive-partial-syllabus-draft';
 import { SyllabusDraftDisplay } from './syllabus-draft-display';
 
 const SYLLABUS_TOOLS: Record<string, ComponentType> = {
   'tool-updateSyllabusDraft': SyllabusDraftDisplay,
 };
-
-function derivePartialSyllabusDraft(
-  messages: UIMessage[],
-): PartialSyllabus | null {
-  const last = messages.at(-1);
-  if (last?.role !== 'assistant') {
-    return null;
-  }
-  for (let j = last.parts.length - 1; j >= 0; j--) {
-    const part = last.parts[j];
-    if (part.type !== 'tool-updateSyllabusDraft') {
-      continue;
-    }
-    if (part.state !== 'input-streaming') {
-      return null;
-    }
-    const parsed = partialSyllabusSchema.safeParse(part.input);
-    if (!parsed.success) {
-      return null;
-    }
-    return parsed.data;
-  }
-  return null;
-}
 
 /** Props for {@link SyllabusChat}. */
 type Props = {
